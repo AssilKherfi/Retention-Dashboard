@@ -26,4 +26,3 @@ matplotlib
 streamlit
 s3fs==2023.6.0
 st_files_connection
-d
