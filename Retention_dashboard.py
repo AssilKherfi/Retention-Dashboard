@@ -1,16 +1,42 @@
 # %%
 import streamlit as st
+from st_files_connection import FilesConnection
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from operator import attrgetter
 from datetime import datetime, timedelta
+import os
+
+# %%
+# Récupération des secrets pour la base de données
+db_username = st.secrets["db_username"]
+db_password = st.secrets["db_password"]
+
+# Récupération des secrets pour S3
+s3_access_key = st.secrets["AWS_S3_credentials"]["access_key"]
+s3_secret_key = st.secrets["AWS_S3_credentials"]["secret_key"]
+
+# Create connection object and retrieve file contents.
+# Specify input format is a csv and to cache the result for 600 seconds.
+conn = st.experimental_connection("s3", type=FilesConnection)
+orders = conn.read("one-data-lake/orders.csv", input_format="csv", ttl=600)
+order_details = conn.read(
+    "one-data-lake/order_details.csv", input_format="csv", ttl=600
+)
+users = conn.read("one-data-lake/", input_format="users.csv", ttl=600)
+external_pmi = conn.read("one-data-lake/", input_format="pmi_external.csv", ttl=600)
+
+
+# Print results.
+for row in df.itertuples():
+    st.write(f"{row.Owner} has a :{row.Pet}:")
 
 # %%
 pd.set_option("display.max_columns", None)
 pd.set_option("display.precision", 0)
 
-orders = pd.read_csv("orders.csv", delimiter=",", low_memory=False)
+# orders = pd.read_csv("orders.csv", delimiter=",", low_memory=False)
 orders["order_id"] = orders["order_id"].astype(str)
 orders["customer_id"] = orders["customer_id"].astype(str)
 orders["createdAt"] = pd.to_datetime(orders["createdAt"])
@@ -138,8 +164,7 @@ external_pmi["businessCat"] = external_pmi["businessCat"].replace(
     ["Recharge mobile", "Recharge mobile / ADSL"], ["Airtime", "Airtime"]
 )
 
-order_details = pd.read_csv("order_details.csv", delimiter=",", low_memory=False)
-order_details = order_details[order_details["createdAt"] >= "2023-01-01"]
+# order_details = pd.read_csv("order_details.csv", delimiter=",", low_memory=False)
 order_details["order_id"] = order_details["order_id"].astype(str)
 order_details["customer_id"] = order_details["customer_id"].astype(str)
 order_details["createdAt"] = pd.to_datetime(order_details["createdAt"])
@@ -263,17 +288,9 @@ order_details["service_fees"] = order_details["order_id"].map(dict_2)
 
 order_details_pmi = order_details[order_details["Order_Type"] == "EXTERNE"]
 
-users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
-users = users[users["createdAt"] >= "2023-01-01"]
+# users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
 users["customer_id"] = users["customer_id"].astype(str)
 users["createdAt"] = pd.to_datetime(users["createdAt"])
-users["2023-2024"] = users["createdAt"].dt.strftime("%Y-%m-%d")
-
-users_all = pd.read_csv("users.csv", delimiter=",", low_memory=False)
-users_all["customer_id"] = users_all["customer_id"].astype(str)
-users_all["createdAt"] = pd.to_datetime(users_all["createdAt"])
-users_all["2023-2024"] = users_all["createdAt"].dt.strftime("%Y-%m-%d")
-
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
 orders["date"] = pd.to_datetime(orders["date"])
