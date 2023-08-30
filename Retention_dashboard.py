@@ -1,6 +1,5 @@
 # %%
 import streamlit as st
-from st_files_connection import FilesConnection
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -20,6 +19,7 @@ s3_secret_key = st.secrets["AWS_S3_credentials"]["secret_key"]
 # Specify input format is a csv and to cache the result for 600 seconds.
 conn = st.experimental_connection("s3", type=FilesConnection)
 orders = conn.read("one-data-lake/orders.csv", input_format="csv", ttl=600)
+
 order_details = conn.read(
     "one-data-lake/order_details.csv", input_format="csv", ttl=600
 )
@@ -28,7 +28,7 @@ external_pmi = conn.read("one-data-lake/", input_format="pmi_external.csv", ttl=
 
 
 # Print results.
-for row in df.itertuples():
+for row in orders.itertuples():
     st.write(f"{row.Owner} has a :{row.Pet}:")
 
 # %%
