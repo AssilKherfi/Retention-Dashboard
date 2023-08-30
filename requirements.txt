@@ -22,6 +22,7 @@ lxml==4.6.3
 pandas==2.0.3
 html5lib
 googlemaps
+matplotlib
 streamlit
 s3fs==2023.6.0
 git+https://github.com/streamlit/files-connection

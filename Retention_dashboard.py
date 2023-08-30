@@ -12,7 +12,6 @@ import os
 # Récupération des secrets pour la base de données
 db_username = st.secrets["db_username"]
 db_password = st.secrets["db_password"]
-
 # Récupération des secrets pour S3
 s3_access_key = st.secrets["AWS_S3_credentials"]["access_key"]
 s3_secret_key = st.secrets["AWS_S3_credentials"]["secret_key"]
