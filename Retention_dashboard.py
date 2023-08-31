@@ -41,7 +41,10 @@ for file_name in file_names:
     response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
     object_content = response["Body"].read().decode("utf-8")
     df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
-    dataframes[df_name] = pd.read_csv(StringIO(object_content))
+    dataframes[df_name] = pd.read_csv(
+        StringIO(object_content), delimiter=",", low_memory=False
+    )
+
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
