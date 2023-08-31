@@ -28,7 +28,7 @@ bucket_name = "one-data-lake"
 # Liste des noms de fichiers à télécharger et à traiter
 file_names = [
     "csv_database/orders.csv",
-    "csv_database/users.csv",
+    # "csv_database/users.csv",
     # "csv_database/order_details.csv",
     # "csv_database/pmi_external.csv"
 ]
@@ -48,7 +48,7 @@ for file_name in file_names:
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
-users = dataframes["users"]
+# users = dataframes["users"]
 # order_details = dataframes["order_details"]
 # pmi_external = dataframes["pmi_external"]
 
@@ -310,8 +310,8 @@ orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 # order_details_pmi = order_details[order_details["Order_Type"] == "EXTERNE"]
 
 # # users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
-users["customer_id"] = users["customer_id"].astype(str)
-users["createdAt"] = pd.to_datetime(users["createdAt"])
+# users["customer_id"] = users["customer_id"].astype(str)
+# users["createdAt"] = pd.to_datetime(users["createdAt"])
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
 orders["date"] = pd.to_datetime(orders["date"])
