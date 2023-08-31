@@ -50,7 +50,7 @@ for file_name in file_names:
 orders = dataframes["orders"]
 # users = dataframes["users"]
 # order_details = dataframes["order_details"]
-pmi_external = dataframes["pmi_external"]
+external_pmi = dataframes["pmi_external"]
 
 
 # %%
@@ -174,7 +174,7 @@ orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 
 # orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
 
-external_pmi = pd.read_csv("pmi_external.csv", delimiter=",", low_memory=False)
+# external_pmi = pd.read_csv("pmi_external.csv", delimiter=",", low_memory=False)
 external_pmi["order_id"] = external_pmi["order_id"].astype(str)
 external_pmi["customer_id"] = external_pmi["customer_id"].astype(str)
 external_pmi = external_pmi.rename(columns={"job_status": "Status"})
