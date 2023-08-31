@@ -20,7 +20,6 @@ seaborn==0.11.2
 streamlit==1.26.0
 toml==0.10.2
 tornado==6.3.2
-xmlrpclib
 zipp==3.6.0
 git+https://github.com/streamlit/files-connection
 pip==23.2.1
