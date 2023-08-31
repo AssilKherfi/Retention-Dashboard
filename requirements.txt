@@ -15,7 +15,6 @@ numpy==1.21.4
 ordereddict==1.1
 pandas==2.0.3
 protobuf==4.24.2
-pyOpenSSL==22.0.0
 pyOpenSSL==23.2.0
 seaborn==0.11.2
 streamlit==1.26.0
@@ -23,3 +22,5 @@ toml==0.10.2
 tornado==6.3.2
 xmlrpclib==1.0.1
 zipp==3.6.0
+git+https://github.com/streamlit/files-connection
+pip==23.2.1
