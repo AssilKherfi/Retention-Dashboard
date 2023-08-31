@@ -28,9 +28,9 @@ bucket_name = "one-data-lake"
 # Liste des noms de fichiers à télécharger et à traiter
 file_names = [
     "csv_database/orders.csv",
-    "csv_database/users.csv",
+    # "csv_database/users.csv",
     # "csv_database/order_details.csv",
-    # "csv_database/pmi_external.csv"
+    "csv_database/pmi_external.csv",
 ]
 
 # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
@@ -48,9 +48,9 @@ for file_name in file_names:
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
-users = dataframes["users"]
+# users = dataframes["users"]
 # order_details = dataframes["order_details"]
-# pmi_external = dataframes["pmi_external"]
+pmi_external = dataframes["pmi_external"]
 
 
 # %%
@@ -174,16 +174,16 @@ orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 
 # orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
 
-# external_pmi = pd.read_csv("pmi_external.csv", delimiter=",", low_memory=False)
-# external_pmi["order_id"] = external_pmi["order_id"].astype(str)
-# external_pmi["customer_id"] = external_pmi["customer_id"].astype(str)
-# external_pmi = external_pmi.rename(columns={"job_status": "Status"})
-# external_pmi = external_pmi[~external_pmi["Status"].isin(["ABANDONED"])]
-# external_pmi["createdAt"] = pd.to_datetime(external_pmi["createdAt"])
-# external_pmi["customer_id"] = external_pmi["customer_id"].str.rstrip(".0")
-# external_pmi["businessCat"] = external_pmi["businessCat"].replace(
-#     ["Recharge mobile", "Recharge mobile / ADSL"], ["Airtime", "Airtime"]
-# )
+external_pmi = pd.read_csv("pmi_external.csv", delimiter=",", low_memory=False)
+external_pmi["order_id"] = external_pmi["order_id"].astype(str)
+external_pmi["customer_id"] = external_pmi["customer_id"].astype(str)
+external_pmi = external_pmi.rename(columns={"job_status": "Status"})
+external_pmi = external_pmi[~external_pmi["Status"].isin(["ABANDONED"])]
+external_pmi["createdAt"] = pd.to_datetime(external_pmi["createdAt"])
+external_pmi["customer_id"] = external_pmi["customer_id"].str.rstrip(".0")
+external_pmi["businessCat"] = external_pmi["businessCat"].replace(
+    ["Recharge mobile", "Recharge mobile / ADSL"], ["Airtime", "Airtime"]
+)
 
 # # order_details = pd.read_csv("order_details.csv", delimiter=",", low_memory=False)
 # order_details["order_id"] = order_details["order_id"].astype(str)
