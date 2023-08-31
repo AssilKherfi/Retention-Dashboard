@@ -23,7 +23,7 @@ pandas==2.0.3
 html5lib
 googlemaps
 matplotlib
-streamlit>=1.22
+streamlit==1.26
 git+https://github.com/streamlit/files-connection
 s3fs
 gcsfs
