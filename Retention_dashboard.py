@@ -28,7 +28,7 @@ bucket_name = "one-data-lake"
 # Liste des noms de fichiers à télécharger et à traiter
 file_names = [
     "csv_database/orders.csv",
-    # "csv_database/users.csv",
+    "csv_database/users.csv",
     # "csv_database/order_details.csv",
     # "csv_database/pmi_external.csv"
 ]
@@ -48,7 +48,7 @@ for file_name in file_names:
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
-# users = dataframes["users"]
+users = dataframes["users"]
 # order_details = dataframes["order_details"]
 # pmi_external = dataframes["pmi_external"]
 
