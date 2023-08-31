@@ -27,3 +27,4 @@ streamlit==1.26
 git+https://github.com/streamlit/files-connection
 s3fs
 gcsfs
+boto3==1.28.38
