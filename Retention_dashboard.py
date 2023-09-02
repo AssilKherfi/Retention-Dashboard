@@ -38,8 +38,6 @@ bucket_name = "one-data-lake"
 file_names = [
     "csv_database/orders.csv",
     # "csv_database/users.csv",
-    # "csv_database/order_details.csv",
-    # "csv_database/pmi_external.csv",
 ]
 
 # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
@@ -53,8 +51,6 @@ for file_name in file_names:
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
 # users = dataframes["users"]
-# order_details = dataframes["order_details"]
-# pmi_external = dataframes["pmi_external"]
 
 
 # %%
@@ -176,143 +172,6 @@ orders = orders[
 orders = orders.rename(columns={"Order Type": "Order_Type"})
 orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 
-# orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
-
-# external_pmi = pd.read_csv("pmi_external.csv", delimiter=",", low_memory=False)
-# external_pmi["order_id"] = external_pmi["order_id"].astype(str)
-# external_pmi["customer_id"] = external_pmi["customer_id"].astype(str)
-# external_pmi = external_pmi.rename(columns={"job_status": "Status"})
-# external_pmi = external_pmi[~external_pmi["Status"].isin(["ABANDONED"])]
-# external_pmi["createdAt"] = pd.to_datetime(external_pmi["createdAt"])
-# external_pmi["customer_id"] = external_pmi["customer_id"].str.rstrip(".0")
-# external_pmi["businessCat"] = external_pmi["businessCat"].replace(
-#     ["Recharge mobile", "Recharge mobile / ADSL"], ["Airtime", "Airtime"]
-# )
-
-# # order_details = pd.read_csv("order_details.csv", delimiter=",", low_memory=False)
-# order_details["order_id"] = order_details["order_id"].astype(str)
-# order_details["customer_id"] = order_details["customer_id"].astype(str)
-# order_details["createdAt"] = pd.to_datetime(order_details["createdAt"])
-# order_details["product_id"] = order_details["product_id"].apply(int)
-# order_details = order_details.rename(columns={"job_status": "Status"})
-# order_details = order_details[~order_details["Status"].isin(["ABANDONED"])]
-# order_details = order_details[
-#     ~order_details["order_id"].isin(
-#         [
-#             "734138951872",
-#             "811738356736",
-#             "648042957760",
-#             "239046556928",
-#             "423486580736",
-#             "536463465088",
-#         ]
-#     )
-# ]
-# order_details = order_details[
-#     ~order_details["customer_id"].isin(
-#         [
-#             "2059318.0",
-#             "1506025442.0",
-#             "1694397201.0",
-#             "2830181885.0",
-#             "5620828389.0",
-#             "4064611739.0",
-#             "3385745613.0",
-#             "2281370.0",
-#             "64438759505.0",
-#             "569994573568.0",
-#             "1628682.0",
-#             "310179181696.0",
-#             "878446.0",
-#             "3643707.0",
-#             "2253354.0",
-#             "1771017743.0",
-#             "727840660224.0",
-#             "2280761953.0",
-#             "2864429.0",
-#             "1505970032.0",
-#             "1517116.0",
-#             "929482210496.0",
-#             "5884716233.0",
-#             "22781605568.0",
-#             "2794629.0",
-#             "47201675489.0",
-#             "6072524763.0",
-#             "2342577.0",
-#             "1440074.0",
-#             "3666483.0",
-#             "449701472960.0",
-#             "869120.0",
-#             "7304625963.0",
-#             "2214784702.0",
-#             "869883.0",
-#             "2851778338.0",
-#             "3000794.0",
-#             "1898245261.0",
-#             "9816298466.0",
-#             "7021529167.0",
-#             "3017838801.0",
-#             "5624710564.0",
-#             "1584024035.0",
-#             "2485567.0",
-#             "2763532338.0",
-#             "841024809600.0",
-#             "1739473.0",
-#             "2183725.0",
-#             "3788062.0",
-#             "23400912794.0",
-#             "150321448192.0",
-#             "461317394880.0",
-#             "2208215.0",
-#             "3669307840.0",
-#             "610335616576.0",
-#             "7478577450.0",
-#             "13153632574.0",
-#             "2815691755.0",
-#             "879984.0",
-#             "3312616.0",
-#             "548088380288.0",
-#             "3526036.0",
-#             "2367635120.0",
-#             "24957125457.0",
-#             "459557812544.0",
-#             "1290757210.0",
-#             "507345740736.0",
-#             "2558315057.0",
-#             "819751.0",
-#             "407181581440.0",
-#             "1412707541.0",
-#             "1419613392.0",
-#             "4068655.0",
-#             "303655560704.0",
-#             "2389210.0",
-#             "2765139.0",
-#             "504153462208.0",
-#             "2100305133.0",
-#             "653243920384.0",
-#             "1253878877.0",
-#             "43255929830.0",
-#         ]
-#     )
-# ]
-# order_details = order_details.rename(columns={"Order Type": "Order_Type"})
-# order_details.loc[
-#     (order_details["customer_id"] == "73187559488.0"), "Order_Type"
-# ] = "EXTERNE"
-# order_details["customer_id"] = order_details["customer_id"].str.rstrip(".0")
-# order_details["businessCat"] = order_details["businessCat"].replace(
-#     ["Recharge mobile", "Recharge mobile / ADSL"], ["Airtime", "Airtime"]
-# )
-# order_details["customer_origine"] = order_details["paymentType"].apply(
-#     lambda x: "Diaspora" if x == "CARD_PAY" else "Local"
-# )
-# dict_1 = dict(zip(orders["order_id"], orders["transactionId"]))
-# dict_2 = dict(zip(orders["order_id"], orders["service_fees"]))
-# order_details["transactionId"] = order_details["order_id"].map(dict_1)
-# order_details["service_fees"] = order_details["order_id"].map(dict_2)
-
-# order_details_pmi = order_details[order_details["Order_Type"] == "EXTERNE"]
-
 # users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
 # users["customer_id"] = users["customer_id"].astype(str)
 # users["createdAt"] = pd.to_datetime(users["createdAt"])
@@ -345,7 +204,7 @@ orders = orders[orders["businessCat"].notnull()]
 
 # Créer une application Streamlit
 # Charger les données (remplacez "votre_fichier.csv" par le chemin de votre fichier CSV)
-# Fonction pour appliquer les filtres
+# Function to apply filters
 @st.cache_data
 def apply_filters(df, status, customer_origine, business_cat, time_period, num_periods):
     filtered_data = df.copy()
@@ -381,13 +240,12 @@ def apply_filters(df, status, customer_origine, business_cat, time_period, num_p
 
 # Fonction pour calculer la plage de dates
 def get_date_range(filtered_data, time_period, num_periods):
-    if time_period == "Semaine":
-        period_type = "W"
-    else:
-        period_type = "M"
-
     end_date = filtered_data["date"].max()
-    start_date = end_date - pd.DateOffset(months=num_periods)
+
+    if time_period == "Semaine":
+        start_date = end_date - pd.DateOffset(weeks=num_periods)
+    else:
+        start_date = end_date - pd.DateOffset(months=num_periods)
 
     return start_date, end_date
 
@@ -406,7 +264,7 @@ def main():
     if time_period == "Semaine":
         num_periods_default = 4  # Par défaut, sélectionner 4 semaines
     else:
-        num_periods_default = 3  # Par défaut, sélectionner 3 mois
+        num_periods_default = 6  # Par défaut, sélectionner 6 mois
 
     num_periods = st.sidebar.number_input(
         "Nombre de périodes précédentes", 1, 36, num_periods_default
