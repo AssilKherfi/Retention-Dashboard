@@ -9,7 +9,16 @@ import os
 import boto3
 from io import StringIO
 
+
 # %%
+# Fonction pour télécharger et charger un DataFrame depuis une URL S3
+@st.cache_data  # Ajoutez le décorateur de mise en cache
+def load_data_s3(bucket_name, file_name):
+    response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
+    object_content = response["Body"].read().decode("utf-8")
+    return pd.read_csv(StringIO(object_content), delimiter=",", low_memory=False)
+
+
 # Accéder aux secrets de la section "s3_credentials"
 s3_secrets = st.secrets["s3_credentials"]
 
@@ -38,19 +47,14 @@ dataframes = {}
 
 # Télécharger et traiter les fichiers
 for file_name in file_names:
-    response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
-    object_content = response["Body"].read().decode("utf-8")
     df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
-    dataframes[df_name] = pd.read_csv(
-        StringIO(object_content), delimiter=",", low_memory=False
-    )
-
+    dataframes[df_name] = load_data_s3(bucket_name, file_name)
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
 # users = dataframes["users"]
 # order_details = dataframes["order_details"]
-# external_pmi = dataframes["pmi_external"]
+# pmi_external = dataframes["pmi_external"]
 
 
 # %%
@@ -174,7 +178,7 @@ orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 
 # orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
 
-# # external_pmi = pd.read_csv("pmi_external.csv", delimiter=",", low_memory=False)
+# external_pmi = pd.read_csv("pmi_external.csv", delimiter=",", low_memory=False)
 # external_pmi["order_id"] = external_pmi["order_id"].astype(str)
 # external_pmi["customer_id"] = external_pmi["customer_id"].astype(str)
 # external_pmi = external_pmi.rename(columns={"job_status": "Status"})
@@ -309,7 +313,7 @@ orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 
 # order_details_pmi = order_details[order_details["Order_Type"] == "EXTERNE"]
 
-# # users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
+# users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
 # users["customer_id"] = users["customer_id"].astype(str)
 # users["createdAt"] = pd.to_datetime(users["createdAt"])
 # %%
@@ -340,8 +344,9 @@ orders = orders[orders["businessCat"].notnull()]
 
 
 # Créer une application Streamlit
-# Utilisation du caching pour les filtres et les résultats
-@st.cache(allow_output_mutation=True)
+# Charger les données (remplacez "votre_fichier.csv" par le chemin de votre fichier CSV)
+# Fonction pour appliquer les filtres
+@st.cache_data
 def apply_filters(df, status, customer_origine, business_cat, time_period, num_periods):
     filtered_data = df.copy()
 
@@ -356,27 +361,25 @@ def apply_filters(df, status, customer_origine, business_cat, time_period, num_p
     if business_cat != "Toutes":
         filtered_data = filtered_data[filtered_data["businessCat"] == business_cat]
 
-    # Filtrer en fonction de la période sélectionnée
-    if time_period == "Semaine":
-        date_col = "date"
-        period_type = "W"
-    else:
-        date_col = "date"
-        period_type = "M"
+    date_col = "date"
 
     # Calculer la date de début de la période en fonction du nombre de périodes souhaitées
-    end_date = filtered_data[date_col].max()
-    start_date = end_date - pd.DateOffset(
-        months=num_periods
-    )  # Change to weeks if needed
+    if time_period == "Semaine":
+        period_type = "W"
+        start_date = filtered_data[date_col].max() - pd.DateOffset(weeks=num_periods)
+    else:
+        period_type = "M"
+        start_date = filtered_data[date_col].max() - pd.DateOffset(months=num_periods)
 
     filtered_data = filtered_data[
-        (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
+        (filtered_data[date_col] >= start_date)
+        & (filtered_data[date_col] <= filtered_data[date_col].max())
     ]
 
     return filtered_data.copy()
 
 
+# Fonction pour calculer la plage de dates
 def get_date_range(filtered_data, time_period, num_periods):
     if time_period == "Semaine":
         period_type = "W"
@@ -384,48 +387,44 @@ def get_date_range(filtered_data, time_period, num_periods):
         period_type = "M"
 
     end_date = filtered_data["date"].max()
-    start_date = end_date - pd.DateOffset(
-        months=num_periods
-    )  # Change to weeks if needed
+    start_date = end_date - pd.DateOffset(months=num_periods)
 
     return start_date, end_date
 
 
-# Créer une application Streamlit
+# Fonction principale
 def main():
-    global orders
     st.title("Tableau de bord d'analyse de Cohorte")
 
     # Sidebar pour les filtres
     st.sidebar.title("Filtres")
 
-    # Ajouter une nouvelle section dans la barre latérale pour choisir entre semaines et mois
+    # Sélection de la période
     time_period = st.sidebar.radio("Période", ["Semaine", "Mois"])
 
-    # Basé sur le choix de l'utilisateur pour la période, créer un nouvel input pour choisir le nombre de semaines ou de mois précédents à afficher
-
+    # Sélection du nombre de périodes précédentes
     if time_period == "Semaine":
-        num_periods = st.sidebar.number_input("Nombre de dernière Semaines", 1, 36, 4)
+        num_periods_default = 4  # Par défaut, sélectionner 4 semaines
     else:
-        num_periods = st.sidebar.number_input("Nombre de dernier Mois", 1, 36, 3)
+        num_periods_default = 3  # Par défaut, sélectionner 3 mois
 
-    # Obtenir la valeur sélectionnée par l'utilisateur pour status
-    status_options = orders["Status"].unique()
-    status = st.sidebar.selectbox("Statut", options=["Tous"] + list(status_options))
+    num_periods = st.sidebar.number_input(
+        "Nombre de périodes précédentes", 1, 36, num_periods_default
+    )
 
-    # Obtenir la valeur sélectionnée par l'utilisateur pour customer_origine
+    # Filtres
+    status_options = ["Tous"] + list(orders["Status"].unique())
+    status = st.sidebar.selectbox("Statut", status_options)
+
+    customer_origine_options = ["Tous", "Diaspora", "Local"]
     customer_origine = st.sidebar.selectbox(
-        "Choississez le type de client (Diaspora ou Local)",
-        options=["Tous", "Diaspora", "Local"],
+        "Choisissez le type de client (Diaspora ou Local)", customer_origine_options
     )
 
-    # Obtenir la valeur sélectionnée par l'utilisateur pour business_cat
-    all_business_cats = orders["businessCat"].unique()
-    business_cat = st.sidebar.selectbox(
-        "Business catégorie", options=["Toutes"] + list(all_business_cats)
-    )
+    business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
+    business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
 
-    # Utilisation du caching pour les résultats filtrés
+    # Appliquer les filtres
     filtered_data = apply_filters(
         orders,
         status,
@@ -435,42 +434,24 @@ def main():
         num_periods,
     )
 
-    # # Afficher la plage de dates sélectionnée dans l'application
-    # start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
-    # st.subheader("Plage de dates sélectionnée:")
-    # st.write(f"De {start_date.strftime('%Y-%m-%d')} à {end_date.strftime('%Y-%m-%d')}")
-
-    # Créer un bouton de basculement pour afficher/masquer les données filtrées
+    # Afficher les données filtrées
     show_filtered_data = st.sidebar.checkbox("Afficher les données")
 
     if show_filtered_data:
-        # # Afficher la plage de dates sélectionnée
-        # start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
-        # st.sidebar.write(
-        #     f"Plage de dates sélectionnée : {start_date.strftime('%Y-%m-%d')} à {end_date.strftime('%Y-%m-%d')}"
-        # )
-
-        # # Formater les dates pour l'affichage dans le format souhaité
-        # filtered_data["Date"] = filtered_data["date"].dt.strftime("%Y-%m-%d")
-
-        # Afficher les résultats dans le contenu de la page
         st.subheader("Data Orders")
-        st.dataframe(
-            filtered_data
-        )  # Utilisation du composant de l'interface utilisateur st.dataframe
+        st.dataframe(filtered_data)
 
-        # Boutons de téléchargement pour filtered_data
-
+        # Téléchargement des données
         st.subheader("Téléchargement de orders")
         download_format = st.radio(
             "Choisir le format de téléchargement :", ["Excel (.xlsx)", "CSV (.csv)"]
         )
 
-        if st.button("Télécharger de données orders"):
+        if st.button("Télécharger les données orders"):
             if download_format == "Excel (.xlsx)":
-                filtered_data.to_excel("orders.xlsx", index=True)
+                filtered_data.to_excel("orders.xlsx", index=False)
             elif download_format == "CSV (.csv)":
-                filtered_data.to_csv("orders.csv", index=True)
+                filtered_data.to_csv("orders.csv", index=False)
 
     # Afficher la plage de dates sélectionnée
     start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
@@ -478,28 +459,14 @@ def main():
         f"Plage de dates sélectionnée : {start_date.strftime('%Y-%m-%d')} à {end_date.strftime('%Y-%m-%d')}"
     )
 
-    # Formater les dates pour l'affichage dans le format souhaité
-    filtered_data["Date"] = filtered_data["date"].dt.strftime("%Y-%m-%d")
-
-    # st.subheader("Téléchargement de données filtrées")
-    # if st.button("Télécharger en Excel (.xlsx)"):
-    #     filtered_data.to_excel("filtered_data.xlsx", index=False)
-    # if st.button("Télécharger en CSV (.csv)"):
-    #     filtered_data.to_csv("filtered_data.csv", index=False)
-
-    # Calculer et afficher l'analyse de cohorte en fonction de la période sélectionnée
+    # Calculer et afficher l'analyse de cohorte
     st.subheader("Analyse de Cohorte")
     filtered_data.dropna(subset=["customer_id"], inplace=True)
     filtered_data["date"] = pd.to_datetime(filtered_data["date"])
 
-    # Calculer l'analyse de cohorte en fonction de la période sélectionnée
-    if time_period == "Semaine":
-        period_frequency = "W"
-    else:
-        period_frequency = "M"
+    period_frequency = "W" if time_period == "Semaine" else "M"
 
     filtered_data["order_period"] = filtered_data["date"].dt.to_period(period_frequency)
-    # filtered_data['order_month'] = filtered_data['date'].dt.to_period('M')
     filtered_data["cohort"] = (
         filtered_data.groupby("customer_id")["date"]
         .transform("min")
@@ -521,41 +488,27 @@ def main():
     cohort_size = cohort_pivot.iloc[:, 0]
     retention_matrix = cohort_pivot.divide(cohort_size, axis=0)
 
-    # Afficher la matrice de rétention sous forme de tableau
-    st.subheader(
-        f"Matrice de Rétention : de {start_date.strftime('%Y-%m-%d')} à {end_date.strftime('%Y-%m-%d')}"
-    )
+    # Afficher la matrice de rétention
+    st.subheader("Matrice de Rétention")
     st.dataframe(retention_matrix)
 
-    st.subheader("Téléchargement de la retention")
-    if st.button("Télécharger en Excel (.xlsx)"):
-        filtered_data.to_excel(
-            f"Matrice de Rétention : de {start_date.strftime('%Y-%m-%d')} à {end_date.strftime('%Y-%m-%d')}.xlsx",
-            index=False,
-        )
+    # Téléchargement de la matrice de rétention
+    st.subheader("Téléchargement de la Matrice de Rétention")
+    if st.button("Télécharger la Matrice de Rétention en Excel (.xlsx)"):
+        retention_matrix.to_excel("matrice_de_retention.xlsx", index=True)
 
-    # Vous pouvez également utiliser une heatmap pour une meilleure visualisation
-    st.subheader(
-        f"Heatmap de la Matrice de Rétention : de {start_date.strftime('%Y-%m-%d')} à {end_date.strftime('%Y-%m-%d')}"
-    )
-
-    # Afficher la heatmap avec Seaborn
-    sns.set(style="white")
+    # Afficher la heatmap de la matrice de rétention
+    st.subheader("Heatmap de la Matrice de Rétention")
     plt.figure(figsize=(10, 6))
     sns.heatmap(retention_matrix, annot=True, cmap="YlGnBu", fmt=".0%")
-    plt.title(
-        f"Heatmap de la Matrice de Rétention : de {start_date.strftime('%Y-%m-%d')} à {end_date.strftime('%Y-%m-%d')}"
-    )
+    plt.title("Heatmap de la Matrice de Rétention")
     plt.xlabel("Période")
     plt.ylabel("Cohorte")
     st.pyplot(plt)
 
-    # Bouton de téléchargement pour l'image de la heatmap
+    # Téléchargement de l'image de la heatmap
     if st.button("Télécharger l'image de la Heatmap"):
-        # plt.savefig("heatmap.png")
-        plt.savefig(
-            f"Heatmap de la Matrice de Rétention : de {start_date.strftime('%Y-%m-%d')} à {end_date.strftime('%Y-%m-%d')}.png"
-        )
+        plt.savefig("heatmap_matrice_de_retention.png")
         st.success("Image de la Heatmap téléchargée avec succès !")
 
 
