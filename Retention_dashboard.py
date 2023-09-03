@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import os
 import boto3
 from io import StringIO
+import bcrypt
 
 
 # %%
@@ -202,10 +203,60 @@ orders = orders[
 
 orders = orders[orders["businessCat"].notnull()]
 
+# %%
+# Créez une base de données utilisateur
+# Accédez aux informations de l'utilisateur depuis les secrets
+user1_username = st.secrets["st_utilisateurs_1"]["st_username"]
+user1_password = st.secrets["st_utilisateurs_1"]["st_password"]
 
-# Créer une application Streamlit
-# Charger les données (remplacez "votre_fichier.csv" par le chemin de votre fichier CSV)
-# Function to apply filters
+user2_username = st.secrets["st_utilisateurs_2"]["st_username"]
+user2_password = st.secrets["st_utilisateurs_2"]["st_password"]
+
+# Créez un dictionnaire user_db avec les informations d'utilisateur hachées
+user_db = {
+    user1_username: {
+        "mot_de_passe": bcrypt.hashpw(user1_password.encode(), bcrypt.gensalt())
+    },
+    user2_username: {
+        "mot_de_passe": bcrypt.hashpw(user2_password.encode(), bcrypt.gensalt())
+    },
+}
+
+# Variables d'état pour suivre si l'utilisateur est connecté
+is_authenticated = False
+current_user = None
+
+
+# Page de connexion
+def login_page():
+    st.title("Connexion")
+    username = st.text_input("Nom d'utilisateur", key="username")
+    password = st.text_input("Mot de passe", type="password", key="password")
+
+    global is_authenticated, current_user
+
+    if st.button("Se connecter"):
+        if username in user_db and bcrypt.checkpw(
+            password.encode(), user_db[username]["mot_de_passe"]
+        ):
+            is_authenticated = True
+            current_user = username
+            st.success(f"Connexion réussie en tant que {username}")
+            return True  # Connexion réussie, renvoie True
+        else:
+            st.error("Nom d'utilisateur ou mot de passe incorrect. Veuillez réessayer.")
+            return False  # Connexion échouée, renvoie False
+
+
+# Page protégée
+def protected_page(username):
+    st.title(f"Tableau de bord de {username}")
+
+    # Contenu de la page protégée
+    st.write("Bienvenue dans votre tableau de bord protégé !")
+
+
+# Fonction pour appliquer les filtres
 @st.cache_data
 def apply_filters(df, status, customer_origine, business_cat, time_period, num_periods):
     filtered_data = df.copy()
@@ -251,126 +302,220 @@ def get_date_range(filtered_data, time_period, num_periods):
     return start_date, end_date
 
 
-# Fonction principale
+# Créer une application Streamlit
 def main():
-    st.title("Tableau de bord d'analyse de Cohorte")
-
-    # Sidebar pour les filtres
-    st.sidebar.title("Filtres")
-
-    # Sélection de la période
-    time_period = st.sidebar.radio("Période", ["Semaine", "Mois"])
-
-    # Sélection du nombre de périodes précédentes
-    if time_period == "Semaine":
-        num_periods_default = 4  # Par défaut, sélectionner 4 semaines
-    else:
-        num_periods_default = 6  # Par défaut, sélectionner 6 mois
-
-    num_periods = st.sidebar.number_input(
-        "Nombre de périodes précédentes", 1, 36, num_periods_default
+    st.sidebar.title("Navigation")
+    page = st.sidebar.selectbox(
+        "Sélectionnez une page", ["Connexion", "Tableau de bord"]
     )
 
-    # Filtres
-    status_options = ["Tous"] + list(orders["Status"].unique())
-    status = st.sidebar.selectbox("Statut", status_options)
+    if is_authenticated:  # Vérifiez si l'utilisateur est authentifié ici
+        if page == "Connexion":
+            page = "Tableau de bord"
 
-    customer_origine_options = ["Tous", "Diaspora", "Local"]
-    customer_origine = st.sidebar.selectbox(
-        "Choisissez le type de client (Diaspora ou Local)", customer_origine_options
-    )
+    if page == "Tableau de bord":
+        protected_page(current_user)
+        st.title("Tableau de bord d'analyse de Cohorte")
 
-    business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
-    business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
+        # Sidebar pour les filtres
+        st.sidebar.title("Filtres")
 
-    # Appliquer les filtres
-    filtered_data = apply_filters(
-        orders,
-        status,
-        customer_origine,
-        business_cat,
-        time_period,
-        num_periods,
-    )
+        # Sélection de la période
+        time_period = st.sidebar.radio("Période", ["Semaine", "Mois"])
 
-    # Afficher les données filtrées
-    show_filtered_data = st.sidebar.checkbox("Afficher les données")
+        # Sélection du nombre de périodes précédentes
+        if time_period == "Semaine":
+            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
+        else:
+            num_periods_default = 6  # Par défaut, sélectionner 6 mois
 
-    if show_filtered_data:
-        st.subheader("Data Orders")
-        st.dataframe(filtered_data)
-
-        # Téléchargement des données
-        st.subheader("Téléchargement de orders")
-        download_format = st.radio(
-            "Choisir le format de téléchargement :", ["Excel (.xlsx)", "CSV (.csv)"]
+        num_periods = st.sidebar.number_input(
+            "Nombre de périodes précédentes", 1, 36, num_periods_default
         )
 
-        if st.button("Télécharger les données orders"):
-            if download_format == "Excel (.xlsx)":
-                filtered_data.to_excel("orders.xlsx", index=False)
-            elif download_format == "CSV (.csv)":
-                filtered_data.to_csv("orders.csv", index=False)
+        # Filtres
+        status_options = ["Tous"] + list(orders["Status"].unique())
+        status = st.sidebar.selectbox("Statut", status_options)
 
-    # Afficher la plage de dates sélectionnée
-    start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
-    st.sidebar.write(
-        f"Plage de dates sélectionnée : {start_date.strftime('%Y-%m-%d')} à {end_date.strftime('%Y-%m-%d')}"
-    )
+        customer_origine_options = ["Tous", "Diaspora", "Local"]
+        customer_origine = st.sidebar.selectbox(
+            "Choisissez le type de client (Diaspora ou Local)", customer_origine_options
+        )
 
-    # Calculer et afficher l'analyse de cohorte
-    st.subheader("Analyse de Cohorte")
-    filtered_data.dropna(subset=["customer_id"], inplace=True)
-    filtered_data["date"] = pd.to_datetime(filtered_data["date"])
+        business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
+        business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
 
-    period_frequency = "W" if time_period == "Semaine" else "M"
+        # Appliquer les filtres
+        filtered_data = apply_filters(
+            orders,
+            status,
+            customer_origine,
+            business_cat,
+            time_period,
+            num_periods,
+        )
 
-    filtered_data["order_period"] = filtered_data["date"].dt.to_period(period_frequency)
-    filtered_data["cohort"] = (
-        filtered_data.groupby("customer_id")["date"]
-        .transform("min")
-        .dt.to_period(period_frequency)
-    )
-    filtered_data_cohort = (
-        filtered_data.groupby(["cohort", "order_period"])
-        .agg(n_customers=("customer_id", "nunique"))
-        .reset_index(drop=False)
-    )
-    filtered_data_cohort["period_number"] = (
-        filtered_data_cohort["order_period"] - filtered_data_cohort["cohort"]
-    ).apply(attrgetter("n"))
+        # Afficher les données filtrées
+        show_filtered_data = st.sidebar.checkbox("Afficher les données")
 
-    cohort_pivot = filtered_data_cohort.pivot_table(
-        index="cohort", columns="period_number", values="n_customers"
-    )
+        if show_filtered_data:
+            st.subheader("Data Orders")
+            st.dataframe(filtered_data)
 
-    cohort_size = cohort_pivot.iloc[:, 0]
-    retention_matrix = cohort_pivot.divide(cohort_size, axis=0)
+            # Téléchargement des données
+            st.subheader("Téléchargement de orders")
+            download_format = st.radio(
+                "Choisir le format de téléchargement :", ["Excel (.xlsx)", "CSV (.csv)"]
+            )
 
-    # Afficher la matrice de rétention
-    st.subheader("Matrice de Rétention")
-    st.dataframe(retention_matrix)
+            if st.button("Télécharger les données orders"):
+                if download_format == "Excel (.xlsx)":
+                    filtered_data.to_excel("orders.xlsx", index=False)
+                elif download_format == "CSV (.csv)":
+                    filtered_data.to_csv("orders.csv", index=False)
 
-    # Téléchargement de la matrice de rétention
-    st.subheader("Téléchargement de la Matrice de Rétention")
-    if st.button("Télécharger la Matrice de Rétention en Excel (.xlsx)"):
-        retention_matrix.to_excel("matrice_de_retention.xlsx", index=True)
+        # Afficher la plage de dates sélectionnée
+        start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
+        st.sidebar.write(
+            f"Plage de dates sélectionnée : {start_date.strftime('%d-%m-%Y')} à {end_date.strftime('%d-%m-%Y')}"
+        )
 
-    # Afficher la heatmap de la matrice de rétention
-    st.subheader("Heatmap de la Matrice de Rétention")
-    plt.figure(figsize=(10, 6))
-    sns.heatmap(retention_matrix, annot=True, cmap="YlGnBu", fmt=".0%")
-    plt.title("Heatmap de la Matrice de Rétention")
-    plt.xlabel("Période")
-    plt.ylabel("Cohorte")
-    st.pyplot(plt)
+        # Calculer et afficher l'analyse de cohorte
+        st.subheader("Analyse de Cohorte")
+        filtered_data.dropna(subset=["customer_id"], inplace=True)
+        filtered_data["date"] = pd.to_datetime(filtered_data["date"])
 
-    # Téléchargement de l'image de la heatmap
-    if st.button("Télécharger l'image de la Heatmap"):
-        plt.savefig("heatmap_matrice_de_retention.png")
-        st.success("Image de la Heatmap téléchargée avec succès !")
+        period_frequency = "W" if time_period == "Semaine" else "M"
+
+        filtered_data["order_period"] = filtered_data["date"].dt.to_period(
+            period_frequency
+        )
+        filtered_data["cohort"] = (
+            filtered_data.groupby("customer_id")["date"]
+            .transform("min")
+            .dt.to_period(period_frequency)
+        )
+        filtered_data_cohort = (
+            filtered_data.groupby(["cohort", "order_period"])
+            .agg(n_customers=("customer_id", "nunique"))
+            .reset_index(drop=False)
+        )
+        filtered_data_cohort["period_number"] = (
+            filtered_data_cohort["order_period"] - filtered_data_cohort["cohort"]
+        ).apply(attrgetter("n"))
+
+        cohort_pivot = filtered_data_cohort.pivot_table(
+            index="cohort", columns="period_number", values="n_customers"
+        )
+
+        cohort_size = cohort_pivot.iloc[:, 0]
+        retention_matrix = cohort_pivot.divide(cohort_size, axis=0)
+
+        # Afficher la matrice de rétention
+        st.subheader("Matrice de Rétention")
+        st.dataframe(retention_matrix)
+
+        # Téléchargement de la matrice de rétention
+        st.subheader("Téléchargement de la Matrice de Rétention")
+        if st.button("Télécharger la Matrice de Rétention en Excel (.xlsx)"):
+            retention_matrix.to_excel("matrice_de_retention.xlsx", index=True)
+
+        # Afficher la heatmap de la matrice de rétention
+        st.subheader("Heatmap de la Matrice de Rétention")
+        plt.figure(figsize=(10, 6))
+        sns.heatmap(retention_matrix, annot=True, cmap="YlGnBu", fmt=".0%")
+        plt.title("Heatmap de la Matrice de Rétention")
+        plt.xlabel("Période")
+        plt.ylabel("Cohorte")
+        st.pyplot(plt)
+
+        # Téléchargement de l'image de la heatmap
+        if st.button("Télécharger l'image de la Heatmap"):
+            plt.savefig("heatmap_matrice_de_retention.png")
+            st.success("Image de la Heatmap téléchargée avec succès !")
+
+        st.markdown(
+            """
+        <style>
+        .css-1cypcdb.eczjsme11 { /* Classe CSS spécifique pour le barre de navigation */
+            background-color: #0A3781 !important; /* Couleur bleue */
+        }
+        .css-1wrcr25 { /* Conteneur du contenu principal */
+            background-color: #70a8ba !important; /* Fond blanc */
+        }
+        
+        .css-1n76uvr.e1f1d6gn0 * { /* Tous les éléments enfants du conteneur */
+            color: #000000 !important; /* Texte en noir */
+        }
+
+        /* Cible les boutons avec la classe .css-19rxjzo.ef3psqc11 */
+        .css-19rxjzo.ef3psqc11 {
+            background-color: #068863 !important; /* Couleur de fond verte */
+        }
+        
+        /* Cible le texte à l'intérieur des boutons */
+        .css-19rxjzo.ef3psqc11 p {
+            color: #000000 !important; /* Couleur du texte en noir */
+            font-weight:bold;
+        }
+
+        /* Cible le bouton par son attribut data-testid */
+        button[data-testid="StyledFullScreenButton"] {
+            background-color: #068817 !important; /* Couleur de fond vert */
+        }
+        </style>
+        """,
+            unsafe_allow_html=True,
+        )
+
+    elif page == "Connexion":
+        if login_page():
+            st.sidebar.success("Vous êtes connecté en tant que " + current_user)
+            st.sidebar.info(
+                "Accédez au tableau de bord en sélectionnant 'Tableau de bord' dans la barre latérale."
+            )
+
+        st.markdown(
+            """
+        <style>
+        .css-1cypcdb.eczjsme11 { /* Classe CSS spécifique pour le barre de navigation */
+            background-color: #068863 !important; /* Couleur bleue */
+        }
+        .css-1wrcr25 { /* Conteneur du contenu principal */
+            background-color: #70a8ba !important; /* Fond blanc */
+        }
+        
+        .css-1n76uvr.e1f1d6gn0 * { /* Tous les éléments enfants du conteneur */
+            color: #EFEFEF !important; /* Texte en noir */
+        }
+
+        /* Cible les boutons avec la classe .css-19rxjzo.ef3psqc11 */
+        .css-19rxjzo.ef3psqc11 {
+            background-color: #0A3781 !important; /* Couleur de fond verte */
+        }
+        
+        /* Cible le texte à l'intérieur des boutons */
+        .css-19rxjzo.ef3psqc11 p {
+            color: #000000 !important; /* Couleur du texte en noir */
+            font-weight:bold;
+        }
+
+        .st-ee {
+        background-color: #ff9999; /* Couleur de fond rouge pour l'erreur */
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        }
+        .st-ee p {
+            color: #ff0000; /* Couleur du texte en rouge */
+            font-weight: bold;
+        }
+
+        </style>
+        """,
+            unsafe_allow_html=True,
+        )
 
 
-# Appel à la fonction main
 if __name__ == "__main__":
     main()
