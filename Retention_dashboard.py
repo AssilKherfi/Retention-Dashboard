@@ -50,7 +50,7 @@ for file_name in file_names:
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
-# users = dataframes["users"]
+users = dataframes["users"]
 
 
 # %%
@@ -173,8 +173,8 @@ orders = orders.rename(columns={"Order Type": "Order_Type"})
 orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 
 # # users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
-# users["customer_id"] = users["customer_id"].astype(str)
-# users["createdAt"] = pd.to_datetime(users["createdAt"])
+users["customer_id"] = users["customer_id"].astype(str)
+users["createdAt"] = pd.to_datetime(users["createdAt"])
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
 orders["date"] = pd.to_datetime(orders["date"])
