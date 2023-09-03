@@ -500,16 +500,16 @@ def main():
             font-weight:bold;
         }
 
-        .st-ee {
-        background-color: #ff9999; /* Couleur de fond rouge pour l'erreur */
-        padding: 10px;
-        border-radius: 5px;
-        text-align: center;
-        }
-        .st-ee p {
-            color: #ff0000; /* Couleur du texte en rouge */
-            font-weight: bold;
-        }
+        # .st-ee {
+        # background-color: #ff9999; /* Couleur de fond rouge pour l'erreur */
+        # padding: 10px;
+        # border-radius: 5px;
+        # text-align: center;
+        # }
+        # .st-ee p {
+        #     color: #ff0000; /* Couleur du texte en rouge */
+        #     font-weight: bold;
+        # }
 
         </style>
         """,
