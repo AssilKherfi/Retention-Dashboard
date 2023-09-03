@@ -408,31 +408,86 @@ def main():
             index="cohort", columns="period_number", values="n_customers"
         )
 
-        cohort_size = cohort_pivot.iloc[:, 0]
-        retention_matrix = cohort_pivot.divide(cohort_size, axis=0)
+        # Calculer les clients qui ont abandonné (churn) pour chaque cohort
+        churned_customers = cohort_pivot.copy()
+        churned_customers.iloc[:, 1:] = (
+            cohort_pivot.iloc[:, 1:].values - cohort_pivot.iloc[:, :-1].values
+        )
+        churned_customers.columns = [
+            f"Churn_{col}" for col in churned_customers.columns
+        ]
+
+        # Calculer la rétention en pourcentage
+        retention_percentage = (
+            cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0) * 100
+        )
 
         # Afficher la matrice de rétention
         st.subheader("Matrice de Rétention")
-        st.dataframe(retention_matrix)
+        st.dataframe(retention_percentage)
 
-        # Téléchargement de la matrice de rétention
-        st.subheader("Téléchargement de la Matrice de Rétention")
-        if st.button("Télécharger la Matrice de Rétention en Excel (.xlsx)"):
-            retention_matrix.to_excel("matrice_de_retention.xlsx", index=True)
+        # Téléchargement de la data de rétention
+        if st.button("Télécharger la Data de Rétention en Excel (.xlsx)"):
+            retention_percentage.to_excel("data_de_retention.xlsx", index=True)
+            st.success("Data de Rétention téléchargée avec succès !")
 
-        # Afficher la heatmap de la matrice de rétention
-        st.subheader("Heatmap de la Matrice de Rétention")
+        # Renommer les colonnes de la matrice de rétention
+        cohort_pivot.columns = [
+            f"Retention_{str(col).zfill(2)}" for col in cohort_pivot.columns
+        ]
+
+        # Concaténer la matrice de rétention avec les clients qui ont abandonné
+        cohort_analysis = pd.concat([cohort_pivot, churned_customers], axis=1)
+
+        # Afficher la matrice de rétention mise à jour
+        st.subheader("Matrice de Rétention avec Churn")
+        st.dataframe(cohort_analysis)
+
+        # Téléchargement de la data de rétention avec churn
+        if st.button("Télécharger la Data de Rétention avec Churn en Excel (.xlsx)"):
+            cohort_analysis.to_excel("data_de_retention_chrun.xlsx", index=True)
+            st.success("Data de Rétention avec Churn téléchargée avec succès !")
+
+        # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
+        st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
         plt.figure(figsize=(10, 6))
-        sns.heatmap(retention_matrix, annot=True, cmap="YlGnBu", fmt=".0%")
-        plt.title("Heatmap de la Matrice de Rétention")
+        ax = sns.heatmap(
+            retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False
+        )
+        for t in ax.texts:
+            t.set_text(f"{float(t.get_text()):.1f}%")
+        plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
         plt.xlabel("Période")
         plt.ylabel("Cohorte")
         st.pyplot(plt)
 
-        # Téléchargement de l'image de la heatmap
-        if st.button("Télécharger l'image de la Heatmap"):
+        # Téléchargement de l'image de la heatmap de la retention
+        if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
             plt.savefig("heatmap_matrice_de_retention.png")
-            st.success("Image de la Heatmap téléchargée avec succès !")
+            st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
+
+        # Afficher la heatmap de la matrice de rétention du churn en pourcentage
+        st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
+        plt.figure(figsize=(10, 6))
+        ax = sns.heatmap(
+            churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
+            annot=True,
+            cmap="YlGnBu",
+            fmt=".1f",
+            cbar=False,
+        )
+
+        for t in ax.texts:
+            t.set_text(f"{float(t.get_text()):.1f}%")
+        plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
+        plt.xlabel("Période")
+        plt.ylabel("Cohorte")
+        st.pyplot(plt)
+
+        # Téléchargement de l'image de la heatmap du churn
+        if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
+            plt.savefig("heatmap_matrice_de_retention_churn.png")
+            st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
 
         st.markdown(
             """
