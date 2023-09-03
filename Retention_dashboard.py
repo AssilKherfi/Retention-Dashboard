@@ -34,24 +34,40 @@ s3_client = session.client("s3")
 # Nom du seau S3
 bucket_name = "one-data-lake"
 
-# Liste des noms de fichiers à télécharger et à traiter
-file_names = [
-    "csv_database/orders.csv",
-    # "csv_database/users.csv",
-]
+# # Liste des noms de fichiers à télécharger et à traiter
+# file_names = [
+#     "csv_database/orders.csv",
+#     # "csv_database/users.csv",
+# ]
 
-# Dictionnaire pour stocker les DataFrames correspondants aux fichiers
-dataframes = {}
+# # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
+# dataframes = {}
 
-# Télécharger et traiter les fichiers
-for file_name in file_names:
-    df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
-    dataframes[df_name] = load_data_s3(bucket_name, file_name)
+# # Télécharger et traiter les fichiers
+# for file_name in file_names:
+#     df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
+#     dataframes[df_name] = load_data_s3(bucket_name, file_name)
 
-# Créer un DataFrame à partir des données
-orders = dataframes["orders"]
+
+# orders = dataframes["orders"]
 # users = dataframes["users"]
 
+# Créer un DataFrame à partir des données
+file_name_orders = "csv_database/orders.csv"
+file_name_users = "csv_database/users.csv"
+
+
+response_orders = s3_client.get_object(Bucket=bucket_name, Key=file_name_orders)
+response_users = s3_client.get_object(Bucket=bucket_name, Key=file_name_users)
+
+
+object_content_orders = response_orders["Body"].read().decode("utf-8")
+object_content_users = response_users["Body"].read().decode("utf-8")
+
+
+# Créer un DataFrame à partir des données
+orders = pd.read_csv(StringIO(object_content_orders))
+users = pd.read_csv(StringIO(object_content_users))
 
 # %%
 pd.set_option("display.max_columns", None)
@@ -298,6 +314,10 @@ def main():
     if show_filtered_data:
         st.subheader("Data Orders")
         st.dataframe(filtered_data)
+
+    if users:
+        st.subheader("Data Users")
+        st.dataframe(users)
 
         # Téléchargement des données
         st.subheader("Téléchargement de orders")
