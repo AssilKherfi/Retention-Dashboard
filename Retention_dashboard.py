@@ -34,10 +34,10 @@ s3_client = session.client("s3")
 # Nom du seau S3
 bucket_name = "one-data-lake"
 
-# Liste des noms de fichiers à télécharger et à traiter
+# Liste des noms de fichiers à télécharger depuis S3
 file_names = [
     "csv_database/orders.csv",
-    "csv_database/users.csv",
+    # "csv_database/users.csv",
 ]
 
 # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
@@ -50,8 +50,7 @@ for file_name in file_names:
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
-users = dataframes["users"]
-
+# users = dataframes["users"]
 
 # %%
 pd.set_option("display.max_columns", None)
@@ -172,9 +171,11 @@ orders = orders[
 orders = orders.rename(columns={"Order Type": "Order_Type"})
 orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 
-# # users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
-users["customer_id"] = users["customer_id"].astype(str)
-users["createdAt"] = pd.to_datetime(users["createdAt"])
+orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
+
+# users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
+# users["customer_id"] = users["customer_id"].astype(str)
+# users["createdAt"] = pd.to_datetime(users["createdAt"])
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
 orders["date"] = pd.to_datetime(orders["date"])
