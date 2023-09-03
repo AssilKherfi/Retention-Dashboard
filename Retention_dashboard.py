@@ -479,7 +479,7 @@ def main():
             """
         <style>
         .css-1cypcdb.eczjsme11 { /* Classe CSS spécifique pour le barre de navigation */
-            background-color: #068863 !important; /* Couleur bleue */
+            background-color: #045e45 !important; /* Couleur verte */
         }
         .css-1wrcr25 { /* Conteneur du contenu principal */
             background-color: #70a8ba !important; /* Fond blanc */
@@ -500,16 +500,16 @@ def main():
             font-weight:bold;
         }
 
-        # .st-ee {
-        # background-color: #ff9999; /* Couleur de fond rouge pour l'erreur */
-        # padding: 10px;
-        # border-radius: 5px;
-        # text-align: center;
-        # }
-        # .st-ee p {
-        #     color: #ff0000; /* Couleur du texte en rouge */
-        #     font-weight: bold;
-        # }
+        .st-ee {
+        background-color: #ff9999; /* Couleur de fond rouge pour l'erreur */
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        }
+        .st-ee p {
+            color: #ff0000; /* Couleur du texte en rouge */
+            font-weight: bold;
+        }
 
         </style>
         """,
