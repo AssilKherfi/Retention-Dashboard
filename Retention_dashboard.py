@@ -222,38 +222,32 @@ user_db = {
     },
 }
 
-# Variables d'état pour suivre si l'utilisateur est connecté
-is_authenticated = False
-current_user = None
 
-
-# Page de connexion
-def login_page():
+# Fonction de connexion
+def login(user_db):
     st.title("Connexion")
-    username = st.text_input("Nom d'utilisateur", key="username")
-    password = st.text_input("Mot de passe", type="password", key="password")
-
-    global is_authenticated, current_user
+    username = st.text_input("Nom d'utilisateur")
+    password = st.text_input("Mot de passe", type="password")
 
     if st.button("Se connecter"):
-        if username in user_db and bcrypt.checkpw(
-            password.encode(), user_db[username]["mot_de_passe"]
-        ):
-            is_authenticated = True
-            current_user = username
-            st.success(f"Connexion réussie en tant que {username}")
-            return True  # Connexion réussie, renvoie True
+        if username in user_db:
+            hashed_password = user_db[username]["mot_de_passe"]
+            if bcrypt.checkpw(password.encode(), hashed_password):
+                st.success("Connexion réussie !")
+                return True
+            else:
+                st.error("Nom d'utilisateur ou mot de passe incorrect.")
         else:
-            st.error("Nom d'utilisateur ou mot de passe incorrect. Veuillez réessayer.")
-            return False  # Connexion échouée, renvoie False
+            st.error("Nom d'utilisateur non trouvé.")
+
+    return False
 
 
-# Page protégée
-def protected_page(username):
-    st.title(f"Tableau de bord de {username}")
-
-    # Contenu de la page protégée
-    st.write("Bienvenue dans votre tableau de bord protégé !")
+def verify_credentials(username, password):
+    if username in user_db:
+        hashed_password = user_db[username]["mot_de_passe"]
+        return bcrypt.checkpw(password.encode(), hashed_password)
+    return False
 
 
 # Fonction pour appliquer les filtres
@@ -304,193 +298,192 @@ def get_date_range(filtered_data, time_period, num_periods):
 
 # Créer une application Streamlit
 def main():
-    st.sidebar.title("Navigation")
-    page = st.sidebar.selectbox(
-        "Sélectionnez une page", ["Connexion", "Tableau de bord"]
+    st.title("Application avec Connexion")
+
+    # Zone de connexion
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+
+    if not st.session_state.logged_in:
+        st.subheader("Connexion Requise")
+        username = st.text_input("Nom d'utilisateur")
+        password = st.text_input("Mot de passe", type="password")
+
+        if st.button("Se connecter"):
+            if verify_credentials(username, password):
+                st.session_state.logged_in = True
+            else:
+                st.error("Nom d'utilisateur ou mot de passe incorrect.")
+        return
+
+    # Sidebar pour les filtres
+    st.sidebar.title("Filtres")
+
+    # Sélection de la période
+    time_period = st.sidebar.radio("Période", ["Semaine", "Mois"])
+
+    # Sélection du nombre de périodes précédentes
+    if time_period == "Semaine":
+        num_periods_default = 4  # Par défaut, sélectionner 4 semaines
+    else:
+        num_periods_default = 6  # Par défaut, sélectionner 6 mois
+
+    num_periods = st.sidebar.number_input(
+        "Nombre de périodes précédentes", 1, 36, num_periods_default
     )
 
-    if is_authenticated:  # Vérifiez si l'utilisateur est authentifié ici
-        if page == "Connexion":
-            page = "Tableau de bord"
+    # Filtres
+    status_options = ["Tous"] + list(orders["Status"].unique())
+    status = st.sidebar.selectbox("Statut", status_options)
 
-    if page == "Tableau de bord":
-        protected_page(current_user)
-        st.title("Tableau de bord d'analyse de Cohorte")
+    customer_origine_options = ["Tous", "Diaspora", "Local"]
+    customer_origine = st.sidebar.selectbox(
+        "Choisissez le type de client (Diaspora ou Local)", customer_origine_options
+    )
 
-        # Sidebar pour les filtres
-        st.sidebar.title("Filtres")
+    business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
+    business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
 
-        # Sélection de la période
-        time_period = st.sidebar.radio("Période", ["Semaine", "Mois"])
+    # Appliquer les filtres
+    filtered_data = apply_filters(
+        orders,
+        status,
+        customer_origine,
+        business_cat,
+        time_period,
+        num_periods,
+    )
 
-        # Sélection du nombre de périodes précédentes
-        if time_period == "Semaine":
-            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
-        else:
-            num_periods_default = 6  # Par défaut, sélectionner 6 mois
+    # Afficher les données filtrées
+    show_filtered_data = st.sidebar.checkbox("Afficher les données")
 
-        num_periods = st.sidebar.number_input(
-            "Nombre de périodes précédentes", 1, 36, num_periods_default
+    if show_filtered_data:
+        st.subheader("Data Orders")
+        st.dataframe(filtered_data)
+
+        # Téléchargement des données
+        st.subheader("Téléchargement de orders")
+        download_format = st.radio(
+            "Choisir le format de téléchargement :", ["Excel (.xlsx)", "CSV (.csv)"]
         )
 
-        # Filtres
-        status_options = ["Tous"] + list(orders["Status"].unique())
-        status = st.sidebar.selectbox("Statut", status_options)
+        if st.button("Télécharger les données orders"):
+            if download_format == "Excel (.xlsx)":
+                filtered_data.to_excel("orders.xlsx", index=False)
+            elif download_format == "CSV (.csv)":
+                filtered_data.to_csv("orders.csv", index=False)
 
-        customer_origine_options = ["Tous", "Diaspora", "Local"]
-        customer_origine = st.sidebar.selectbox(
-            "Choisissez le type de client (Diaspora ou Local)", customer_origine_options
-        )
+    # Afficher la plage de dates sélectionnée
+    start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
+    st.sidebar.write(
+        f"Plage de dates sélectionnée : {start_date.strftime('%d-%m-%Y')} à {end_date.strftime('%d-%m-%Y')}"
+    )
 
-        business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
-        business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
+    # Calculer et afficher l'analyse de cohorte
+    st.subheader("Analyse de Cohorte")
+    filtered_data.dropna(subset=["customer_id"], inplace=True)
+    filtered_data["date"] = pd.to_datetime(filtered_data["date"])
 
-        # Appliquer les filtres
-        filtered_data = apply_filters(
-            orders,
-            status,
-            customer_origine,
-            business_cat,
-            time_period,
-            num_periods,
-        )
+    period_frequency = "W" if time_period == "Semaine" else "M"
 
-        # Afficher les données filtrées
-        show_filtered_data = st.sidebar.checkbox("Afficher les données")
+    filtered_data["order_period"] = filtered_data["date"].dt.to_period(period_frequency)
+    filtered_data["cohort"] = (
+        filtered_data.groupby("customer_id")["date"]
+        .transform("min")
+        .dt.to_period(period_frequency)
+    )
+    filtered_data_cohort = (
+        filtered_data.groupby(["cohort", "order_period"])
+        .agg(n_customers=("customer_id", "nunique"))
+        .reset_index(drop=False)
+    )
+    filtered_data_cohort["period_number"] = (
+        filtered_data_cohort["order_period"] - filtered_data_cohort["cohort"]
+    ).apply(attrgetter("n"))
 
-        if show_filtered_data:
-            st.subheader("Data Orders")
-            st.dataframe(filtered_data)
+    cohort_pivot = filtered_data_cohort.pivot_table(
+        index="cohort", columns="period_number", values="n_customers"
+    )
 
-            # Téléchargement des données
-            st.subheader("Téléchargement de orders")
-            download_format = st.radio(
-                "Choisir le format de téléchargement :", ["Excel (.xlsx)", "CSV (.csv)"]
-            )
+    # Calculer les clients qui ont abandonné (churn) pour chaque cohort
+    churned_customers = cohort_pivot.copy()
+    churned_customers.iloc[:, 1:] = (
+        cohort_pivot.iloc[:, 1:].values - cohort_pivot.iloc[:, :-1].values
+    )
+    churned_customers.columns = [f"Churn_{col}" for col in churned_customers.columns]
 
-            if st.button("Télécharger les données orders"):
-                if download_format == "Excel (.xlsx)":
-                    filtered_data.to_excel("orders.xlsx", index=False)
-                elif download_format == "CSV (.csv)":
-                    filtered_data.to_csv("orders.csv", index=False)
+    # Calculer la rétention en pourcentage
+    retention_percentage = cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0) * 100
 
-        # Afficher la plage de dates sélectionnée
-        start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
-        st.sidebar.write(
-            f"Plage de dates sélectionnée : {start_date.strftime('%d-%m-%Y')} à {end_date.strftime('%d-%m-%Y')}"
-        )
+    # Afficher la matrice de rétention
+    st.subheader("Matrice de Rétention")
+    st.dataframe(retention_percentage)
 
-        # Calculer et afficher l'analyse de cohorte
-        st.subheader("Analyse de Cohorte")
-        filtered_data.dropna(subset=["customer_id"], inplace=True)
-        filtered_data["date"] = pd.to_datetime(filtered_data["date"])
+    # Téléchargement de la data de rétention
+    if st.button("Télécharger la Data de Rétention en Excel (.xlsx)"):
+        retention_percentage.to_excel("data_de_retention.xlsx", index=True)
+        st.success("Data de Rétention téléchargée avec succès !")
 
-        period_frequency = "W" if time_period == "Semaine" else "M"
+    # Renommer les colonnes de la matrice de rétention
+    cohort_pivot.columns = [
+        f"Retention_{str(col).zfill(2)}" for col in cohort_pivot.columns
+    ]
 
-        filtered_data["order_period"] = filtered_data["date"].dt.to_period(
-            period_frequency
-        )
-        filtered_data["cohort"] = (
-            filtered_data.groupby("customer_id")["date"]
-            .transform("min")
-            .dt.to_period(period_frequency)
-        )
-        filtered_data_cohort = (
-            filtered_data.groupby(["cohort", "order_period"])
-            .agg(n_customers=("customer_id", "nunique"))
-            .reset_index(drop=False)
-        )
-        filtered_data_cohort["period_number"] = (
-            filtered_data_cohort["order_period"] - filtered_data_cohort["cohort"]
-        ).apply(attrgetter("n"))
+    # Concaténer la matrice de rétention avec les clients qui ont abandonné
+    cohort_analysis = pd.concat([cohort_pivot, churned_customers], axis=1)
 
-        cohort_pivot = filtered_data_cohort.pivot_table(
-            index="cohort", columns="period_number", values="n_customers"
-        )
+    # Afficher la matrice de rétention mise à jour
+    st.subheader("Matrice de Rétention avec Churn")
+    st.dataframe(cohort_analysis)
 
-        # Calculer les clients qui ont abandonné (churn) pour chaque cohort
-        churned_customers = cohort_pivot.copy()
-        churned_customers.iloc[:, 1:] = (
-            cohort_pivot.iloc[:, 1:].values - cohort_pivot.iloc[:, :-1].values
-        )
-        churned_customers.columns = [
-            f"Churn_{col}" for col in churned_customers.columns
-        ]
+    # Téléchargement de la data de rétention avec churn
+    if st.button("Télécharger la Data de Rétention avec Churn en Excel (.xlsx)"):
+        cohort_analysis.to_excel("data_de_retention_chrun.xlsx", index=True)
+        st.success("Data de Rétention avec Churn téléchargée avec succès !")
 
-        # Calculer la rétention en pourcentage
-        retention_percentage = (
-            cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0) * 100
-        )
+    # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
+    st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
+    plt.figure(figsize=(10, 6))
+    ax = sns.heatmap(
+        retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False
+    )
+    for t in ax.texts:
+        t.set_text(f"{float(t.get_text()):.1f}%")
+    plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
+    plt.xlabel("Période")
+    plt.ylabel("Cohorte")
+    st.pyplot(plt)
 
-        # Afficher la matrice de rétention
-        st.subheader("Matrice de Rétention")
-        st.dataframe(retention_percentage)
+    # Téléchargement de l'image de la heatmap de la retention
+    if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
+        plt.savefig("heatmap_matrice_de_retention.png")
+        st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
 
-        # Téléchargement de la data de rétention
-        if st.button("Télécharger la Data de Rétention en Excel (.xlsx)"):
-            retention_percentage.to_excel("data_de_retention.xlsx", index=True)
-            st.success("Data de Rétention téléchargée avec succès !")
+    # Afficher la heatmap de la matrice de rétention du churn en pourcentage
+    st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
+    plt.figure(figsize=(10, 6))
+    ax = sns.heatmap(
+        churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
+        annot=True,
+        cmap="YlGnBu",
+        fmt=".1f",
+        cbar=False,
+    )
 
-        # Renommer les colonnes de la matrice de rétention
-        cohort_pivot.columns = [
-            f"Retention_{str(col).zfill(2)}" for col in cohort_pivot.columns
-        ]
+    for t in ax.texts:
+        t.set_text(f"{float(t.get_text()):.1f}%")
+    plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
+    plt.xlabel("Période")
+    plt.ylabel("Cohorte")
+    st.pyplot(plt)
 
-        # Concaténer la matrice de rétention avec les clients qui ont abandonné
-        cohort_analysis = pd.concat([cohort_pivot, churned_customers], axis=1)
+    # Téléchargement de l'image de la heatmap du churn
+    if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
+        plt.savefig("heatmap_matrice_de_retention_churn.png")
+        st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
 
-        # Afficher la matrice de rétention mise à jour
-        st.subheader("Matrice de Rétention avec Churn")
-        st.dataframe(cohort_analysis)
-
-        # Téléchargement de la data de rétention avec churn
-        if st.button("Télécharger la Data de Rétention avec Churn en Excel (.xlsx)"):
-            cohort_analysis.to_excel("data_de_retention_chrun.xlsx", index=True)
-            st.success("Data de Rétention avec Churn téléchargée avec succès !")
-
-        # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
-        st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
-        plt.figure(figsize=(10, 6))
-        ax = sns.heatmap(
-            retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False
-        )
-        for t in ax.texts:
-            t.set_text(f"{float(t.get_text()):.1f}%")
-        plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
-        plt.xlabel("Période")
-        plt.ylabel("Cohorte")
-        st.pyplot(plt)
-
-        # Téléchargement de l'image de la heatmap de la retention
-        if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
-            plt.savefig("heatmap_matrice_de_retention.png")
-            st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
-
-        # Afficher la heatmap de la matrice de rétention du churn en pourcentage
-        st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
-        plt.figure(figsize=(10, 6))
-        ax = sns.heatmap(
-            churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
-            annot=True,
-            cmap="YlGnBu",
-            fmt=".1f",
-            cbar=False,
-        )
-
-        for t in ax.texts:
-            t.set_text(f"{float(t.get_text()):.1f}%")
-        plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
-        plt.xlabel("Période")
-        plt.ylabel("Cohorte")
-        st.pyplot(plt)
-
-        # Téléchargement de l'image de la heatmap du churn
-        if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
-            plt.savefig("heatmap_matrice_de_retention_churn.png")
-            st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
-
-        st.markdown(
-            """
+    st.markdown(
+        """
         <style>
         .css-1cypcdb.eczjsme11 { /* Classe CSS spécifique pour le barre de navigation */
             background-color: #0A3781 !important; /* Couleur bleue */
@@ -520,18 +513,11 @@ def main():
         }
         </style>
         """,
-            unsafe_allow_html=True,
-        )
+        unsafe_allow_html=True,
+    )
 
-    elif page == "Connexion":
-        if login_page():
-            st.sidebar.success("Vous êtes connecté en tant que " + current_user)
-            st.sidebar.info(
-                "Accédez au tableau de bord en sélectionnant 'Tableau de bord' dans la barre latérale."
-            )
-
-        st.markdown(
-            """
+    st.markdown(
+        """
         <style>
         .css-1cypcdb.eczjsme11 { /* Classe CSS spécifique pour le barre de navigation */
             background-color: #045e45 !important; /* Couleur verte */
@@ -568,8 +554,8 @@ def main():
 
         </style>
         """,
-            unsafe_allow_html=True,
-        )
+        unsafe_allow_html=True,
+    )
 
 
 if __name__ == "__main__":
