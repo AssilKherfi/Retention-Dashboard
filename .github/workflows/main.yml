@@ -1,0 +1,47 @@
+name: streamlit_pipeline
+
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+jobs:
+  execute_Retention_dashboard:
+    name: Retention_dashboard
+    timeout-minutes: 25
+    runs-on: fd-runner
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Set up S3cmd cli tool
+        uses: s3-actions/s3cmd@v1.5.0
+        with:
+          provider: aws # default is linode
+          region: "eu-central-1"
+          access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          secret_key: ${{ secrets.AWS_SECRET_KEY }}
+
+      - name: Install Python dependencies
+        uses: py-actions/py-dependency-install@v4
+        with:
+          path: "requirements.txt"
+
+      - name: Download orders.csv from S3
+        run: |
+          s3cmd get s3://one-data-lake/csv_database/orders.csv
+
+      - name: Download order_details.csv from S3
+        run: |
+          s3cmd get s3://one-data-lake/csv_database/order_details.csv
+
+      - name: Download users.csv from S3
+        run: |
+          s3cmd get s3://one-data-lake/csv_database/users.csv
+
+      - name: execute script Retention_dashboard
+        run: python Retention_dashboard.py
