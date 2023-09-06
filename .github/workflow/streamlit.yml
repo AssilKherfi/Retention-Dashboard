@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  prepareTdbDaily:
+  execute_Retention_dashboard:
     name: Retention_dashboard
     timeout-minutes: 25
     runs-on: fd-runner
