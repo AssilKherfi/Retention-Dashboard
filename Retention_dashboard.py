@@ -7,6 +7,7 @@ from operator import attrgetter
 from datetime import datetime, timedelta
 import os
 import boto3
+import openpyxl
 from io import StringIO
 import bcrypt
 
@@ -85,87 +86,85 @@ orders = orders[
 orders = orders[
     ~orders["customer_id"].isin(
         [
-            "2059318.0",
-            "1506025442.0",
-            "1694397201.0",
-            "2830181885.0",
-            "5620828389.0",
-            "4064611739.0",
-            "3385745613.0",
-            "2281370.0",
-            "64438759505.0",
-            "569994573568.0",
-            "1628682.0",
-            "310179181696.0",
-            "878446.0",
-            "3643707.0",
-            "2253354.0",
-            "1771017743.0",
-            "727840660224.0",
-            "2280761953.0",
-            "2864429.0",
-            "1505970032.0",
-            "1517116.0",
-            "929482210496.0",
-            "5884716233.0",
-            "22781605568.0",
-            "2794629.0",
-            "47201675489.0",
-            "6072524763.0",
-            "2342577.0",
-            "1440074.0",
-            "3666483.0",
-            "449701472960.0",
-            "869120.0",
-            "7304625963.0",
-            "2214784702.0",
-            "869883.0",
-            "2851778338.0",
-            "3000794.0",
-            "1898245261.0",
-            "9816298466.0",
-            "7021529167.0",
-            "3017838801.0",
-            "5624710564.0",
-            "1584024035.0",
-            "2485567.0",
-            "2763532338.0",
-            "841024809600.0",
-            "1739473.0",
-            "2183725.0",
-            "3788062.0",
-            "23400912794.0",
-            "150321448192.0",
-            "461317394880.0",
-            "2208215.0",
-            "3669307840.0",
-            "610335616576.0",
-            "7478577450.0",
-            "13153632574.0",
-            "2815691755.0",
-            "879984.0",
-            "3312616.0",
-            "548088380288.0",
-            "3526036.0",
-            "2367635120.0",
-            "24957125457.0",
-            "459557812544.0",
-            "1290757210.0",
-            "507345740736.0",
-            "2558315057.0",
-            "819751.0",
-            "407181581440.0",
-            "1412707541.0",
-            "1419613392.0",
-            "4068655.0",
-            "303655560704.0",
-            "2389210.0",
-            "2765139.0",
-            "504153462208.0",
-            "2100305133.0",
-            "653243920384.0",
-            "1253878877.0",
-            "43255929830.0",
+            "2059318",
+            "1506025442",
+            "1694397201",
+            "2830181885",
+            "5620828389",
+            "4064611739",
+            "3385745613",
+            "2281370",
+            "64438759505",
+            "569994573568",
+            "1628682",
+            "310179181696" "878446",
+            "3643707",
+            "2253354",
+            "1771017743",
+            "727840660224",
+            "2280761953",
+            "2864429",
+            "1505970032",
+            "1517116",
+            "929482210496",
+            "5884716233",
+            "22781605568",
+            "2794629",
+            "47201675489",
+            "6072524763",
+            "2342577",
+            "1440074",
+            "3666483",
+            "449701472960",
+            "869120",
+            "7304625963",
+            "2214784702",
+            "869883",
+            "2851778338",
+            "3000794",
+            "1898245261",
+            "9816298466",
+            "7021529167",
+            "3017838801",
+            "5624710564",
+            "1584024035",
+            "2485567",
+            "2763532338",
+            "841024809600",
+            "1739473",
+            "2183725",
+            "3788062",
+            "23400912794",
+            "150321448192",
+            "461317394880",
+            "2208215",
+            "3669307840",
+            "610335616576",
+            "7478577450",
+            "13153632574",
+            "2815691755",
+            "879984",
+            "3312616",
+            "548088380288" "3526036",
+            "2367635120",
+            "24957125457",
+            "459557812544",
+            "1290757210",
+            "507345740736",
+            "2558315057",
+            "819751",
+            "407181581440",
+            "1412707541",
+            "1419613392",
+            "4068655",
+            "303655560704",
+            "2389210",
+            "2765139",
+            "504153462208",
+            "2100305133",
+            "653243920384",
+            "1253878877",
+            "43255929830",
         ]
     )
 ]
@@ -221,7 +220,6 @@ user_db = {
         "mot_de_passe": bcrypt.hashpw(user2_password.encode(), bcrypt.gensalt())
     },
 }
-
 
 # Fonction de connexion
 def login(user_db):
@@ -298,7 +296,7 @@ def get_date_range(filtered_data, time_period, num_periods):
 
 # Créer une application Streamlit
 def main():
-    st.title("Application avec Connexion")
+    st.title("Tableau de Bord de Retention")
 
     # Zone de connexion
     if "logged_in" not in st.session_state:
@@ -486,19 +484,35 @@ def main():
         """
         <style>
         .css-1cypcdb.eczjsme11 { /* Classe CSS spécifique pour le barre de navigation */
-            background-color: #0A3781 !important; /* Couleur bleue */
+            background-color: #ffffff !important; /* Couleur bleue */;
+            border: 1px solid #FF6B05; /* Bordure de 1 pixel avec une couleur orange */
         }
         .css-1wrcr25 { /* Conteneur du contenu principal */
-            background-color: #70a8ba !important; /* Fond blanc */
+            background-color: #ffffff !important; /* Fond blanc */
+            border: 1px solid #FF6B05; /* Bordure de 1 pixel avec une couleur orange */
         }
-        
+        .css-k7vsyb h1 {
+            color: #000000 !important; /* Texte en noir */
+        }
+
+        .css-nahz7x{
+            color: #000000 !important; /* Texte en noir */
+        }
+
+        .css-x78sv8 {
+            color: #000000; /* Couleur du texte en noir */
+        }
+        .css-q8sbsg{
+            color: #000000; /* Couleur du texte en noir */
+        }
+
         .css-1n76uvr.e1f1d6gn0 * { /* Tous les éléments enfants du conteneur */
             color: #000000 !important; /* Texte en noir */
         }
 
         /* Cible les boutons avec la classe .css-19rxjzo.ef3psqc11 */
         .css-19rxjzo.ef3psqc11 {
-            background-color: #068863 !important; /* Couleur de fond verte */
+            background-color: #FF6B05 !important; /* Couleur de fond verte */@
         }
         
         /* Cible le texte à l'intérieur des boutons */
@@ -509,49 +523,8 @@ def main():
 
         /* Cible le bouton par son attribut data-testid */
         button[data-testid="StyledFullScreenButton"] {
-            background-color: #068817 !important; /* Couleur de fond vert */
+            background-color: #FF6B05 !important; /* Couleur de fond vert */
         }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        """
-        <style>
-        .css-1cypcdb.eczjsme11 { /* Classe CSS spécifique pour le barre de navigation */
-            background-color: #045e45 !important; /* Couleur verte */
-        }
-        .css-1wrcr25 { /* Conteneur du contenu principal */
-            background-color: #70a8ba !important; /* Fond blanc */
-        }
-        
-        .css-1n76uvr.e1f1d6gn0 * { /* Tous les éléments enfants du conteneur */
-            color: #EFEFEF !important; /* Texte en noir */
-        }
-
-        /* Cible les boutons avec la classe .css-19rxjzo.ef3psqc11 */
-        .css-19rxjzo.ef3psqc11 {
-            background-color: #0A3781 !important; /* Couleur de fond verte */
-        }
-        
-        /* Cible le texte à l'intérieur des boutons */
-        .css-19rxjzo.ef3psqc11 p {
-            color: #000000 !important; /* Couleur du texte en noir */
-            font-weight:bold;
-        }
-
-        # .st-ee {
-        # background-color: #ff9999; /* Couleur de fond rouge pour l'erreur */
-        # padding: 10px;
-        # border-radius: 5px;
-        # text-align: center;
-        # }
-        # .st-ee p {
-        #     color: #ff0000; /* Couleur du texte en rouge */
-        #     font-weight: bold;
-        # }
-
         </style>
         """,
         unsafe_allow_html=True,
