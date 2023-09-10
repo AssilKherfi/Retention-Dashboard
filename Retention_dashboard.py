@@ -473,10 +473,21 @@ def main():
     plt.ylabel("Cohorte")
     st.pyplot(plt)
 
+    # Génération de l'image de la heatmap
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png")
+    buffer.seek(0)
+
     # Téléchargement de l'image de la heatmap de la retention
-    if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
-        plt.savefig("heatmap_matrice_de_retention.png")
-        st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
+    st.download_button(
+        label="Télécharger l'image de la Heatmap (Rétention en %)",
+        data=buffer,
+        file_name="heatmap_matrice_de_retention.png",
+        mime="image/png",
+    )
+    # if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
+    #     plt.savefig("heatmap_matrice_de_retention.png")
+    #     st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
 
     # Afficher la heatmap de la matrice de rétention du churn en pourcentage
     st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
@@ -496,22 +507,13 @@ def main():
     plt.ylabel("Cohorte")
     st.pyplot(plt)
 
-    # Génération de l'image de la heatmap du churn
-    buffer = BytesIO()
-    plt.savefig(buffer, format="png")
-    buffer.seek(0)
-
+    # Téléchargement de l'image de la heatmap de la retention (Churn en %)
     st.download_button(
-        label="Télécharger l'image de la Heatmap (Churn en %",
+        label="Télécharger l'image de la Heatmap (Churn en %)",
         data=buffer,
         file_name="heatmap_matrice_de_retention_churn.png",
         mime="image/png",
     )
-
-    # # Téléchargement de l'image de la heatmap du churn
-    # if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
-    #     plt.savefig("heatmap_matrice_de_retention_churn.png")
-    #     st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
 
     st.markdown(
         """
