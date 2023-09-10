@@ -426,7 +426,7 @@ def main():
     churned_customers.columns = [f"Churn_{col}" for col in churned_customers.columns]
 
     # Calculer la rétention en pourcentage
-    retention_percentage = cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0) * 100
+    retention_percentage = cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0)
 
     # Afficher la matrice de rétention
     st.subheader("Matrice de Rétention")
@@ -435,23 +435,14 @@ def main():
     # Téléchargement de la  Rétention
     retention_percentage_xlsx = to_excel(retention_percentage)
     download_button_clicked = st.download_button(
-        "Télécharger la Rétention  en Excel (.xlsx)",
+        "Télécharger la Matrice de Rétention en Excel (.xlsx)",
         retention_percentage_xlsx,
-        "Orders.xlsx",
+        "Matrice de Rétention.xlsx",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
     if download_button_clicked:
-        st.success("Téléchargement de la Rétention avec succès !")
-
-    # if st.download_button(
-    #     "Télécharger la Rétention en Excel (.xlsx)",
-    #     retention_percentage.to_excel,
-    #     "Retention.xlsx",
-    #     args=(True,),
-    #     key="download_retention",
-    # ):
-    #     st.success("La Rétention téléchargée avec succès !")
+        st.success("Téléchargement de la Matrice de Rétention avec succès !")
 
     # Renommer les colonnes de la matrice de rétention
     cohort_pivot.columns = [
@@ -468,14 +459,14 @@ def main():
     # Téléchargement de la rétention avec churn
     cohort_analysis_xlsx = to_excel(cohort_analysis)
     download_button_clicked = st.download_button(
-        "Télécharger la Rétention avec Churn en Excel (.xlsx)",
+        "Télécharger la Matrice de Rétention avec Churn en Excel (.xlsx)",
         cohort_analysis_xlsx,
-        "Orders.xlsx",
+        "Matrice de Rétention avec Churn.xlsx",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
     if download_button_clicked:
-        st.success("Téléchargement de la Rétention avec Churn avec succès !")
+        st.success("Téléchargement de la Matrice de Rétention avec Churn avec succès !")
 
     # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
 
