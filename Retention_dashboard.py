@@ -374,7 +374,7 @@ def main():
             label="Télécharger les données orders en Excel",
             data=buffer,
             file_name="orders.xlsx",
-            mime="application/vnd.ms-excel",
+            mime="application/octet-stream",  # Utilisez ce format MIME
         )
 
     # Afficher la plage de dates sélectionnée
