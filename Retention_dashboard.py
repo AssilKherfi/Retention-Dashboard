@@ -376,7 +376,7 @@ def main():
 
         # Bouton pour télécharger le DataFrame au format Excel
         filtered_data_xlsx = to_excel(filtered_data)
-        download_button_clicked = st.download_button(
+        st.download_button(
             "Télécharger les Orders en Excel (.xlsx)",
             filtered_data_xlsx,
             "Orders.xlsx",
@@ -431,7 +431,7 @@ def main():
 
     # Téléchargement de la  Rétention
     retention_percentage_xlsx = to_excel(retention_percentage)
-    download_button_clicked = st.download_button(
+    st.download_button(
         "Télécharger la Matrice de Rétention en Excel (.xlsx)",
         retention_percentage_xlsx,
         "Matrice de Rétention.xlsx",
@@ -452,7 +452,7 @@ def main():
 
     # Téléchargement de la rétention avec churn
     cohort_analysis_xlsx = to_excel(cohort_analysis)
-    download_button_clicked = st.download_button(
+    st.download_button(
         "Télécharger la Matrice de Rétention avec Churn en Excel (.xlsx)",
         cohort_analysis_xlsx,
         "Matrice de Rétention avec Churn.xlsx",
@@ -497,7 +497,7 @@ def main():
     st.pyplot(plt)
 
     # Génération de l'image de la heatmap du churn
-    buffer = io.BytesIO()
+    buffer = BytesIO()
     plt.savefig(buffer, format="png")
     buffer.seek(0)
 
