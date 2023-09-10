@@ -485,9 +485,6 @@ def main():
         file_name="heatmap_matrice_de_retention.png",
         mime="image/png",
     )
-    # if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
-    #     plt.savefig("heatmap_matrice_de_retention.png")
-    #     st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
 
     # Afficher la heatmap de la matrice de rétention du churn en pourcentage
     st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
@@ -517,51 +514,47 @@ def main():
 
     st.markdown(
         """
-        <style>
-        .css-1cypcdb.eczjsme11 { /* Classe CSS spécifique pour le barre de navigation */
-            background-color: #ffffff !important; /* Couleur bleue */;
-            border: 1px solid #FF6B05; /* Bordure de 1 pixel avec une couleur orange */
-        }
-        .css-1wrcr25 { /* Conteneur du contenu principal */
-            background-color: #ffffff !important; /* Fond blanc */
-            border: 1px solid #FF6B05; /* Bordure de 1 pixel avec une couleur orange */
-        }
-        .css-k7vsyb h1 {
-            color: #000000 !important; /* Texte en noir */
-        }
+    <style>
+    /* Styles pour la barre de navigation et le contenu principal */
+    .css-1cypcdb.eczjsme11,
+    .css-1wrcr25 {
+        background-color: #ffffff !important; /* Fond blanc */
+        border: 1px solid #FF6B05; /* Bordure de 1 pixel avec une couleur orange */
+    }
 
-        .css-nahz7x{
-            color: #000000 !important; /* Texte en noir */
-        }
+    /* Styles pour le texte en noir */
+    .css-k7vsyb h1,
+    .css-nahz7x,
+    .css-x78sv8,
+    .css-q8sbsg,
+    .css-1n76uvr.e1f1d6gn0 * {
+        color: #000000 !important; /* Texte en noir */
+    }
 
-        .css-x78sv8 {
-            color: #000000; /* Couleur du texte en noir */
-        }
-        .css-q8sbsg{
-            color: #000000; /* Couleur du texte en noir */
-        }
+    /* Styles pour les boutons */
+    .css-19rxjzo.ef3psqc11 {
+        background-color: #ffffff !important; /* Couleur de fond orange par défaut */
+        color: #FF6B05 !important; /* Couleur du texte en noir par défaut */
+        border: 1px solid #FF6B05; /* Bordure noire de 1 pixel */
+    }
 
-        .css-1n76uvr.e1f1d6gn0 * { /* Tous les éléments enfants du conteneur */
-            color: #000000 !important; /* Texte en noir */
-        }
+    .css-19rxjzo.ef3psqc11:hover {
+        background-color: #FF6B05 !important; /* Couleur de fond verte lorsque survolé */
+        color: #ffffff !important; /* Couleur du texte en blanc lorsque survolé */
+    }
 
-        /* Cible les boutons avec la classe .css-19rxjzo.ef3psqc11 */
-        .css-19rxjzo.ef3psqc11 {
-            background-color: #FF6B05 !important; /* Couleur de fond verte */@
-        }
-        
-        /* Cible le texte à l'intérieur des boutons */
-        .css-19rxjzo.ef3psqc11 p {
-            color: #000000 !important; /* Couleur du texte en noir */
-            font-weight:bold;
-        }
+    /* Styles pour le texte à l'intérieur des boutons */
+    .css-19rxjzo.ef3psqc11 p {
+        font-weight: bold;
+        color: #FF6B05 !important;
+    }
 
-        /* Cible le bouton par son attribut data-testid */
-        button[data-testid="StyledFullScreenButton"] {
-            background-color: #FF6B05 !important; /* Couleur de fond vert */
-        }
-        </style>
-        """,
+    .css-19rxjzo.ef3psqc11 p:hover {
+        color: #ffffff !important; /* Couleur du texte en blanc lorsque survolé */
+        font-weight: bold;
+    }
+    </style>
+    """,
         unsafe_allow_html=True,
     )
 
