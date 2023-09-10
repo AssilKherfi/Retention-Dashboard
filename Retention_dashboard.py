@@ -358,32 +358,33 @@ def main():
     # Afficher les données filtrées
     show_filtered_data = st.sidebar.checkbox("Afficher les données")
 
+    # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+    def to_excel(df):
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False, sheet_name="Sheet1")
+            workbook = writer.book
+            worksheet = writer.sheets["Sheet1"]
+            format = workbook.add_format({"num_format": "0.00"})
+            worksheet.set_column("A:A", None, format)
+        processed_data = output.getvalue()
+        return processed_data
+
     if show_filtered_data:
         st.subheader("Data Orders")
         st.dataframe(filtered_data)
 
-        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-        def to_excel(df):
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                df.to_excel(writer, index=False, sheet_name="Sheet1")
-                workbook = writer.book
-                worksheet = writer.sheets["Sheet1"]
-                format = workbook.add_format({"num_format": "0.00"})
-                worksheet.set_column("A:A", None, format)
-            processed_data = output.getvalue()
-            return processed_data
-
         # Bouton pour télécharger le DataFrame au format Excel
         filtered_data_xlsx = to_excel(filtered_data)
-
-        if st.download_button(
-            "Télécharger Orders.xlsx",
+        download_button_clicked = st.download_button(
+            "Télécharger les Orders en Excel (.xlsx)",
             filtered_data_xlsx,
             "Orders.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        ):
-            pass
+        )
+
+        if download_button_clicked:
+            st.success("Téléchargement des Orders avec succès !")
 
     # Afficher la plage de dates sélectionnée
     start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
@@ -431,7 +432,18 @@ def main():
     st.subheader("Matrice de Rétention")
     st.dataframe(retention_percentage)
 
-    # # Téléchargement de la  Rétention
+    # Téléchargement de la  Rétention
+    retention_percentage_xlsx = to_excel(retention_percentage)
+    download_button_clicked = st.download_button(
+        "Télécharger la Rétention  en Excel (.xlsx)",
+        retention_percentage_xlsx,
+        "Orders.xlsx",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    if download_button_clicked:
+        st.success("Téléchargement de la Rétention avec succès !")
+
     # if st.download_button(
     #     "Télécharger la Rétention en Excel (.xlsx)",
     #     retention_percentage.to_excel,
@@ -453,15 +465,17 @@ def main():
     st.subheader("Matrice de Rétention avec Churn")
     st.dataframe(cohort_analysis)
 
-    # # Téléchargement de la rétention avec churn
-    # if st.download_button(
-    #     "Télécharger la Rétention avec Churn en Excel (.xlsx)",
-    #     cohort_analysis.to_excel,
-    #     "retention_chrun.xlsx",
-    #     args=(True,),
-    #     key="download_retention_churn",
-    # ):
-    #     st.success("La Rétention avec Churn téléchargée avec succès !")
+    # Téléchargement de la rétention avec churn
+    cohort_analysis_xlsx = to_excel(cohort_analysis)
+    download_button_clicked = st.download_button(
+        "Télécharger la Rétention avec Churn en Excel (.xlsx)",
+        cohort_analysis_xlsx,
+        "Orders.xlsx",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    if download_button_clicked:
+        st.success("Téléchargement de la Rétention avec Churn avec succès !")
 
     # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
 
