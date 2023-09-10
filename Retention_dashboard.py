@@ -367,6 +367,8 @@ def main():
             excel_binary = BytesIO()  # Créez un objet BytesIO
             excel_data.save(excel_binary)
             excel_binary.seek(0)  # Réglez la position du curseur au début
+            st.write("Données binaires Excel générées. Prêt à télécharger.")
+
             st.download_button(
                 label="Télécharger le fichier Excel (.xlsx)",
                 data=excel_binary,
