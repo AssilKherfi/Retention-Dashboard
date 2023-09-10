@@ -440,7 +440,7 @@ def main():
         "Matrice de Rétention.xlsx",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ):
-        st.success("Téléchargement de la Matrice de Rétention avec succès !")
+        st.write("Téléchargement de la Matrice de Rétention avec succès !")
 
     # Renommer les colonnes de la matrice de rétention
     cohort_pivot.columns = [
