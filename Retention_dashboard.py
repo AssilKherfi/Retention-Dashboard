@@ -383,9 +383,6 @@ def main():
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
-        if download_button_clicked:
-            st.success("Téléchargement des Orders avec succès !")
-
     # Afficher la plage de dates sélectionnée
     start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
     st.sidebar.write(
@@ -434,13 +431,12 @@ def main():
 
     # Téléchargement de la  Rétention
     retention_percentage_xlsx = to_excel(retention_percentage)
-    if st.download_button(
+    download_button_clicked = st.download_button(
         "Télécharger la Matrice de Rétention en Excel (.xlsx)",
         retention_percentage_xlsx,
         "Matrice de Rétention.xlsx",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ):
-        st.write("Téléchargement de la Matrice de Rétention avec succès !")
+    )
 
     # Renommer les colonnes de la matrice de rétention
     cohort_pivot.columns = [
@@ -462,9 +458,6 @@ def main():
         "Matrice de Rétention avec Churn.xlsx",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-
-    if download_button_clicked:
-        st.success("Téléchargement de la Matrice de Rétention avec Churn avec succès !")
 
     # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
     st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
@@ -503,10 +496,22 @@ def main():
     plt.ylabel("Cohorte")
     st.pyplot(plt)
 
-    # Téléchargement de l'image de la heatmap du churn
-    if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
-        plt.savefig("heatmap_matrice_de_retention_churn.png")
-        st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
+    # Génération de l'image de la heatmap du churn
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format="png")
+    buffer.seek(0)
+
+    st.download_button(
+        label="Télécharger l'image de la Heatmap (Churn en %",
+        data=buffer,
+        file_name="heatmap_matrice_de_retention_churn.png",
+        mime="image/png",
+    )
+
+    # # Téléchargement de l'image de la heatmap du churn
+    # if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
+    #     plt.savefig("heatmap_matrice_de_retention_churn.png")
+    #     st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
 
     st.markdown(
         """
