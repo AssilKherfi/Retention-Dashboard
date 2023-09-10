@@ -361,21 +361,21 @@ def main():
         st.subheader("Data Orders")
         st.dataframe(filtered_data)
 
-        # Télécharger les données au format Excel (.xlsx)
-        if st.button("Télécharger les données orders (Excel)"):
-            buffer = (
-                BytesIO()
-            )  # Créez un nouvel objet BytesIO à l'intérieur de cette condition
-            with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
-                # Write each dataframe to a different worksheet.
-                filtered_data.to_excel(writer, sheet_name="Sheet1", index=False)
+    # Télécharger les données au format Excel (.xlsx)
+    if st.button("Télécharger les données orders (Excel)"):
+        buffer = (
+            BytesIO()
+        )  # Créez un nouvel objet BytesIO à l'intérieur de cette condition
+        with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+            # Write each dataframe to a different worksheet.
+            filtered_data.to_excel(writer, sheet_name="Sheet1", index=False)
 
-            download = st.download_button(
-                label="Télécharger les données orders en Excel",
-                data=buffer,
-                file_name="orders.xlsx",
-                mime="application/vnd.ms-excel",
-            )
+        download = st.download_button(
+            label="Télécharger les données orders en Excel",
+            data=buffer,
+            file_name="orders.xlsx",
+            mime="application/vnd.ms-excel",
+        )
 
     # Afficher la plage de dates sélectionnée
     start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
