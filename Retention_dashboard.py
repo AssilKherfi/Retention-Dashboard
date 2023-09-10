@@ -363,18 +363,18 @@ def main():
 
         # Télécharger les données au format Excel (.xlsx)
         if st.button("Télécharger les données orders (Excel)"):
-            excel_data = filtered_data.to_excel(index=False, header=True)
-            excel_binary = BytesIO()  # Créez un objet BytesIO
-            excel_data.save(excel_binary)
-            excel_binary.seek(0)  # Réglez la position du curseur au début
-            st.write("Données binaires Excel générées. Prêt à télécharger.")
+            buffer = (
+                BytesIO()
+            )  # Créez un nouvel objet BytesIO à l'intérieur de cette condition
+            with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+                # Write each dataframe to a different worksheet.
+                filtered_data.to_excel(writer, sheet_name="Sheet1", index=False)
 
-            st.download_button(
-                label="Télécharger le fichier Excel (.xlsx)",
-                data=excel_binary,
-                key="download_xlsx",
+            download = st.download_button(
+                label="Télécharger les données orders en Excel",
+                data=buffer,
                 file_name="orders.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                mime="application/vnd.ms-excel",
             )
 
     # Afficher la plage de dates sélectionnée
