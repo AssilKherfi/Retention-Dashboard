@@ -221,6 +221,7 @@ user_db = {
     },
 }
 
+
 # Fonction de connexion
 def login(user_db):
     st.title("Connexion")
@@ -298,21 +299,21 @@ def get_date_range(filtered_data, time_period, num_periods):
 def main():
     st.title("Tableau de Bord de Retention")
 
-    # Zone de connexion
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
+    # # Zone de connexion
+    # if "logged_in" not in st.session_state:
+    #     st.session_state.logged_in = False
 
-    if not st.session_state.logged_in:
-        st.subheader("Connexion Requise")
-        username = st.text_input("Nom d'utilisateur")
-        password = st.text_input("Mot de passe", type="password")
+    # if not st.session_state.logged_in:
+    #     st.subheader("Connexion Requise")
+    #     username = st.text_input("Nom d'utilisateur")
+    #     password = st.text_input("Mot de passe", type="password")
 
-        if st.button("Se connecter"):
-            if verify_credentials(username, password):
-                st.session_state.logged_in = True
-            else:
-                st.error("Nom d'utilisateur ou mot de passe incorrect.")
-        return
+    #     if st.button("Se connecter"):
+    #         if verify_credentials(username, password):
+    #             st.session_state.logged_in = True
+    #         else:
+    #             st.error("Nom d'utilisateur ou mot de passe incorrect.")
+    #     return
 
     # Sidebar pour les filtres
     st.sidebar.title("Filtres")
@@ -367,9 +368,27 @@ def main():
 
         if st.button("Télécharger les données orders"):
             if download_format == "Excel (.xlsx)":
-                filtered_data.to_excel("orders.xlsx", index=False)
+                with st.spinner("Téléchargement en cours..."):
+                    # Générez le fichier Excel
+                    excel_data = filtered_data.to_excel(index=False, header=True)
+                    st.download_button(
+                        label="Télécharger le fichier Excel (.xlsx)",
+                        data=excel_data,
+                        key="download_xlsx",
+                        file_name="orders.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    )
             elif download_format == "CSV (.csv)":
-                filtered_data.to_csv("orders.csv", index=False)
+                with st.spinner("Téléchargement en cours..."):
+                    # Générez le fichier CSV
+                    csv_data = filtered_data.to_csv(index=False, header=True)
+                    st.download_button(
+                        label="Télécharger le fichier CSV (.csv)",
+                        data=csv_data,
+                        key="download_csv",
+                        file_name="orders.csv",
+                        mime="text/csv",
+                    )
 
     # Afficher la plage de dates sélectionnée
     start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
@@ -417,10 +436,15 @@ def main():
     st.subheader("Matrice de Rétention")
     st.dataframe(retention_percentage)
 
-    # Téléchargement de la data de rétention
-    if st.button("Télécharger la Data de Rétention en Excel (.xlsx)"):
-        retention_percentage.to_excel("data_de_retention.xlsx", index=True)
-        st.success("Data de Rétention téléchargée avec succès !")
+    # Téléchargement de la  Rétention
+    if st.download_button(
+        "Télécharger la Rétention en Excel (.xlsx)",
+        retention_percentage.to_excel,
+        "Retention.xlsx",
+        args=(True,),
+        key="download_retention",
+    ):
+        st.success("La Rétention téléchargée avec succès !")
 
     # Renommer les colonnes de la matrice de rétention
     cohort_pivot.columns = [
@@ -434,51 +458,55 @@ def main():
     st.subheader("Matrice de Rétention avec Churn")
     st.dataframe(cohort_analysis)
 
-    # Téléchargement de la data de rétention avec churn
-    if st.button("Télécharger la Data de Rétention avec Churn en Excel (.xlsx)"):
-        cohort_analysis.to_excel("data_de_retention_chrun.xlsx", index=True)
-        st.success("Data de Rétention avec Churn téléchargée avec succès !")
+    # Téléchargement de la rétention avec churn
+    if st.download_button(
+        "Télécharger la Rétention avec Churn en Excel (.xlsx)",
+        cohort_analysis.to_excel,
+        "retention_chrun.xlsx",
+        args=(True,),
+        key="download_retention_churn",
+    ):
+        st.success("La Rétention avec Churn téléchargée avec succès !")
 
     # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
-    st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
-    plt.figure(figsize=(10, 6))
-    ax = sns.heatmap(
-        retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False
-    )
-    for t in ax.texts:
-        t.set_text(f"{float(t.get_text()):.1f}%")
-    plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
-    plt.xlabel("Période")
-    plt.ylabel("Cohorte")
-    st.pyplot(plt)
 
-    # Téléchargement de l'image de la heatmap de la retention
-    if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
-        plt.savefig("heatmap_matrice_de_retention.png")
-        st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
 
-    # Afficher la heatmap de la matrice de rétention du churn en pourcentage
-    st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
-    plt.figure(figsize=(10, 6))
-    ax = sns.heatmap(
-        churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
-        annot=True,
-        cmap="YlGnBu",
-        fmt=".1f",
-        cbar=False,
-    )
+st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
+plt.figure(figsize=(10, 6))
+ax = sns.heatmap(retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False)
 
-    for t in ax.texts:
-        t.set_text(f"{float(t.get_text()):.1f}%")
-    plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
-    plt.xlabel("Période")
-    plt.ylabel("Cohorte")
-    st.pyplot(plt)
+for t in ax.texts:
+    t.set_text(f"{float(t.get_text()):.1f}%")
+plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
+plt.xlabel("Période")
+plt.ylabel("Cohorte")
 
-    # Téléchargement de l'image de la heatmap du churn
-    if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
-        plt.savefig("heatmap_matrice_de_retention_churn.png")
-        st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
+# Téléchargement de l'image de la heatmap de la retention
+if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
+    plt.savefig("heatmap_matrice_de_retention.png")
+    st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
+
+# Afficher la heatmap de la matrice de rétention du churn en pourcentage
+st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
+plt.figure(figsize=(10, 6))
+ax = sns.heatmap(
+    churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
+    annot=True,
+    cmap="YlGnBu",
+    fmt=".1f",
+    cbar=False,
+)
+
+for t in ax.texts:
+    t.set_text(f"{float(t.get_text()):.1f}%")
+plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
+plt.xlabel("Période")
+plt.ylabel("Cohorte")
+
+# Téléchargement de l'image de la heatmap du churn
+if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
+    plt.savefig("heatmap_matrice_de_retention_churn.png")
+    st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
 
     st.markdown(
         """
