@@ -469,7 +469,6 @@ def main():
         st.success("Téléchargement de la Matrice de Rétention avec Churn avec succès !")
 
     # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
-
     st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
     plt.figure(figsize=(10, 6))
     ax = sns.heatmap(
@@ -481,6 +480,7 @@ def main():
     plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
     plt.xlabel("Période")
     plt.ylabel("Cohorte")
+    st.pyplot(plt)
 
     # Téléchargement de l'image de la heatmap de la retention
     if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
@@ -503,6 +503,7 @@ def main():
     plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
     plt.xlabel("Période")
     plt.ylabel("Cohorte")
+    st.pyplot(plt)
 
     # Téléchargement de l'image de la heatmap du churn
     if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
