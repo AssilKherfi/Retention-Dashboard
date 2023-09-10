@@ -25,3 +25,4 @@ git+https://github.com/streamlit/files-connection
 pip==23.2.1
 bcrypt
 openpyxl
+XlsxWriter

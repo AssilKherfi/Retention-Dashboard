@@ -11,6 +11,7 @@ import openpyxl
 from io import StringIO
 from io import BytesIO
 import bcrypt
+import xlsxwriter
 
 
 # %%
@@ -361,27 +362,34 @@ def main():
         st.subheader("Data Orders")
         st.dataframe(filtered_data)
 
-    # Télécharger les données au format Excel (.xlsx)
-    if st.button("Télécharger les données orders (Excel)"):
-        buffer = (
-            BytesIO()
-        )  # Créez un nouvel objet BytesIO à l'intérieur de cette condition
-        with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
-            # Write each dataframe to a different worksheet.
-            filtered_data.to_excel(writer, sheet_name="Sheet1", index=False)
+    # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+    def to_excel(df):
+        output = BytesIO()
+        writer = pd.ExcelWriter(output, engine="xlsxwriter")
+        df.to_excel(writer, index=False, sheet_name="Sheet1")
+        workbook = writer.book
+        worksheet = writer.sheets["Sheet1"]
+        format = workbook.add_format({"num_format": "0.00"})
+        worksheet.set_column("A:A", None, format)
+        writer.save()
+        processed_data = output.getvalue()
+        return processed_data
 
-        download = st.download_button(
-            label="Télécharger les données orders en Excel",
-            data=buffer,
-            file_name="orders.xlsx",
-            mime="application/octet-stream",  # Utilisez ce format MIME
+    # Bouton pour télécharger le DataFrame au format Excel
+    if st.button("Télécharger les Orders au format Excel"):
+        filtered_data_xlsx = to_excel(filtered_data)
+        st.download_button(
+            label="📥 Télécharger Orders",
+            data=filtered_data_xlsx,
+            file_name="Orders.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
-    # Afficher la plage de dates sélectionnée
-    start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
-    st.sidebar.write(
-        f"Plage de dates sélectionnée : {start_date.strftime('%d-%m-%Y')} à {end_date.strftime('%d-%m-%Y')}"
-    )
+        # Afficher la plage de dates sélectionnée
+        start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
+        st.sidebar.write(
+            f"Plage de dates sélectionnée : {start_date.strftime('%d-%m-%Y')} à {end_date.strftime('%d-%m-%Y')}"
+        )
 
     # Calculer et afficher l'analyse de cohorte
     st.subheader("Analyse de Cohorte")
