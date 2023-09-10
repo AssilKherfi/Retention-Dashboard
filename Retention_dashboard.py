@@ -470,43 +470,44 @@ def main():
 
     # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
 
+    st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
+    plt.figure(figsize=(10, 6))
+    ax = sns.heatmap(
+        retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False
+    )
 
-st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
-plt.figure(figsize=(10, 6))
-ax = sns.heatmap(retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False)
+    for t in ax.texts:
+        t.set_text(f"{float(t.get_text()):.1f}%")
+    plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
+    plt.xlabel("Période")
+    plt.ylabel("Cohorte")
 
-for t in ax.texts:
-    t.set_text(f"{float(t.get_text()):.1f}%")
-plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
-plt.xlabel("Période")
-plt.ylabel("Cohorte")
+    # Téléchargement de l'image de la heatmap de la retention
+    if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
+        plt.savefig("heatmap_matrice_de_retention.png")
+        st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
 
-# Téléchargement de l'image de la heatmap de la retention
-if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
-    plt.savefig("heatmap_matrice_de_retention.png")
-    st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
+    # Afficher la heatmap de la matrice de rétention du churn en pourcentage
+    st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
+    plt.figure(figsize=(10, 6))
+    ax = sns.heatmap(
+        churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
+        annot=True,
+        cmap="YlGnBu",
+        fmt=".1f",
+        cbar=False,
+    )
 
-# Afficher la heatmap de la matrice de rétention du churn en pourcentage
-st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
-plt.figure(figsize=(10, 6))
-ax = sns.heatmap(
-    churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
-    annot=True,
-    cmap="YlGnBu",
-    fmt=".1f",
-    cbar=False,
-)
+    for t in ax.texts:
+        t.set_text(f"{float(t.get_text()):.1f}%")
+    plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
+    plt.xlabel("Période")
+    plt.ylabel("Cohorte")
 
-for t in ax.texts:
-    t.set_text(f"{float(t.get_text()):.1f}%")
-plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
-plt.xlabel("Période")
-plt.ylabel("Cohorte")
-
-# Téléchargement de l'image de la heatmap du churn
-if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
-    plt.savefig("heatmap_matrice_de_retention_churn.png")
-    st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
+    # Téléchargement de l'image de la heatmap du churn
+    if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
+        plt.savefig("heatmap_matrice_de_retention_churn.png")
+        st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
 
     st.markdown(
         """
