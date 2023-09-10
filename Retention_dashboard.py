@@ -9,6 +9,7 @@ import os
 import boto3
 import openpyxl
 from io import StringIO
+from io import BytesIO
 import bcrypt
 
 
@@ -360,16 +361,12 @@ def main():
         st.subheader("Data Orders")
         st.dataframe(filtered_data)
 
-        # Téléchargement des données
-        st.subheader("Téléchargement de orders")
-        download_format = st.radio(
-            "Choisir le format de téléchargement :", ["Excel (.xlsx)", "CSV (.csv)"]
-        )
-
         # Télécharger les données au format Excel (.xlsx)
         if st.button("Télécharger les données orders (Excel)"):
             excel_data = filtered_data.to_excel(index=False, header=True)
-            excel_binary = excel_data.read()  # Convertir en données binaires
+            excel_binary = BytesIO()  # Créez un objet BytesIO
+            excel_data.save(excel_binary)
+            excel_binary.seek(0)  # Réglez la position du curseur au début
             st.download_button(
                 label="Télécharger le fichier Excel (.xlsx)",
                 data=excel_binary,
@@ -378,17 +375,6 @@ def main():
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
-        # Télécharger les données au format CSV (.csv)
-        if st.button("Télécharger les données orders (CSV)"):
-            csv_data = filtered_data.to_csv(index=False, header=True)
-            csv_binary = csv_data.encode()  # Convertir en données binaires
-            st.download_button(
-                label="Télécharger le fichier CSV (.csv)",
-                data=csv_binary,
-                key="download_csv",
-                file_name="orders.csv",
-                mime="text/csv",
-            )
     # Afficher la plage de dates sélectionnée
     start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
     st.sidebar.write(
