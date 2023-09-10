@@ -366,30 +366,29 @@ def main():
             "Choisir le format de téléchargement :", ["Excel (.xlsx)", "CSV (.csv)"]
         )
 
-        if st.button("Télécharger les données orders"):
-            if download_format == "Excel (.xlsx)":
-                with st.spinner("Téléchargement en cours..."):
-                    # Générez le fichier Excel
-                    excel_data = filtered_data.to_excel(index=False, header=True)
-                    st.download_button(
-                        label="Télécharger le fichier Excel (.xlsx)",
-                        data=excel_data,
-                        key="download_xlsx",
-                        file_name="orders.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    )
-            elif download_format == "CSV (.csv)":
-                with st.spinner("Téléchargement en cours..."):
-                    # Générez le fichier CSV
-                    csv_data = filtered_data.to_csv(index=False, header=True)
-                    st.download_button(
-                        label="Télécharger le fichier CSV (.csv)",
-                        data=csv_data,
-                        key="download_csv",
-                        file_name="orders.csv",
-                        mime="text/csv",
-                    )
+        # Télécharger les données au format Excel (.xlsx)
+        if st.button("Télécharger les données orders (Excel)"):
+            excel_data = filtered_data.to_excel(index=False, header=True)
+            excel_binary = excel_data.read()  # Convertir en données binaires
+            st.download_button(
+                label="Télécharger le fichier Excel (.xlsx)",
+                data=excel_binary,
+                key="download_xlsx",
+                file_name="orders.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
 
+        # Télécharger les données au format CSV (.csv)
+        if st.button("Télécharger les données orders (CSV)"):
+            csv_data = filtered_data.to_csv(index=False, header=True)
+            csv_binary = csv_data.encode()  # Convertir en données binaires
+            st.download_button(
+                label="Télécharger le fichier CSV (.csv)",
+                data=csv_binary,
+                key="download_csv",
+                file_name="orders.csv",
+                mime="text/csv",
+            )
     # Afficher la plage de dates sélectionnée
     start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
     st.sidebar.write(
