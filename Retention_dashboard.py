@@ -434,14 +434,12 @@ def main():
 
     # Téléchargement de la  Rétention
     retention_percentage_xlsx = to_excel(retention_percentage)
-    download_button_clicked = st.download_button(
+    if st.download_button(
         "Télécharger la Matrice de Rétention en Excel (.xlsx)",
         retention_percentage_xlsx,
         "Matrice de Rétention.xlsx",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-
-    if download_button_clicked:
+    ):
         st.success("Téléchargement de la Matrice de Rétention avec succès !")
 
     # Renommer les colonnes de la matrice de rétention
