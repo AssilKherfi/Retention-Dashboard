@@ -365,13 +365,12 @@ def main():
         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
         def to_excel(df):
             output = BytesIO()
-            writer = pd.ExcelWriter(output, engine="xlsxwriter")
-            df.to_excel(writer, index=False, sheet_name="Sheet1")
-            workbook = writer.book
-            worksheet = writer.sheets["Sheet1"]
-            format = workbook.add_format({"num_format": "0.00"})
-            worksheet.set_column("A:A", None, format)
-            writer.save()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=False, sheet_name="Sheet1")
+                workbook = writer.book
+                worksheet = writer.sheets["Sheet1"]
+                format = workbook.add_format({"num_format": "0.00"})
+                worksheet.set_column("A:A", None, format)
             processed_data = output.getvalue()
             return processed_data
 
