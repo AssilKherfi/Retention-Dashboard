@@ -431,15 +431,15 @@ def main():
     st.subheader("Matrice de Rétention")
     st.dataframe(retention_percentage)
 
-    # Téléchargement de la  Rétention
-    if st.download_button(
-        "Télécharger la Rétention en Excel (.xlsx)",
-        retention_percentage.to_excel,
-        "Retention.xlsx",
-        args=(True,),
-        key="download_retention",
-    ):
-        st.success("La Rétention téléchargée avec succès !")
+    # # Téléchargement de la  Rétention
+    # if st.download_button(
+    #     "Télécharger la Rétention en Excel (.xlsx)",
+    #     retention_percentage.to_excel,
+    #     "Retention.xlsx",
+    #     args=(True,),
+    #     key="download_retention",
+    # ):
+    #     st.success("La Rétention téléchargée avec succès !")
 
     # Renommer les colonnes de la matrice de rétention
     cohort_pivot.columns = [
@@ -453,15 +453,15 @@ def main():
     st.subheader("Matrice de Rétention avec Churn")
     st.dataframe(cohort_analysis)
 
-    # Téléchargement de la rétention avec churn
-    if st.download_button(
-        "Télécharger la Rétention avec Churn en Excel (.xlsx)",
-        cohort_analysis.to_excel,
-        "retention_chrun.xlsx",
-        args=(True,),
-        key="download_retention_churn",
-    ):
-        st.success("La Rétention avec Churn téléchargée avec succès !")
+    # # Téléchargement de la rétention avec churn
+    # if st.download_button(
+    #     "Télécharger la Rétention avec Churn en Excel (.xlsx)",
+    #     cohort_analysis.to_excel,
+    #     "retention_chrun.xlsx",
+    #     args=(True,),
+    #     key="download_retention_churn",
+    # ):
+    #     st.success("La Rétention avec Churn téléchargée avec succès !")
 
     # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
 
@@ -477,10 +477,10 @@ def main():
     plt.xlabel("Période")
     plt.ylabel("Cohorte")
 
-    # Téléchargement de l'image de la heatmap de la retention
-    if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
-        plt.savefig("heatmap_matrice_de_retention.png")
-        st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
+    # # Téléchargement de l'image de la heatmap de la retention
+    # if st.button("Télécharger l'image de la Heatmap (Rétention en %)"):
+    #     plt.savefig("heatmap_matrice_de_retention.png")
+    #     st.success("Image de la Heatmap (Rétention en %) téléchargée avec succès !")
 
     # Afficher la heatmap de la matrice de rétention du churn en pourcentage
     st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
@@ -499,10 +499,10 @@ def main():
     plt.xlabel("Période")
     plt.ylabel("Cohorte")
 
-    # Téléchargement de l'image de la heatmap du churn
-    if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
-        plt.savefig("heatmap_matrice_de_retention_churn.png")
-        st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
+    # # Téléchargement de l'image de la heatmap du churn
+    # if st.button("Télécharger l'image de la Heatmap (Churn en %)"):
+    #     plt.savefig("heatmap_matrice_de_retention_churn.png")
+    #     st.success("Image de la Heatmap (Churn en %) téléchargée avec succès !")
 
     st.markdown(
         """
