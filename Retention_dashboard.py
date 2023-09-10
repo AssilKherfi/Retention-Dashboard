@@ -375,14 +375,15 @@ def main():
             return processed_data
 
         # Bouton pour télécharger le DataFrame au format Excel
-        if st.button("Télécharger les Orders au format Excel"):
-            filtered_data_xlsx = to_excel(filtered_data)
-            st.download_button(
-                label="📥 Télécharger Orders",
-                data=filtered_data_xlsx,
-                file_name="Orders.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
+        filtered_data_xlsx = to_excel(filtered_data)
+
+        if st.download_button(
+            "Télécharger Orders.xlsx",
+            filtered_data_xlsx,
+            "Orders.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ):
+            pass
 
     # Afficher la plage de dates sélectionnée
     start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
