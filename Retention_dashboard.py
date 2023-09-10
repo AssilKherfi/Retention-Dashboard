@@ -359,10 +359,10 @@ def main():
     show_filtered_data = st.sidebar.checkbox("Afficher les données")
 
     # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-    def to_excel(df):
+    def to_excel(df, include_index=True):
         output = BytesIO()
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            df.to_excel(writer, index=False, sheet_name="Sheet1")
+            df.to_excel(writer, index=include_index, sheet_name="Sheet1")
             workbook = writer.book
             worksheet = writer.sheets["Sheet1"]
             format = workbook.add_format({"num_format": "0.00"})
@@ -375,7 +375,7 @@ def main():
         st.dataframe(filtered_data)
 
         # Bouton pour télécharger le DataFrame au format Excel
-        filtered_data_xlsx = to_excel(filtered_data)
+        filtered_data_xlsx = to_excel(filtered_data, include_index=False)
         st.download_button(
             "Télécharger les Orders en Excel (.xlsx)",
             filtered_data_xlsx,
@@ -430,7 +430,7 @@ def main():
     st.dataframe(retention_percentage)
 
     # Téléchargement de la  Rétention
-    retention_percentage_xlsx = to_excel(retention_percentage)
+    retention_percentage_xlsx = to_excel(retention_percentage, include_index=True)
     st.download_button(
         "Télécharger la Matrice de Rétention en Excel (.xlsx)",
         retention_percentage_xlsx,
@@ -451,7 +451,7 @@ def main():
     st.dataframe(cohort_analysis)
 
     # Téléchargement de la rétention avec churn
-    cohort_analysis_xlsx = to_excel(cohort_analysis)
+    cohort_analysis_xlsx = to_excel(cohort_analysis, include_index=True)
     st.download_button(
         "Télécharger la Matrice de Rétention avec Churn en Excel (.xlsx)",
         cohort_analysis_xlsx,
