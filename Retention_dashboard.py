@@ -289,6 +289,20 @@ def apply_filters(df, status, customer_origine, business_cat, time_period, num_p
     return filtered_data.copy()
 
 
+def apply_filters_summary(df, status, customer_origine, time_period, num_periods):
+    filtered_data = df.copy()
+
+    if status != "Tous":
+        filtered_data = filtered_data[filtered_data["Status"] == status]
+
+    if customer_origine != "Tous":
+        filtered_data = filtered_data[
+            filtered_data["customer_origine"] == customer_origine
+        ]
+
+    date_col = "date"
+
+
 # Fonction pour calculer la plage de dates
 def get_date_range(filtered_data, time_period, num_periods):
     end_date = filtered_data["date"].max()
@@ -661,6 +675,165 @@ def main():
         st.sidebar.write(
             f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
         )
+
+        # Appliquer les filtres
+        filtered_data_ltv_summary = apply_filters_summary(
+            orders,
+            status,
+            customer_origine,
+            time_period,
+            num_periods,
+        )
+
+        # Liste unique de catégories d'entreprise
+        business_cats = filtered_data_ltv_summary["businessCat"].unique()
+
+        # Initialiser une liste pour stocker les résultats par Business Catégorie
+        ltv_results = []
+
+        # Parcourir chaque Business Catégorie et calculer la LTV
+        for business_cat in business_cats:
+            # Filtrer les données pour la Business Catégorie actuelle
+            ltv_cat_df = filtered_data_ltv_summary[
+                filtered_data_ltv_summary["businessCat"] == business_cat
+            ]
+
+            # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
+            ltv_df_summary_cat = ltv_cat_df.groupby("customer_id").agg(
+                {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
+            )
+            ltv_df_summary_cat.columns = [
+                "Nombre de commandes",
+                "Chiffre d'affaire",
+                "min_date",
+                "max_date",
+            ]
+            ltv_df_summary_cat = ltv_df_summary_cat.reset_index()
+
+            # Calculer la durée de vie de chaque client en mois sur les données filtrées
+            ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] = (
+                ltv_df_summary_cat["max_date"] - ltv_df_summary_cat["min_date"]
+            ).dt.days / 30
+
+            # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
+            ltv_df_summary_cat = ltv_df_summary_cat[
+                ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] > 0
+            ]
+
+            # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
+            ltv_df_summary_cat["Panier moyen"] = (
+                ltv_df_summary_cat["Chiffre d'affaire"]
+                / ltv_df_summary_cat["Nombre de commandes"]
+            )
+
+            # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
+            ltv_df_summary_cat["Fréquence d’achat"] = (
+                ltv_df_summary_cat["Nombre de commandes"]
+                / ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
+            )
+
+            # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
+            ltv_df_summary_cat[f"LTV ({time_period})"] = (
+                ltv_df_summary_cat["Fréquence d’achat"]
+                * ltv_df_summary_cat["Panier moyen"]
+                * ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
+            )
+
+            # Ajouter une colonne "businessCat" pour indiquer la Business Catégorie
+            ltv_df_summary_cat["businessCat"] = business_cat
+
+            # Ajouter les résultats au tableau de résultats
+            ltv_results.append(ltv_df_summary_cat)
+
+        # Concaténer les résultats de toutes les catégories en un seul DataFrame
+        ltv_summary_df = pd.concat(ltv_results, ignore_index=True)
+
+        # Réorganiser les colonnes si nécessaire
+        ltv_summary_df = ltv_summary_df[["businessCat", f"LTV ({time_period})"]]
+
+        # Renommer la colonne f"LTV ({time_period})" en "LTV avec GMV (en DZD)"
+        ltv_summary_df.rename(
+            columns={f"LTV ({time_period})": "LTV avec GMV (en DZD)"}, inplace=True
+        )
+
+        # Calculer la moyenne de LTV avec GMV par Business Catégorie
+        ltv_avg_with_gmv_by_cat = (
+            ltv_summary_df.groupby("businessCat")["LTV avec GMV (en DZD)"]
+            .mean()
+            .reset_index()
+        )
+
+        # Calculer la moyenne de LTV avec GMV
+        ltv_avg_with_gmv = ltv_avg_with_gmv_by_cat["LTV avec GMV (en DZD)"].mean()
+
+        # Calculer la moyenne de LTV avec 15% de la GMV par Business Catégorie
+        ltv_avg_with_15_percent_gmv_by_cat = (
+            ltv_summary_df.groupby("businessCat")["LTV avec GMV (en DZD)"]
+            .mean()
+            .reset_index()
+        )
+
+        # Renommer la colonne pour plus de clarté
+        ltv_avg_with_15_percent_gmv_by_cat.rename(
+            columns={"LTV avec GMV (en DZD)": "LTV avec 15% de la GMV (en DZD)"},
+            inplace=True,
+        )
+
+        # Appliquer la multiplication par 0.15 à la colonne de LTV avec 15% de la GMV
+        ltv_avg_with_15_percent_gmv_by_cat["LTV avec 15% de la GMV (en DZD)"] *= 0.15
+
+        # Fusionner les DataFrames
+        ltv_avg_combined_df = pd.merge(
+            ltv_avg_with_gmv_by_cat,
+            ltv_avg_with_15_percent_gmv_by_cat,
+            on="businessCat",
+            suffixes=("_GMV", "_15% GMV"),
+        ).rename(columns={"businessCat": "Business Catégorie"})
+
+        # Calculer la moyenne de LTV avec 15% de la GMV globale
+        ltv_avg_with_15_percent_gmv_global = (
+            ltv_summary_df["LTV avec GMV (en DZD)"] * 0.15
+        ).mean()
+
+        # Ajouter une ligne pour les totaux globaux
+        ltv_avg_combined_df.loc[ltv_avg_combined_df.shape[0]] = [
+            "Total",
+            ltv_avg_with_gmv,
+            ltv_avg_with_15_percent_gmv_global,
+        ]
+
+        # Afficher le tableau des moyennes
+        st.subheader("LTV par Business Catégorie")
+        st.dataframe(ltv_avg_combined_df)
+
+        # Téléchargement de la data de rétention
+        if st.button("Télécharger LTV par Business Catégorie (.xlsx)"):
+            ltv_avg_combined_df.to_excel(
+                f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+                index=True,
+            )
+
+        # # Afficher le résumé
+        # st.subheader("Résumé de la LTV par Business Catégorie")
+        # st.dataframe(ltv_summary_df)
+
+        # # Téléchargement de la data de rétention
+        # if st.button("Télécharger dataframel (.xlsx)"):
+        #     ltv_summary_df.to_excel(
+        #         f"ltv_summary_df.xlsx",
+        #         index=True,
+        #     )
+
+        # Créer un graphique à barres
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ltv_avg_combined_df.plot(
+            x="Business Catégorie", kind="bar", ax=ax
+        )  # Utilisez "businessCat" au lieu de "Business Catégorie"
+        plt.title("LTV par Business Catégorie")
+        plt.xlabel("Business Catégorie")
+        plt.ylabel("LTV (en DZD)")
+        plt.xticks(rotation=45)
+        st.pyplot(fig)
 
     st.markdown(
         """
