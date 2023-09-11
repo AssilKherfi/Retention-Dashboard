@@ -495,7 +495,7 @@ def main():
         for t in ax.texts:
             t.set_text(f"{float(t.get_text()):.1f}%")
         plt.title(
-            "Heatmap de la Rétention (Rétention en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}"
+            f"Heatmap de la Rétention (Rétention en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}"
         )
         plt.xlabel("Période")
         plt.ylabel("Cohorte")
@@ -510,7 +510,7 @@ def main():
         st.download_button(
             label="Télécharger la Heatmap (Rétention en %)",
             data=buffer,
-            file_name="Heatmap de la retention - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.png",
+            file_name=f"Heatmap de la retention - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
 
@@ -528,7 +528,7 @@ def main():
         for t in ax.texts:
             t.set_text(f"{float(t.get_text()):.1f}%")
         plt.title(
-            "Heatmap de la Rétention (Churn en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}"
+            f"Heatmap de la Rétention (Churn en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}"
         )
         plt.xlabel("Période")
         plt.ylabel("Cohorte")
@@ -538,7 +538,7 @@ def main():
         st.download_button(
             label="Télécharger la Heatmap (Churn en %)",
             data=buffer,
-            file_name="Heatmap de la retention (churn) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.png",
+            file_name=f"Heatmap de la retention (churn) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
 
