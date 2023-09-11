@@ -494,7 +494,9 @@ def main():
 
         for t in ax.texts:
             t.set_text(f"{float(t.get_text()):.1f}%")
-        plt.title("Heatmap de la Rétention (Rétention en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}")
+        plt.title(
+            "Heatmap de la Rétention (Rétention en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}"
+        )
         plt.xlabel("Période")
         plt.ylabel("Cohorte")
         st.pyplot(plt)
@@ -525,7 +527,9 @@ def main():
 
         for t in ax.texts:
             t.set_text(f"{float(t.get_text()):.1f}%")
-        plt.title("Heatmap de la Rétention (Churn en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}")
+        plt.title(
+            "Heatmap de la Rétention (Churn en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}"
+        )
         plt.xlabel("Période")
         plt.ylabel("Cohorte")
         st.pyplot(plt)
@@ -650,7 +654,7 @@ def main():
             st.download_button(
                 "Télécharger les données de la LTV en Excel (.xlsx)",
                 ltv_df_xlsx,
-                "LTV - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
+                f"LTV - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
