@@ -12,6 +12,7 @@ from io import StringIO
 from io import BytesIO
 import bcrypt
 import xlsxwriter
+import re
 
 
 # %%
@@ -66,7 +67,9 @@ orders["customer_id"] = orders["customer_id"].astype(str)
 orders["createdAt"] = pd.to_datetime(orders["createdAt"])
 orders = orders.rename(columns={"job_status": "Status"})
 orders = orders[~orders["Status"].isin(["ABANDONED"])]
-orders["customer_id"] = orders["customer_id"].str.rstrip(".0")
+orders["customer_id"] = [
+    re.sub(r"\.0$", "", customer_id) for customer_id in orders["customer_id"]
+]
 orders["businessCat"] = orders["businessCat"].replace(
     ["Recharge mobile", "Recharge mobile / ADSL"], ["Airtime", "Airtime"]
 )
@@ -177,6 +180,7 @@ orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
 
 # users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
 # users["customer_id"] = users["customer_id"].astype(str)
+# users["customer_id"] = [re.sub(r'\.0$', '', customer_id) for customer_id in users["customer_id"]]
 # users["createdAt"] = pd.to_datetime(users["createdAt"])
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
@@ -299,7 +303,7 @@ def get_date_range(filtered_data, time_period, num_periods):
 
 # Créer une application Streamlit
 def main():
-    st.title("Tableau de Bord de Retention")
+    st.title("Tableau de Bord TemtemOne")
 
     # # Zone de connexion
     # if "logged_in" not in st.session_state:
@@ -317,200 +321,338 @@ def main():
     #             st.error("Nom d'utilisateur ou mot de passe incorrect.")
     #     return
 
-    # Sidebar pour les filtres
-    st.sidebar.title("Filtres")
-
-    # Sélection de la période
-    time_period = st.sidebar.radio("Période", ["Semaine", "Mois"])
-
-    # Sélection du nombre de périodes précédentes
-    if time_period == "Semaine":
-        num_periods_default = 4  # Par défaut, sélectionner 4 semaines
-    else:
-        num_periods_default = 6  # Par défaut, sélectionner 6 mois
-
-    num_periods = st.sidebar.number_input(
-        "Nombre de périodes précédentes", 1, 36, num_periods_default
+    # Créer un menu de navigation
+    selected_page = st.sidebar.selectbox(
+        "Sélectionnez un Tableau de Bord",
+        ["Tableau de Bord de Retention", "Lifetime Value (LTV)"],
     )
 
-    # Filtres
-    status_options = ["Tous"] + list(orders["Status"].unique())
-    status = st.sidebar.selectbox("Statut", status_options)
+    if selected_page == "Tableau de Bord de Retention":
+        # Contenu de la page "Tableau de Bord de Retention"
+        st.header("Tableau de Bord de Retention")
 
-    customer_origine_options = ["Tous", "Diaspora", "Local"]
-    customer_origine = st.sidebar.selectbox(
-        "Choisissez le type de client (Diaspora ou Local)", customer_origine_options
-    )
+        # Sidebar pour les filtres
+        st.sidebar.title("Filtres")
 
-    business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
-    business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
+        # Sélection de la période
+        time_period = st.sidebar.radio(
+            "Période", ["Semaine", "Mois"], key="time_period_retention"
+        )
 
-    # Appliquer les filtres
-    filtered_data = apply_filters(
-        orders,
-        status,
-        customer_origine,
-        business_cat,
-        time_period,
-        num_periods,
-    )
+        # Sélection du nombre de périodes précédentes
+        if time_period == "Semaine":
+            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
+        else:
+            num_periods_default = 6  # Par défaut, sélectionner 6 mois
 
-    # Afficher les données filtrées
-    show_filtered_data = st.sidebar.checkbox("Afficher les données")
+        num_periods = st.sidebar.number_input(
+            "Nombre de périodes précédentes",
+            1,
+            36,
+            num_periods_default,
+            key="num_periods_retention",
+        )
 
-    # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-    def to_excel(df, include_index=True):
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            df.to_excel(writer, index=include_index, sheet_name="Sheet1")
-            workbook = writer.book
-            worksheet = writer.sheets["Sheet1"]
-            format = workbook.add_format({"num_format": "0.00"})
-            worksheet.set_column("A:A", None, format)
-        processed_data = output.getvalue()
-        return processed_data
+        # Filtres
+        status_options = ["Tous"] + list(orders["Status"].unique())
+        status = st.sidebar.selectbox("Statut", status_options)
 
-    if show_filtered_data:
-        st.subheader("Data Orders")
-        st.dataframe(filtered_data)
+        customer_origine_options = ["Tous", "Diaspora", "Local"]
+        customer_origine = st.sidebar.selectbox(
+            "Choisissez le type de client (Diaspora ou Local)",
+            customer_origine_options,
+            key="customer_origin_retention",
+        )
 
-        # Bouton pour télécharger le DataFrame au format Excel
-        filtered_data_xlsx = to_excel(filtered_data, include_index=False)
+        business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
+        business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
+
+        # Appliquer les filtres
+        filtered_data = apply_filters(
+            orders,
+            status,
+            customer_origine,
+            business_cat,
+            time_period,
+            num_periods,
+        )
+
+        # Afficher les données filtrées
+        show_filtered_data = st.sidebar.checkbox("Afficher les données")
+
+        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        def to_excel(df, include_index=True):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+                workbook = writer.book
+                worksheet = writer.sheets["Sheet1"]
+                format = workbook.add_format({"num_format": "0.00"})
+                worksheet.set_column("A:A", None, format)
+            processed_data = output.getvalue()
+            return processed_data
+
+        if show_filtered_data:
+            st.subheader("Data Orders")
+            st.dataframe(filtered_data)
+
+            # Bouton pour télécharger le DataFrame au format Excel
+            filtered_data_xlsx = to_excel(filtered_data, include_index=False)
+            st.download_button(
+                "Télécharger les Orders en Excel (.xlsx)",
+                filtered_data_xlsx,
+                "Orders.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+        # Afficher la plage de dates sélectionnée
+        start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
+        st.sidebar.write(
+            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
+        )
+
+        # Calculer et afficher l'analyse de cohorte
+        st.subheader("Analyse de Cohorte")
+        filtered_data.dropna(subset=["customer_id"], inplace=True)
+        filtered_data["date"] = pd.to_datetime(filtered_data["date"])
+
+        period_frequency = "W" if time_period == "Semaine" else "M"
+
+        filtered_data["order_period"] = filtered_data["date"].dt.to_period(
+            period_frequency
+        )
+        filtered_data["cohort"] = (
+            filtered_data.groupby("customer_id")["date"]
+            .transform("min")
+            .dt.to_period(period_frequency)
+        )
+        filtered_data_cohort = (
+            filtered_data.groupby(["cohort", "order_period"])
+            .agg(n_customers=("customer_id", "nunique"))
+            .reset_index(drop=False)
+        )
+        filtered_data_cohort["period_number"] = (
+            filtered_data_cohort["order_period"] - filtered_data_cohort["cohort"]
+        ).apply(attrgetter("n"))
+
+        cohort_pivot = filtered_data_cohort.pivot_table(
+            index="cohort", columns="period_number", values="n_customers"
+        )
+
+        # Calculer les clients qui ont abandonné (churn) pour chaque cohort
+        churned_customers = cohort_pivot.copy()
+        churned_customers.iloc[:, 1:] = (
+            cohort_pivot.iloc[:, 1:].values - cohort_pivot.iloc[:, :-1].values
+        )
+        churned_customers.columns = [
+            f"Churn_{col}" for col in churned_customers.columns
+        ]
+
+        # Calculer la rétention en pourcentage
+        retention_percentage = cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0)
+
+        # Afficher la matrice de rétention
+        st.subheader("Matrice de Rétention")
+        st.dataframe(retention_percentage)
+
+        # Téléchargement de la  Rétention
+        retention_percentage_xlsx = to_excel(retention_percentage, include_index=True)
         st.download_button(
-            "Télécharger les Orders en Excel (.xlsx)",
-            filtered_data_xlsx,
-            "Orders.xlsx",
+            "Télécharger la Matrice de Rétention en Excel (.xlsx)",
+            retention_percentage_xlsx,
+            "Matrice de Rétention.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
-    # Afficher la plage de dates sélectionnée
-    start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
-    st.sidebar.write(
-        f"Plage de dates sélectionnée : {start_date.strftime('%d-%m-%Y')} à {end_date.strftime('%d-%m-%Y')}"
-    )
+        # Renommer les colonnes de la matrice de rétention
+        cohort_pivot.columns = [
+            f"Retention_{str(col).zfill(2)}" for col in cohort_pivot.columns
+        ]
 
-    # Calculer et afficher l'analyse de cohorte
-    st.subheader("Analyse de Cohorte")
-    filtered_data.dropna(subset=["customer_id"], inplace=True)
-    filtered_data["date"] = pd.to_datetime(filtered_data["date"])
+        # Concaténer la matrice de rétention avec les clients qui ont abandonné
+        cohort_analysis = pd.concat([cohort_pivot, churned_customers], axis=1)
 
-    period_frequency = "W" if time_period == "Semaine" else "M"
+        # Afficher la matrice de rétention mise à jour
+        st.subheader("Matrice de Rétention avec Churn")
+        st.dataframe(cohort_analysis)
 
-    filtered_data["order_period"] = filtered_data["date"].dt.to_period(period_frequency)
-    filtered_data["cohort"] = (
-        filtered_data.groupby("customer_id")["date"]
-        .transform("min")
-        .dt.to_period(period_frequency)
-    )
-    filtered_data_cohort = (
-        filtered_data.groupby(["cohort", "order_period"])
-        .agg(n_customers=("customer_id", "nunique"))
-        .reset_index(drop=False)
-    )
-    filtered_data_cohort["period_number"] = (
-        filtered_data_cohort["order_period"] - filtered_data_cohort["cohort"]
-    ).apply(attrgetter("n"))
+        # Téléchargement de la rétention avec churn
+        cohort_analysis_xlsx = to_excel(cohort_analysis, include_index=True)
+        st.download_button(
+            "Télécharger la Matrice de Rétention avec Churn en Excel (.xlsx)",
+            cohort_analysis_xlsx,
+            "Matrice de Rétention avec Churn.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
-    cohort_pivot = filtered_data_cohort.pivot_table(
-        index="cohort", columns="period_number", values="n_customers"
-    )
+        # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
+        st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
+        plt.figure(figsize=(10, 6))
+        ax = sns.heatmap(
+            retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False
+        )
 
-    # Calculer les clients qui ont abandonné (churn) pour chaque cohort
-    churned_customers = cohort_pivot.copy()
-    churned_customers.iloc[:, 1:] = (
-        cohort_pivot.iloc[:, 1:].values - cohort_pivot.iloc[:, :-1].values
-    )
-    churned_customers.columns = [f"Churn_{col}" for col in churned_customers.columns]
+        for t in ax.texts:
+            t.set_text(f"{float(t.get_text()):.1f}%")
+        plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
+        plt.xlabel("Période")
+        plt.ylabel("Cohorte")
+        st.pyplot(plt)
 
-    # Calculer la rétention en pourcentage
-    retention_percentage = cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0)
+        # Génération de l'image de la heatmap
+        buffer = BytesIO()
+        plt.savefig(buffer, format="png")
+        buffer.seek(0)
 
-    # Afficher la matrice de rétention
-    st.subheader("Matrice de Rétention")
-    st.dataframe(retention_percentage)
+        # Téléchargement de l'image de la heatmap de la retention
+        st.download_button(
+            label="Télécharger l'image de la Heatmap (Rétention en %)",
+            data=buffer,
+            file_name="heatmap_matrice_de_retention.png",
+            mime="image/png",
+        )
 
-    # Téléchargement de la  Rétention
-    retention_percentage_xlsx = to_excel(retention_percentage, include_index=True)
-    st.download_button(
-        "Télécharger la Matrice de Rétention en Excel (.xlsx)",
-        retention_percentage_xlsx,
-        "Matrice de Rétention.xlsx",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
+        # Afficher la heatmap de la matrice de rétention du churn en pourcentage
+        st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
+        plt.figure(figsize=(10, 6))
+        ax = sns.heatmap(
+            churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
+            annot=True,
+            cmap="YlGnBu",
+            fmt=".1f",
+            cbar=False,
+        )
 
-    # Renommer les colonnes de la matrice de rétention
-    cohort_pivot.columns = [
-        f"Retention_{str(col).zfill(2)}" for col in cohort_pivot.columns
-    ]
+        for t in ax.texts:
+            t.set_text(f"{float(t.get_text()):.1f}%")
+        plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
+        plt.xlabel("Période")
+        plt.ylabel("Cohorte")
+        st.pyplot(plt)
 
-    # Concaténer la matrice de rétention avec les clients qui ont abandonné
-    cohort_analysis = pd.concat([cohort_pivot, churned_customers], axis=1)
+        # Téléchargement de l'image de la heatmap de la retention (Churn en %)
+        st.download_button(
+            label="Télécharger l'image de la Heatmap (Churn en %)",
+            data=buffer,
+            file_name="heatmap_matrice_de_retention_churn.png",
+            mime="image/png",
+        )
 
-    # Afficher la matrice de rétention mise à jour
-    st.subheader("Matrice de Rétention avec Churn")
-    st.dataframe(cohort_analysis)
+    # Créez une nouvelle page LTV
+    elif selected_page == "Lifetime Value (LTV)":
+        st.header("Tableau de Bord de Lifetime Value (LTV)")
 
-    # Téléchargement de la rétention avec churn
-    cohort_analysis_xlsx = to_excel(cohort_analysis, include_index=True)
-    st.download_button(
-        "Télécharger la Matrice de Rétention avec Churn en Excel (.xlsx)",
-        cohort_analysis_xlsx,
-        "Matrice de Rétention avec Churn.xlsx",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
+        # Sidebar pour les filtres
+        st.sidebar.title("Filtres")
 
-    # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
-    st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
-    plt.figure(figsize=(10, 6))
-    ax = sns.heatmap(
-        retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False
-    )
+        # Sélection de la période
+        time_period = st.sidebar.radio(
+            "Période", ["Semaine", "Mois"], key="time_period_ltv"
+        )
 
-    for t in ax.texts:
-        t.set_text(f"{float(t.get_text()):.1f}%")
-    plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
-    plt.xlabel("Période")
-    plt.ylabel("Cohorte")
-    st.pyplot(plt)
+        # Sélection du nombre de périodes précédentes
+        if time_period == "Semaine":
+            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
+        else:
+            num_periods_default = 6  # Par défaut, sélectionner 6 mois
 
-    # Génération de l'image de la heatmap
-    buffer = BytesIO()
-    plt.savefig(buffer, format="png")
-    buffer.seek(0)
+        num_periods = st.sidebar.number_input(
+            "Nombre de périodes précédentes",
+            1,
+            36,
+            num_periods_default,
+            key="num_periods_ltv",
+        )
 
-    # Téléchargement de l'image de la heatmap de la retention
-    st.download_button(
-        label="Télécharger l'image de la Heatmap (Rétention en %)",
-        data=buffer,
-        file_name="heatmap_matrice_de_retention.png",
-        mime="image/png",
-    )
+        # Filtres
+        status_options = ["Tous"] + list(orders["Status"].unique())
+        status = st.sidebar.selectbox("Statut", status_options)
 
-    # Afficher la heatmap de la matrice de rétention du churn en pourcentage
-    st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
-    plt.figure(figsize=(10, 6))
-    ax = sns.heatmap(
-        churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
-        annot=True,
-        cmap="YlGnBu",
-        fmt=".1f",
-        cbar=False,
-    )
+        customer_origine_options = ["Tous", "Diaspora", "Local"]
+        customer_origine = st.sidebar.selectbox(
+            "Choisissez le type de client (Diaspora ou Local)",
+            customer_origine_options,
+            key="customer_origin_ltv",
+        )
 
-    for t in ax.texts:
-        t.set_text(f"{float(t.get_text()):.1f}%")
-    plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
-    plt.xlabel("Période")
-    plt.ylabel("Cohorte")
-    st.pyplot(plt)
+        business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
+        business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
 
-    # Téléchargement de l'image de la heatmap de la retention (Churn en %)
-    st.download_button(
-        label="Télécharger l'image de la Heatmap (Churn en %)",
-        data=buffer,
-        file_name="heatmap_matrice_de_retention_churn.png",
-        mime="image/png",
-    )
+        # Appliquer les filtres
+        filtered_data_ltv = apply_filters(
+            orders,
+            status,
+            customer_origine,
+            business_cat,
+            time_period,
+            num_periods,
+        )
+
+        # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
+        ltv_df = filtered_data_ltv.groupby("customer_id").agg(
+            {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
+        )
+        ltv_df.columns = [
+            "Nombre de commandes",
+            "Chiffre d'affaire",
+            "min_date",
+            "max_date",
+        ]
+        ltv_df = ltv_df.reset_index()
+
+        # Calculer la durée de vie de chaque client en mois sur les données filtrées
+        ltv_df["Durée de vie d’un client (lifetime)"] = (
+            ltv_df["max_date"] - ltv_df["min_date"]
+        ).dt.days / 30
+
+        # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
+        ltv_df = ltv_df[ltv_df["Durée de vie d’un client (lifetime)"] > 0]
+
+        # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
+        ltv_df["Panier moyen"] = (
+            ltv_df["Chiffre d'affaire"] / ltv_df["Nombre de commandes"]
+        )
+
+        # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
+        ltv_df["Fréquence d’achat"] = (
+            ltv_df["Nombre de commandes"]
+            / ltv_df["Durée de vie d’un client (lifetime)"]
+        )
+
+        # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
+        ltv_df["LTV (mois)"] = (
+            ltv_df["Fréquence d’achat"]
+            * ltv_df["Panier moyen"]
+            * ltv_df["Durée de vie d’un client (lifetime)"]
+        )
+
+        # # Afficher les résultats de la LTV
+        # st.subheader("Données de LTV")
+        # st.dataframe(ltv_df)
+
+        # Afficher les données de la LTV
+        show_ltv_df = st.sidebar.checkbox("Afficher les données de LTV")
+
+        if show_ltv_df:
+            st.subheader("Data LTV")
+            st.dataframe(ltv_df)
+
+            # Bouton pour télécharger le DataFrame au format Excel
+            ltv_df_xlsx = to_excel(ltv_df, include_index=False)
+            st.download_button(
+                "Télécharger la data de la LTV en Excel (.xlsx)",
+                ltv_df,
+                "LTV Data.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+        # Afficher la plage de dates sélectionnée
+        start_date, end_date = get_date_range(
+            filtered_data_ltv, time_period, num_periods
+        )
+        st.sidebar.write(
+            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
+        )
 
     st.markdown(
         """
