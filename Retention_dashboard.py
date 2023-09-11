@@ -302,6 +302,21 @@ def apply_filters_summary(df, status, customer_origine, time_period, num_periods
 
     date_col = "date"
 
+    # Calculer la date de début de la période en fonction du nombre de périodes souhaitées
+    if time_period == "Semaine":
+        period_type = "W"
+        start_date = filtered_data[date_col].max() - pd.DateOffset(weeks=num_periods)
+    else:
+        period_type = "M"
+        start_date = filtered_data[date_col].max() - pd.DateOffset(months=num_periods)
+
+    filtered_data = filtered_data[
+        (filtered_data[date_col] >= start_date)
+        & (filtered_data[date_col] <= filtered_data[date_col].max())
+    ]
+
+    return filtered_data.copy()
+
 
 # Fonction pour calculer la plage de dates
 def get_date_range(filtered_data, time_period, num_periods):
