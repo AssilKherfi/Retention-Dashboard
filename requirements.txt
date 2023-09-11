@@ -26,4 +26,3 @@ pip==23.2.1
 bcrypt
 openpyxl
 XlsxWriter
-re
