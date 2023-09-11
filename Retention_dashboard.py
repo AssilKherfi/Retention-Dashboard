@@ -401,7 +401,7 @@ def main():
             st.download_button(
                 "Télécharger les Orders en Excel (.xlsx)",
                 filtered_data_xlsx,
-                "Orders.xlsx",
+                f"Orders - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
@@ -458,9 +458,9 @@ def main():
         # Téléchargement de la  Rétention
         retention_percentage_xlsx = to_excel(retention_percentage, include_index=True)
         st.download_button(
-            "Télécharger la Matrice de Rétention en Excel (.xlsx)",
+            "Télécharger la Rétention en Excel (.xlsx)",
             retention_percentage_xlsx,
-            "Matrice de Rétention.xlsx",
+            f"Rétention - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
@@ -473,20 +473,20 @@ def main():
         cohort_analysis = pd.concat([cohort_pivot, churned_customers], axis=1)
 
         # Afficher la matrice de rétention mise à jour
-        st.subheader("Matrice de Rétention avec Churn")
+        st.subheader("Matrice de Rétention & Churn")
         st.dataframe(cohort_analysis)
 
         # Téléchargement de la rétention avec churn
         cohort_analysis_xlsx = to_excel(cohort_analysis, include_index=True)
         st.download_button(
-            "Télécharger la Matrice de Rétention avec Churn en Excel (.xlsx)",
+            "Télécharger la Rétention & Churn en Excel (.xlsx)",
             cohort_analysis_xlsx,
-            "Matrice de Rétention avec Churn.xlsx",
+            f"Rétention avec Churn - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
         # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
-        st.subheader("Heatmap de la Matrice de Rétention (Rétention en %)")
+        st.subheader("Heatmap de la Rétention (Rétention en %)")
         plt.figure(figsize=(10, 6))
         ax = sns.heatmap(
             retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False
@@ -494,7 +494,7 @@ def main():
 
         for t in ax.texts:
             t.set_text(f"{float(t.get_text()):.1f}%")
-        plt.title("Heatmap de la Matrice de Rétention (Rétention en %)")
+        plt.title("Heatmap de la Rétention (Rétention en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}")
         plt.xlabel("Période")
         plt.ylabel("Cohorte")
         st.pyplot(plt)
@@ -506,14 +506,14 @@ def main():
 
         # Téléchargement de l'image de la heatmap de la retention
         st.download_button(
-            label="Télécharger l'image de la Heatmap (Rétention en %)",
+            label="Télécharger la Heatmap (Rétention en %)",
             data=buffer,
-            file_name="heatmap_matrice_de_retention.png",
+            file_name="Heatmap de la retention - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
 
         # Afficher la heatmap de la matrice de rétention du churn en pourcentage
-        st.subheader("Heatmap de la Matrice de Rétention (Churn en %)")
+        st.subheader("Heatmap de la Rétention (Churn en %)")
         plt.figure(figsize=(10, 6))
         ax = sns.heatmap(
             churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
@@ -525,16 +525,16 @@ def main():
 
         for t in ax.texts:
             t.set_text(f"{float(t.get_text()):.1f}%")
-        plt.title("Heatmap de la Matrice de Rétention (Churn en %)")
+        plt.title("Heatmap de la Rétention (Churn en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}")
         plt.xlabel("Période")
         plt.ylabel("Cohorte")
         st.pyplot(plt)
 
         # Téléchargement de l'image de la heatmap de la retention (Churn en %)
         st.download_button(
-            label="Télécharger l'image de la Heatmap (Churn en %)",
+            label="Télécharger la Heatmap (Churn en %)",
             data=buffer,
-            file_name="heatmap_matrice_de_retention_churn.png",
+            file_name="Heatmap de la retention (churn) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
 
@@ -620,7 +620,7 @@ def main():
         )
 
         # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
-        ltv_df["LTV (mois)"] = (
+        ltv_df[f"LTV ({time_period})"] = (
             ltv_df["Fréquence d’achat"]
             * ltv_df["Panier moyen"]
             * ltv_df["Durée de vie d’un client (lifetime)"]
@@ -650,7 +650,7 @@ def main():
             st.download_button(
                 "Télécharger les données de la LTV en Excel (.xlsx)",
                 ltv_df_xlsx,
-                "LTV.xlsx",
+                "LTV - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
