@@ -626,12 +626,8 @@ def main():
             * ltv_df["Durée de vie d’un client (lifetime)"]
         )
 
-        # # Afficher les résultats de la LTV
-        # st.subheader("Données de LTV")
-        # st.dataframe(ltv_df)
-
-        # Afficher les données de la LTV
-        show_ltv_df = st.sidebar.checkbox("Afficher les données de LTV")
+        # Afficher les données filtrées
+        show_ltv_df = st.sidebar.checkbox("Afficher les données")
 
         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
         def to_excel(df, include_index=True):
@@ -646,15 +642,15 @@ def main():
             return processed_data
 
         if show_ltv_df:
-            st.subheader("Data LTV")
+            st.subheader("LTV Data")
             st.dataframe(ltv_df)
 
             # Bouton pour télécharger le DataFrame au format Excel
             ltv_df_xlsx = to_excel(ltv_df, include_index=False)
             st.download_button(
-                "Télécharger la data de la LTV en Excel (.xlsx)",
-                ltv_df,
-                "LTV Data.xlsx",
+                "Télécharger les données de la LTV en Excel (.xlsx)",
+                ltv_df_xlsx,
+                "LTV.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
