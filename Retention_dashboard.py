@@ -399,7 +399,7 @@ def main():
             st.download_button(
                 "Télécharger les Orders en Excel (.xlsx)",
                 filtered_data_xlsx,
-                f"Orders - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
+                f"Orders - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
@@ -458,7 +458,7 @@ def main():
         st.download_button(
             "Télécharger la Rétention en Excel (.xlsx)",
             retention_percentage_xlsx,
-            f"Rétention - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
+            f"Rétention - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
@@ -479,7 +479,7 @@ def main():
         st.download_button(
             "Télécharger la Rétention & Churn en Excel (.xlsx)",
             cohort_analysis_xlsx,
-            f"Rétention avec Churn - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
+            f"Rétention avec Churn - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
@@ -493,7 +493,7 @@ def main():
         for t in ax.texts:
             t.set_text(f"{float(t.get_text()):.1f}%")
         plt.title(
-            f"Heatmap de la Rétention (Rétention en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}"
+            f"Heatmap de la Rétention (Rétention en %) - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}"
         )
         plt.xlabel("Période")
         plt.ylabel("Cohorte")
@@ -508,7 +508,7 @@ def main():
         st.download_button(
             label="Télécharger la Heatmap (Rétention en %)",
             data=buffer,
-            file_name=f"Heatmap de la retention - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.png",
+            file_name=f"Heatmap de la retention - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
 
@@ -526,7 +526,7 @@ def main():
         for t in ax.texts:
             t.set_text(f"{float(t.get_text()):.1f}%")
         plt.title(
-            f"Heatmap de la Rétention (Churn en %) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}"
+            f"Heatmap de la Rétention (Churn en %) - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}"
         )
         plt.xlabel("Période")
         plt.ylabel("Cohorte")
@@ -536,7 +536,7 @@ def main():
         st.download_button(
             label="Télécharger la Heatmap (Churn en %)",
             data=buffer,
-            file_name=f"Heatmap de la retention (churn) - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.png",
+            file_name=f"Heatmap de la retention (churn) - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
 
@@ -650,7 +650,7 @@ def main():
             st.download_button(
                 "Télécharger les données de la LTV en Excel (.xlsx)",
                 ltv_df_xlsx,
-                f"LTV - {customer_origine} origine - {business_cat} catégorie - status {status}, pour les {num_periods} derniers {time_period}.xlsx",
+                f"LTV - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
