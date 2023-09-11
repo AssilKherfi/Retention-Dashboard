@@ -633,6 +633,18 @@ def main():
         # Afficher les données de la LTV
         show_ltv_df = st.sidebar.checkbox("Afficher les données de LTV")
 
+        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        def to_excel(df, include_index=True):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+                workbook = writer.book
+                worksheet = writer.sheets["Sheet1"]
+                format = workbook.add_format({"num_format": "0.00"})
+                worksheet.set_column("A:A", None, format)
+            processed_data = output.getvalue()
+            return processed_data
+
         if show_ltv_df:
             st.subheader("Data LTV")
             st.dataframe(ltv_df)
