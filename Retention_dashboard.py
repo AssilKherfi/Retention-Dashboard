@@ -357,11 +357,9 @@ def main():
         status_options = ["Tous"] + list(orders["Status"].unique())
         status = st.sidebar.selectbox("Statut", status_options)
 
-        customer_origine_options = ["Tous", "Diaspora", "Local"]
+        customer_origine_options = ["Tous"] + list(orders["customer_origine"].unique())
         customer_origine = st.sidebar.selectbox(
-            "Choisissez le type de client (Diaspora ou Local)",
-            customer_origine_options,
-            key="customer_origin_retention",
+            "Customer Origine (diaspora or Local)", customer_origine_options
         )
 
         business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
@@ -572,11 +570,9 @@ def main():
         status_options = ["Tous"] + list(orders["Status"].unique())
         status = st.sidebar.selectbox("Statut", status_options)
 
-        customer_origine_options = ["Tous", "Diaspora", "Local"]
+        customer_origine_options = ["Tous"] + list(orders["customer_origine"].unique())
         customer_origine = st.sidebar.selectbox(
-            "Choisissez le type de client (Diaspora ou Local)",
-            customer_origine_options,
-            key="customer_origin_ltv",
+            "Customer Origine (diaspora or Local)", customer_origine_options
         )
 
         business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
