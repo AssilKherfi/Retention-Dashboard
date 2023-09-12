@@ -13,6 +13,7 @@ from io import BytesIO
 import bcrypt
 import xlsxwriter
 import re
+from easy_exchange_rates import API
 
 
 # %%
