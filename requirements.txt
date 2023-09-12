@@ -26,3 +26,4 @@ pip==23.2.1
 bcrypt
 openpyxl
 XlsxWriter
+easy_exchange_rates

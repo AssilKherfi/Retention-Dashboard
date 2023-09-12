@@ -779,7 +779,7 @@ def main():
         )
 
         # Calculer la moyenne de LTV avec GMV
-        ltv_avg_with_gmv = ltv_avg_with_gmv_by_cat["LTV avec GMV (en DZD)"].mean()
+        ltv_avg_with_gmv = ltv_summary_df[f"LTV avec GMV (en DZD)"].mean()
 
         # Calculer la moyenne de LTV avec 15% de la GMV par Business Catégorie
         ltv_avg_with_15_percent_gmv_by_cat = (
@@ -812,10 +812,46 @@ def main():
 
         # Ajouter une ligne pour les totaux globaux
         ltv_avg_combined_df.loc[ltv_avg_combined_df.shape[0]] = [
-            "Total",
+            "Total Business Catégorie",
             ltv_avg_with_gmv,
             ltv_avg_with_15_percent_gmv_global,
         ]
+
+        # Créez une instance de l'API (assurez-vous d'importer l'API au préalable)
+        api = API()
+
+        # Obtenez la date actuelle
+        current_date = datetime.now().strftime("%Y-%m-%d")
+
+        # Obtenez le taux de change entre EUR et DZD pour la date actuelle
+        exchange_rate_today = api.get_exchange_rates(
+            base_currency="EUR",
+            start_date=current_date,
+            end_date=current_date,
+            targets=["DZD"],
+        )
+
+        # Obtenez le taux de change EUR/DZD
+        eur_to_dzd_rate = exchange_rate_today[current_date]["DZD"]
+
+        # Convertir les colonnes de LTV en euro en divisant par le taux de change
+        ltv_avg_combined_df["LTV avec GMV (en EUR)"] = (
+            ltv_avg_combined_df["LTV avec GMV (en DZD)"] / eur_to_dzd_rate
+        )
+        ltv_avg_combined_df["LTV avec 15% de la GMV (en EUR)"] = (
+            ltv_avg_combined_df["LTV avec 15% de la GMV (en DZD)"] / eur_to_dzd_rate
+        )
+
+        # Afficher le tableau des moyennes
+        st.subheader("LTV par Business Catégorie")
+        st.dataframe(ltv_avg_combined_df)
+
+        # Téléchargement de la data de rétention
+        if st.button("Télécharger LTV par Business Catégorie (.xlsx)"):
+            ltv_avg_combined_df.to_excel(
+                f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+                index=True,
+            )
 
         # Afficher le tableau des moyennes
         st.subheader("LTV par Business Catégorie")
