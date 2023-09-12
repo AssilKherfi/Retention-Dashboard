@@ -843,22 +843,11 @@ def main():
             ltv_avg_combined_df["LTV avec 15% de la GMV (en DZD)"] / eur_to_dzd_rate
         )
 
-        # Afficher le tableau des moyennes
+        # Afficher le tableau de la LTV
         st.subheader("LTV par Business Catégorie")
         st.dataframe(ltv_avg_combined_df)
 
-        # Téléchargement de la data de rétention
-        if st.button("Télécharger LTV par Business Catégorie (.xlsx)"):
-            ltv_avg_combined_df.to_excel(
-                f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
-                index=True,
-            )
-
-        # Afficher le tableau des moyennes
-        st.subheader("LTV par Business Catégorie")
-        st.dataframe(ltv_avg_combined_df)
-
-        # Téléchargement de la data de rétention
+        # Téléchargement de la LTV
         if st.button("Télécharger LTV par Business Catégorie (.xlsx)"):
             ltv_avg_combined_df.to_excel(
                 f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
