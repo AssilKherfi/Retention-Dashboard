@@ -26,20 +26,20 @@ def load_data_s3(bucket_name, file_name):
     return pd.read_csv(StringIO(object_content), delimiter=",", low_memory=False)
 
 
-# Accéder aux secrets de la section "s3_credentials"
-s3_secrets = st.secrets["s3_credentials"]
+# # Accéder aux secrets de la section "s3_credentials"
+# s3_secrets = st.secrets["s3_credentials"]
 
-# Créer une session AWS
-session = boto3.Session(
-    aws_access_key_id=s3_secrets["AWS_ACCESS_KEY_ID"],
-    aws_secret_access_key=s3_secrets["AWS_SECRET_ACCESS_KEY"],
-)
+# # Créer une session AWS
+# session = boto3.Session(
+#     aws_access_key_id=s3_secrets["AWS_ACCESS_KEY_ID"],
+#     aws_secret_access_key=s3_secrets["AWS_SECRET_ACCESS_KEY"],
+# )
 
-# Créer un client S3
-s3_client = session.client("s3")
+# # Créer un client S3
+# s3_client = session.client("s3")
 
-# Nom du seau S3
-bucket_name = "one-data-lake"
+# # Nom du seau S3
+# bucket_name = "one-data-lake"
 
 # # Liste des noms de fichiers à télécharger depuis S3
 # file_names = [
