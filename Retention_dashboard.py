@@ -193,10 +193,12 @@ orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 
 orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
 
-# users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
-# users["customer_id"] = users["customer_id"].astype(str)
-# users["customer_id"] = [re.sub(r'\.0$', '', customer_id) for customer_id in users["customer_id"]]
-# users["createdAt"] = pd.to_datetime(users["createdAt"])
+users = pd.read_csv("users.csv", delimiter=",", low_memory=False)
+users["customer_id"] = users["customer_id"].astype(str)
+users["customer_id"] = [
+    re.sub(r"\.0$", "", customer_id) for customer_id in users["customer_id"]
+]
+users["createdAt"] = pd.to_datetime(users["createdAt"])
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
 orders["date"] = pd.to_datetime(orders["date"])
