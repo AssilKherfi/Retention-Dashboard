@@ -67,7 +67,7 @@ orders = conn.read(
     low_memory=False,
 )
 users = conn.read(
-    "one-data-lake/csv_database/users.csv",
+    "one-data-lake/csv_database/users_2023.csv",
     input_format="csv",
     ttl=600,
     low_memory=False,
