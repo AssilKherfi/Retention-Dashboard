@@ -14,6 +14,7 @@ import bcrypt
 import xlsxwriter
 import re
 from easy_exchange_rates import API
+from st_files_connection import FilesConnection
 
 
 # %%
@@ -40,23 +41,26 @@ s3_client = session.client("s3")
 # Nom du seau S3
 bucket_name = "one-data-lake"
 
-# Liste des noms de fichiers à télécharger depuis S3
-file_names = [
-    "csv_database/orders.csv",
-    # "csv_database/users.csv",
-]
+# # Liste des noms de fichiers à télécharger depuis S3
+# file_names = [
+#     "csv_database/orders.csv",
+#     # "csv_database/users.csv",
+# ]
 
-# Dictionnaire pour stocker les DataFrames correspondants aux fichiers
-dataframes = {}
+# # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
+# dataframes = {}
 
-# Télécharger et traiter les fichiers
-for file_name in file_names:
-    df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
-    dataframes[df_name] = load_data_s3(bucket_name, file_name)
+# # Télécharger et traiter les fichiers
+# for file_name in file_names:
+#     df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
+#     dataframes[df_name] = load_data_s3(bucket_name, file_name)
 
-# Créer un DataFrame à partir des données
-orders = dataframes["orders"]
-# users = dataframes["users"]
+# # Créer un DataFrame à partir des données
+# orders = dataframes["orders"]
+# # users = dataframes["users"]
+
+conn = st.experimental_connection("s3", type=FilesConnection)
+orders = conn.read("one-data-lake/csv_database/orders.csv", input_format="csv", ttl=600)
 
 # %%
 pd.set_option("display.max_columns", None)
