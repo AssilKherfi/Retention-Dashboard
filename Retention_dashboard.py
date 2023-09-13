@@ -117,7 +117,8 @@ orders = orders[
             "64438759505",
             "569994573568",
             "1628682",
-            "310179181696" "878446",
+            "310179181696",
+            "878446",
             "3643707",
             "2253354",
             "1771017743",
@@ -165,7 +166,8 @@ orders = orders[
             "2815691755",
             "879984",
             "3312616",
-            "548088380288" "3526036",
+            "548088380288",
+            "3526036",
             "2367635120",
             "24957125457",
             "459557812544",
@@ -197,7 +199,99 @@ users["customer_id"] = users["customer_id"].astype(str)
 users["customer_id"] = [
     re.sub(r"\.0$", "", customer_id) for customer_id in users["customer_id"]
 ]
+users["tags"] = users["tags"].str.replace(r"\[|\]", "", regex=True)
+users["tags"] = users["tags"].str.replace(r"['\"]", "", regex=True)
+users = users[
+    ~users["customer_id"].isin(
+        [
+            "2059318",
+            "1506025442",
+            "1694397201",
+            "2830181885",
+            "5620828389",
+            "4064611739",
+            "3385745613",
+            "2281370",
+            "64438759505",
+            "569994573568",
+            "1628682",
+            "310179181696",
+            "878446",
+            "3643707",
+            "2253354",
+            "1771017743",
+            "727840660224",
+            "2280761953",
+            "2864429",
+            "1505970032",
+            "1517116",
+            "929482210496",
+            "5884716233",
+            "22781605568",
+            "2794629",
+            "47201675489",
+            "6072524763",
+            "2342577",
+            "1440074",
+            "3666483",
+            "449701472960",
+            "869120",
+            "7304625963",
+            "2214784702",
+            "869883",
+            "2851778338",
+            "3000794",
+            "1898245261",
+            "9816298466",
+            "7021529167",
+            "3017838801",
+            "5624710564",
+            "1584024035",
+            "2485567",
+            "2763532338",
+            "841024809600",
+            "1739473",
+            "2183725",
+            "3788062",
+            "23400912794",
+            "150321448192",
+            "461317394880",
+            "2208215",
+            "3669307840",
+            "610335616576",
+            "7478577450",
+            "13153632574",
+            "2815691755",
+            "879984",
+            "3312616",
+            "548088380288",
+            "3526036",
+            "2367635120",
+            "24957125457",
+            "459557812544",
+            "1290757210",
+            "507345740736",
+            "2558315057",
+            "819751",
+            "407181581440",
+            "1412707541",
+            "1419613392",
+            "4068655",
+            "303655560704",
+            "2389210",
+            "2765139",
+            "504153462208",
+            "2100305133",
+            "653243920384",
+            "1253878877",
+            "43255929830",
+        ]
+    )
+]
 users["createdAt"] = pd.to_datetime(users["createdAt"])
+users["date"] = users["createdAt"].dt.strftime("%Y-%m-%d")
+users["date"] = pd.to_datetime(users["date"])
+users = users.rename(columns={"Origine": "customer_origine"})
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
 orders["date"] = pd.to_datetime(orders["date"])
@@ -334,6 +428,45 @@ def apply_filters_summary(df, status, customer_origine, time_period, num_periods
     return filtered_data.copy()
 
 
+def apply_filters_users(
+    df, customer_origine, customer_country, time_period, num_periods
+):
+    filtered_data = df.copy()
+
+    if customer_origine != "Tous":
+        filtered_data = filtered_data[
+            filtered_data["customer_origine"] == customer_origine
+        ]
+
+    if customer_country != "Tous":
+        filtered_data = filtered_data[
+            filtered_data["customer_country"] == customer_country
+        ]
+
+    # if tags != "Tous":
+    #     filtered_data = filtered_data[filtered_data["tags"] == tags]
+
+    # if accountTypes != "Tous":
+    #     filtered_data = filtered_data[filtered_data["accountTypes"] == accountTypes]
+
+    date_col = "date"
+
+    # Calculer la date de début de la période en fonction du nombre de périodes souhaitées
+    if time_period == "Semaine":
+        period_type = "W"
+        start_date = filtered_data[date_col].max() - pd.DateOffset(weeks=num_periods)
+    else:
+        period_type = "M"
+        start_date = filtered_data[date_col].max() - pd.DateOffset(months=num_periods)
+
+    filtered_data = filtered_data[
+        (filtered_data[date_col] >= start_date)
+        & (filtered_data[date_col] <= filtered_data[date_col].max())
+    ]
+
+    return filtered_data.copy()
+
+
 # Fonction pour calculer la plage de dates
 def get_date_range(filtered_data, time_period, num_periods):
     end_date = filtered_data["date"].max()
@@ -369,12 +502,12 @@ def main():
     # Créer un menu de navigation
     selected_page = st.sidebar.selectbox(
         "Sélectionnez un Tableau de Bord",
-        ["Tableau de Bord de Retention", "Lifetime Value (LTV)"],
+        ["Retention", "Lifetime Value (LTV)", "Users"],
     )
 
-    if selected_page == "Tableau de Bord de Retention":
+    if selected_page == "Retention":
         # Contenu de la page "Tableau de Bord de Retention"
-        st.header("Tableau de Bord de Retention")
+        st.header("Retention")
 
         # Sidebar pour les filtres
         st.sidebar.title("Filtres")
@@ -587,7 +720,7 @@ def main():
 
     # Créez une nouvelle page LTV
     elif selected_page == "Lifetime Value (LTV)":
-        st.header("Tableau de Bord de Lifetime Value (LTV)")
+        st.header("Lifetime Value (LTV)")
 
         # Sidebar pour les filtres
         st.sidebar.title("Filtres")
@@ -890,6 +1023,71 @@ def main():
         plt.ylabel("LTV (en DZD)")
         plt.xticks(rotation=45)
         st.pyplot(fig)
+
+    # Créez une nouvelle page Users
+    elif selected_page == "Users":
+        st.header("Users")
+
+        # Sidebar pour les filtres
+        st.sidebar.title("Filtres")
+
+        # Sélection de la période
+        time_period = st.sidebar.radio(
+            "Période", ["Semaine", "Mois"], key="time_period_users"
+        )
+
+        # Sélection du nombre de périodes précédentes
+        if time_period == "Semaine":
+            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
+        else:
+            num_periods_default = 6  # Par défaut, sélectionner 6 mois
+
+        num_periods = st.sidebar.number_input(
+            "Nombre de périodes précédentes",
+            1,
+            36,
+            num_periods_default,
+            key="num_periods_users",
+        )
+
+        # Filtres
+        customer_origine_options = ["Tous"] + list(users["customer_origine"].unique())
+        customer_origine = st.sidebar.selectbox(
+            "Customer Origine (diaspora or Local)", customer_origine_options
+        )
+
+        customer_country_options = ["Tous"] + list(users["customer_country"].unique())
+        customer_country = st.sidebar.selectbox(
+            "Customer Country", customer_country_options
+        )
+
+        # accountTypes_options = ["Tous"] + list(users["accountTypes"].unique())
+        # accountTypes = st.sidebar.selectbox("Account Types", accountTypes_options)
+
+        # tags_options = ["Toutes"] + list(users["tags"].unique())
+        # tags = st.sidebar.selectbox("Tags", tags_options)
+
+        # Appliquer les filtres
+        filtered_data_users = apply_filters_users(
+            users,
+            customer_origine,
+            customer_country,
+            # accountTypes,
+            # tags,
+            time_period,
+            num_periods,
+        )
+
+        # Afficher le tableau des users
+        st.subheader("Users Data")
+        st.dataframe(filtered_data_users)
+
+        # Téléchargement de la data des users
+        if st.button("Télécharger les données des Users (.xlsx)"):
+            filtered_data_users.to_excel(
+                f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country} , pour les {num_periods} derniers {time_period}.xlsx",
+                index=True,
+            )
 
     st.markdown(
         """
