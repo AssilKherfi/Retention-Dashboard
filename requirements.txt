@@ -27,5 +27,5 @@ bcrypt
 openpyxl
 XlsxWriter
 easy_exchange_rates
-s3fs==2023.6.0
-gcsfs==2023.6.0
+s3fs
+gcsfs
