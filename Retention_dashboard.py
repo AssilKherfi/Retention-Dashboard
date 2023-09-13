@@ -60,13 +60,23 @@ def load_data_s3(bucket_name, file_name):
 # # users = dataframes["users"]
 
 conn = st.experimental_connection("s3", type=FilesConnection)
-orders = conn.read("one-data-lake/csv_database/orders.csv", input_format="csv", ttl=600)
+orders = conn.read(
+    "one-data-lake/csv_database/orders.csv",
+    input_format="csv",
+    ttl=600,
+    low_memory=False,
+)
+users = conn.read(
+    "one-data-lake/csv_database/users.csv",
+    input_format="csv",
+    ttl=600,
+    low_memory=False,
+)
 
 # %%
 pd.set_option("display.max_columns", None)
 pd.set_option("display.precision", 0)
 
-# orders = pd.read_csv("orders.csv", delimiter=",", low_memory=False)
 orders["order_id"] = orders["order_id"].astype(str)
 orders["customer_id"] = orders["customer_id"].astype(str)
 orders["createdAt"] = pd.to_datetime(orders["createdAt"])
