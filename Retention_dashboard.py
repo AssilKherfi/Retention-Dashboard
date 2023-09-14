@@ -1078,16 +1078,31 @@ def main():
             num_periods,
         )
 
-        # Afficher le tableau des users
-        st.subheader("Users Data")
-        st.dataframe(filtered_data_users)
+        # Afficher les données des Users
+        show_filtered_data_users = st.sidebar.checkbox("Afficher les données")
 
-        # Téléchargement de la data des users
-        if st.button("Télécharger les données des Users (.xlsx)"):
-            filtered_data_users.to_excel(
-                f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country} , pour les {num_periods} derniers {time_period}.xlsx",
-                index=True,
+        if show_filtered_data_users:
+            st.subheader("Data Users")
+            st.dataframe(filtered_data_users)
+
+            # Bouton pour télécharger le DataFrame au format Excel
+            filtered_data_users_xlsx = to_excel(
+                filtered_data_users, include_index=False
             )
+            st.download_button(
+                "Télécharger les Users en Excel (.xlsx)",
+                filtered_data_users_xlsx,
+                f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+        # Afficher la plage de dates sélectionnée
+        start_date, end_date = get_date_range(
+            filtered_data_users, time_period, num_periods
+        )
+        st.sidebar.write(
+            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
+        )
 
     st.markdown(
         """
