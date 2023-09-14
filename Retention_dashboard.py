@@ -681,19 +681,17 @@ def main():
         st.pyplot(plt)
 
         # Génération de l'image de la heatmap
-        buffer = BytesIO()
-        plt.savefig(buffer, format="png")
-        buffer.seek(0)
+        buffer_ret = BytesIO()
+        plt.savefig(buffer_ret, format="png")
+        buffer_ret.seek(0)
 
         # Téléchargement de l'image de la heatmap de la retention
         st.download_button(
             label="Télécharger la Heatmap (Rétention en %)",
-            data=buffer,
+            data=buffer_ret,
             file_name=f"Heatmap de la retention - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
-
-        plt.clf()
 
         # Afficher la heatmap de la matrice de rétention du churn en pourcentage
         st.subheader("Heatmap de la Rétention (Churn en %)")
@@ -715,15 +713,18 @@ def main():
         plt.ylabel("Cohorte")
         st.pyplot(plt)
 
+        # Génération de l'image de la heatmap
+        buffer_churn = BytesIO()
+        plt.savefig(buffer_churn, format="png")
+        buffer_churn.seek(0)
+
         # Téléchargement de l'image de la heatmap de la retention (Churn en %)
         st.download_button(
             label="Télécharger la Heatmap (Churn en %)",
-            data=buffer,
+            data=buffer_churn,
             file_name=f"Heatmap de la retention (churn) - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
-
-        plt.clf()
 
     # Créez une nouvelle page LTV
     elif selected_page == "Lifetime Value (LTV)":

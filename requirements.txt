@@ -30,3 +30,4 @@ easy_exchange_rates
 s3fs
 gcsfs
 plotly==5.1.0
+kaleido
