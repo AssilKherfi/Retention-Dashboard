@@ -484,21 +484,21 @@ def get_date_range(filtered_data, time_period, num_periods):
 def main():
     st.title("Tableau de Bord TemtemOne")
 
-    # # Zone de connexion
-    # if "logged_in" not in st.session_state:
-    #     st.session_state.logged_in = False
+    # Zone de connexion
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
 
-    # if not st.session_state.logged_in:
-    #     st.subheader("Connexion Requise")
-    #     username = st.text_input("Nom d'utilisateur")
-    #     password = st.text_input("Mot de passe", type="password")
+    if not st.session_state.logged_in:
+        st.subheader("Connexion Requise")
+        username = st.text_input("Nom d'utilisateur")
+        password = st.text_input("Mot de passe", type="password")
 
-    #     if st.button("Se connecter"):
-    #         if verify_credentials(username, password):
-    #             st.session_state.logged_in = True
-    #         else:
-    #             st.error("Nom d'utilisateur ou mot de passe incorrect.")
-    #     return
+        if st.button("Se connecter"):
+            if verify_credentials(username, password):
+                st.session_state.logged_in = True
+            else:
+                st.error("Nom d'utilisateur ou mot de passe incorrect.")
+        return
 
     # Créer un menu de navigation
     selected_page = st.sidebar.selectbox(
@@ -997,7 +997,7 @@ def main():
         st.dataframe(ltv_avg_combined_df)
 
         # Téléchargement de la LTV
-        ltv_avg_combined_df_xlsx = to_excel(ltv_avg_combined_df, include_index=True)
+        ltv_avg_combined_df_xlsx = to_excel(ltv_avg_combined_df, include_index=False)
         st.download_button(
             "Télécharger LTV par Business Catégorie (.xlsx)",
             ltv_avg_combined_df_xlsx,
@@ -1085,7 +1085,7 @@ def main():
         show_filtered_data_users = st.sidebar.checkbox("Afficher les données")
 
         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-        def to_excel(df, include_index=True):
+        def to_excel(df, include_index=False):
             output = BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 df.to_excel(writer, index=include_index, sheet_name="Sheet1")
@@ -1138,8 +1138,8 @@ def main():
         st.subheader("Nouveaux Inscrits")
         st.dataframe(new_signups)
 
-        # Téléchargement de la rétention avec churn
-        new_signups_xlsx = to_excel(new_signups, include_index=True)
+        # Téléchargement des nouveaux inscrit
+        new_signups_xlsx = to_excel(new_signups, include_index=False)
         st.download_button(
             "Télécharger les données des Nouveaux Inscrits (.xlsx)",
             new_signups_xlsx,
