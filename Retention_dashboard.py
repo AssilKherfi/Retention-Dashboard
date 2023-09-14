@@ -693,6 +693,8 @@ def main():
             mime="image/png",
         )
 
+        plt.clf()
+
         # Afficher la heatmap de la matrice de rétention du churn en pourcentage
         st.subheader("Heatmap de la Rétention (Churn en %)")
         plt.figure(figsize=(10, 6))
@@ -720,6 +722,8 @@ def main():
             file_name=f"Heatmap de la retention (churn) - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
+
+        plt.clf()
 
     # Créez une nouvelle page LTV
     elif selected_page == "Lifetime Value (LTV)":
@@ -1174,18 +1178,13 @@ def main():
         st.subheader("Nombre de Nouveaux Inscrits par Période")
         st.plotly_chart(fig)
 
-        # Génération de l'image de la heatmap
-        buffer = BytesIO()
-        plt.savefig(buffer, format="png")
-        buffer.seek(0)
-
-        # Effacez le graphique de la mémoire de Matplotlib
-        plt.clf()
+        # Génération de l'image de du nombre de nouveau inscrit avec Plotly Express
+        img_bytes = fig.to_image(format="png")
 
         # Téléchargement de l'image de la heatmap de la retention
         st.download_button(
             label="Télécharger le graphique",
-            data=buffer,
+            data=img_bytes,
             file_name=f"Nouveaux_Inscrits_Graph - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.png",
             mime="image/png",
         )
