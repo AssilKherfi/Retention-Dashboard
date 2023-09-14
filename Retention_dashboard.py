@@ -484,21 +484,21 @@ def get_date_range(filtered_data, time_period, num_periods):
 def main():
     st.title("Tableau de Bord TemtemOne")
 
-    # Zone de connexion
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
+    # # Zone de connexion
+    # if "logged_in" not in st.session_state:
+    #     st.session_state.logged_in = False
 
-    if not st.session_state.logged_in:
-        st.subheader("Connexion Requise")
-        username = st.text_input("Nom d'utilisateur")
-        password = st.text_input("Mot de passe", type="password")
+    # if not st.session_state.logged_in:
+    #     st.subheader("Connexion Requise")
+    #     username = st.text_input("Nom d'utilisateur")
+    #     password = st.text_input("Mot de passe", type="password")
 
-        if st.button("Se connecter"):
-            if verify_credentials(username, password):
-                st.session_state.logged_in = True
-            else:
-                st.error("Nom d'utilisateur ou mot de passe incorrect.")
-        return
+    #     if st.button("Se connecter"):
+    #         if verify_credentials(username, password):
+    #             st.session_state.logged_in = True
+    #         else:
+    #             st.error("Nom d'utilisateur ou mot de passe incorrect.")
+    #     return
 
     # Créer un menu de navigation
     selected_page = st.sidebar.selectbox(
@@ -626,7 +626,9 @@ def main():
         ]
 
         # Calculer la rétention en pourcentage
-        retention_percentage = cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0)
+        retention_percentage = (
+            cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0) * 100
+        )
 
         # Afficher la matrice de rétention
         st.subheader("Matrice de Rétention")
@@ -1172,21 +1174,21 @@ def main():
         st.subheader("Nombre de Nouveaux Inscrits par Période")
         st.plotly_chart(fig)
 
-        # Ajoutez un bouton pour télécharger le graphique
-        if st.button("Télécharger le graphique (.png)"):
-            # Utilisez Plotly pour générer une image PNG du graphique
-            img_bytes = fig.to_image(format="png")
+        # Génération de l'image de la heatmap
+        buffer = BytesIO()
+        plt.savefig(buffer, format="png")
+        buffer.seek(0)
 
-            # Générez un nom de fichier pour l'image
-            img_filename = "Nouveaux_Inscrits_Graph - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.png"
+        # Effacez le graphique de la mémoire de Matplotlib
+        plt.clf()
 
-            # Téléchargez l'image PNG du graphique
-            st.download_button(
-                label="Télécharger le graphique (.png)",
-                data=img_bytes,
-                file_name=img_filename,
-                mime="image/png",
-            )
+        # Téléchargement de l'image de la heatmap de la retention
+        st.download_button(
+            label="Télécharger le graphique",
+            data=buffer,
+            file_name=f"Nouveaux_Inscrits_Graph - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.png",
+            mime="image/png",
+        )
 
     st.markdown(
         """
