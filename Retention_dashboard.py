@@ -1143,44 +1143,46 @@ def main():
                 index=True,
             )
 
-    # Agrégez les données par période (semaine ou mois) et comptez le nombre d'inscriptions par période
-    if time_period == "Semaine":
-        new_signups["period"] = new_signups["date"] - pd.to_timedelta(
-            new_signups["date"].dt.dayofweek, unit="D"
+        # Agrégez les données par période (semaine ou mois) et comptez le nombre d'inscriptions par période
+        if time_period == "Semaine":
+            new_signups["period"] = new_signups["date"] - pd.to_timedelta(
+                new_signups["date"].dt.dayofweek, unit="D"
+            )
+        else:
+            new_signups["period"] = new_signups["date"].dt.strftime("%Y-%m")
+
+        new_signups_count = (
+            new_signups.groupby("period").size().reset_index(name="count")
         )
-    else:
-        new_signups["period"] = new_signups["date"].dt.strftime("%Y-%m")
 
-    new_signups_count = new_signups.groupby("period").size().reset_index(name="count")
+        # Créez un graphique montrant le nombre de nouveaux inscrits par période
+        fig = px.bar(
+            new_signups_count,
+            x="period",
+            y="count",
+            title="Nombre de Nouveaux Inscrits par Période",
+            labels={"period": "Période", "count": "Nombre de Nouveaux Inscrits"},
+        ).update_xaxes(categoryorder="total ascending")
 
-    # Créez un graphique montrant le nombre de nouveaux inscrits par période
-    fig = px.bar(
-        new_signups_count,
-        x="period",
-        y="count",
-        title="Nombre de Nouveaux Inscrits par Période",
-        labels={"period": "Période", "count": "Nombre de Nouveaux Inscrits"},
-    ).update_xaxes(categoryorder="total ascending")
+        # Affichez le graphique
+        st.subheader("Nombre de Nouveaux Inscrits par Période")
+        st.plotly_chart(fig)
 
-    # Affichez le graphique
-    st.subheader("Nombre de Nouveaux Inscrits par Période")
-    st.plotly_chart(fig)
+        # Ajoutez un bouton pour télécharger le graphique
+        if st.button("Télécharger le graphique (.png)"):
+            # Utilisez Plotly pour générer une image PNG du graphique
+            img_bytes = fig.to_image(format="png")
 
-    # Ajoutez un bouton pour télécharger le graphique
-    if st.button("Télécharger le graphique (.png)"):
-        # Utilisez Plotly pour générer une image PNG du graphique
-        img_bytes = fig.to_image(format="png")
+            # Générez un nom de fichier pour l'image
+            img_filename = "Nouveaux_Inscrits_Graph - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.png"
 
-        # Générez un nom de fichier pour l'image
-        img_filename = "Nouveaux_Inscrits_Graph.png"
-
-        # Téléchargez l'image PNG du graphique
-        st.download_button(
-            label="Télécharger le graphique (.png)",
-            data=img_bytes,
-            file_name=img_filename,
-            mime="image/png",
-        )
+            # Téléchargez l'image PNG du graphique
+            st.download_button(
+                label="Télécharger le graphique (.png)",
+                data=img_bytes,
+                file_name=img_filename,
+                mime="image/png",
+            )
 
     st.markdown(
         """
