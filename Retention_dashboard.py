@@ -15,6 +15,7 @@ import xlsxwriter
 import re
 from easy_exchange_rates import API
 from st_files_connection import FilesConnection
+import plotly.express as px
 
 
 # %%
@@ -1115,6 +1116,55 @@ def main():
         st.sidebar.write(
             f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
         )
+
+        # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
+        new_signups = filtered_data_users
+        new_signups = new_signups[
+            [
+                "date",
+                "customer_id",
+                "lastName",
+                "firstName",
+                "phone",
+                "email",
+                "customer_country",
+                "customer_origine",
+            ]
+        ]
+
+        # Affichez les nouveaux inscrits dans le tableau de bord
+        st.subheader("Nouveaux Inscrits")
+        st.dataframe(new_signups)
+
+        # Téléchargement de la LTV
+        if st.button("Télécharger les données des Nouveaux Inscrits (.xlsx)"):
+            new_signups.to_excel(
+                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+                index=True,
+            )
+
+    # Agrégez les données par période (semaine ou mois) et comptez le nombre d'inscriptions par période
+    if time_period == "Semaine":
+        new_signups["period"] = new_signups["date"] - pd.to_timedelta(
+            new_signups["date"].dt.dayofweek, unit="D"
+        )
+    else:
+        new_signups["period"] = new_signups["date"].dt.strftime("%Y-%m")
+
+    new_signups_count = new_signups.groupby("period").size().reset_index(name="count")
+
+    # Créez un graphique montrant le nombre de nouveaux inscrits par période
+    fig = px.bar(
+        new_signups_count,
+        x="period",
+        y="count",
+        title="Nombre de Nouveaux Inscrits par Période",
+        labels={"period": "Période", "count": "Nombre de Nouveaux Inscrits"},
+    ).update_xaxes(categoryorder="total ascending")
+
+    # Affichez le graphique
+    st.subheader("Nombre de Nouveaux Inscrits par Période")
+    st.plotly_chart(fig)
 
     st.markdown(
         """
