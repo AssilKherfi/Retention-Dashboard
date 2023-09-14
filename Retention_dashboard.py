@@ -1166,6 +1166,22 @@ def main():
     st.subheader("Nombre de Nouveaux Inscrits par Période")
     st.plotly_chart(fig)
 
+    # Ajoutez un bouton pour télécharger le graphique
+    if st.button("Télécharger le graphique (.png)"):
+        # Utilisez Plotly pour générer une image PNG du graphique
+        img_bytes = fig.to_image(format="png")
+
+        # Générez un nom de fichier pour l'image
+        img_filename = "Nouveaux_Inscrits_Graph.png"
+
+        # Téléchargez l'image PNG du graphique
+        st.download_button(
+            label="Télécharger le graphique (.png)",
+            data=img_bytes,
+            file_name=img_filename,
+            mime="image/png",
+        )
+
     st.markdown(
         """
     <style>
