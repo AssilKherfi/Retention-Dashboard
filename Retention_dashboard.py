@@ -1136,7 +1136,7 @@ def main():
         st.subheader("Nouveaux Inscrits")
         st.dataframe(new_signups)
 
-        # Téléchargement de la LTV
+        # Téléchargement des Nouveaux Inscrits
         if st.button("Télécharger les données des Nouveaux Inscrits (.xlsx)"):
             new_signups.to_excel(
                 f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
