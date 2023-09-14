@@ -1026,7 +1026,7 @@ def main():
 
     # Créez une nouvelle page Users
     elif selected_page == "Users":
-        st.header("Users")
+        st.header("Users 2023")
 
         # Sidebar pour les filtres
         st.sidebar.title("Filtres")
@@ -1080,6 +1080,18 @@ def main():
 
         # Afficher les données des Users
         show_filtered_data_users = st.sidebar.checkbox("Afficher les données")
+
+        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        def to_excel(df, include_index=True):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+                workbook = writer.book
+                worksheet = writer.sheets["Sheet1"]
+                format = workbook.add_format({"num_format": "0.00"})
+                worksheet.set_column("A:A", None, format)
+            processed_data = output.getvalue()
+            return processed_data
 
         if show_filtered_data_users:
             st.subheader("Data Users")
