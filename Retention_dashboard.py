@@ -997,11 +997,13 @@ def main():
         st.dataframe(ltv_avg_combined_df)
 
         # Téléchargement de la LTV
-        if st.button("Télécharger LTV par Business Catégorie (.xlsx)"):
-            ltv_avg_combined_df.to_excel(
-                f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
-                index=True,
-            )
+        ltv_avg_combined_df_xlsx = to_excel(ltv_avg_combined_df, include_index=True)
+        st.download_button(
+            "Télécharger LTV par Business Catégorie (.xlsx)",
+            ltv_avg_combined_df_xlsx,
+            f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
         # # Afficher le résumé
         # st.subheader("Résumé de la LTV par Business Catégorie")
@@ -1136,12 +1138,14 @@ def main():
         st.subheader("Nouveaux Inscrits")
         st.dataframe(new_signups)
 
-        # Téléchargement des Nouveaux Inscrits
-        if st.button("Télécharger les données des Nouveaux Inscrits (.xlsx)"):
-            new_signups.to_excel(
-                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
-                index=True,
-            )
+        # Téléchargement de la rétention avec churn
+        new_signups_xlsx = to_excel(new_signups, include_index=True)
+        st.download_button(
+            "Télécharger les données des Nouveaux Inscrits (.xlsx)",
+            new_signups_xlsx,
+            f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
         # Agrégez les données par période (semaine ou mois) et comptez le nombre d'inscriptions par période
         if time_period == "Semaine":
