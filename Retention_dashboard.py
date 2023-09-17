@@ -1061,7 +1061,7 @@ def main():
         # Sélection de la devise
         selected_devise = st.selectbox("Sélectionnez la devise :", ["€", "DZD"])
 
-        devise = ""
+        devise = "€"
 
         if selected_devise != devise:
             devise = selected_devise
