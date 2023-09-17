@@ -22,10 +22,10 @@ import plotly.graph_objects as go
 # %%
 # Fonction pour télécharger et charger un DataFrame depuis une URL S3
 @st.cache_data  # Ajoutez le décorateur de mise en cache
-def load_data_s3(bucket_name, file_name):
-    response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
-    object_content = response["Body"].read().decode("utf-8")
-    return pd.read_csv(StringIO(object_content), delimiter=",", low_memory=False)
+# def load_data_s3(bucket_name, file_name):
+#     response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
+#     object_content = response["Body"].read().decode("utf-8")
+#     return pd.read_csv(StringIO(object_content), delimiter=",", low_memory=False)
 
 
 # # Accéder aux secrets de la section "s3_credentials"
@@ -61,15 +61,45 @@ def load_data_s3(bucket_name, file_name):
 # orders = dataframes["orders"]
 # # users = dataframes["users"]
 
-conn = st.experimental_connection("s3", type=FilesConnection)
-orders = conn.read(
-    "one-data-lake/csv_database/orders.csv",
+# conn = st.experimental_connection("s3", type=FilesConnection)
+# orders = conn.read(
+#     "one-data-lake/csv_database/orders.csv",
+#     input_format="csv",
+#     ttl=600,
+#     low_memory=False,
+# )
+# users = conn.read(
+#     "one-data-lake/csv_database/users_2023.csv",
+#     input_format="csv",
+#     ttl=600,
+#     low_memory=False,
+# )
+
+
+def load_data_s3(file_path, input_format="csv", ttl=600, low_memory=False):
+    # Créez la connexion S3 en utilisant st.experimental_connection
+    conn = st.experimental_connection("s3", type=FilesConnection)
+
+    # Lisez les données depuis S3 en utilisant la connexion
+    data = conn.read(
+        file_path,
+        input_format=input_format,
+        ttl=ttl,
+        low_memory=low_memory,
+    )
+
+    return data
+
+
+# Chargez les données depuis S3 en utilisant la fonction mise en cache
+orders = load_data_s3(
+    "votre_bucket/one-data-lake/csv_database/orders.csv",
     input_format="csv",
     ttl=600,
     low_memory=False,
 )
-users = conn.read(
-    "one-data-lake/csv_database/users_2023.csv",
+users = load_data_s3(
+    "votre_bucket/one-data-lake/csv_database/users_2023.csv",
     input_format="csv",
     ttl=600,
     low_memory=False,
@@ -993,11 +1023,11 @@ def main():
         # Obtenez le taux de change EUR/DZD
         eur_to_dzd_rate = exchange_rate_today[current_date]["DZD"]
 
-        # Convertir les colonnes de LTV en euro en divisant par le taux de change
-        ltv_avg_combined_df["LTV avec GMV (en EUR)"] = (
+        # Convertir les colonnes de LTV en €o en divisant par le taux de change
+        ltv_avg_combined_df["LTV avec GMV (en €)"] = (
             ltv_avg_combined_df["LTV avec GMV (en DZD)"] / eur_to_dzd_rate
         )
-        ltv_avg_combined_df["LTV avec 15% de la GMV (en EUR)"] = (
+        ltv_avg_combined_df["LTV avec 15% de la GMV (en €)"] = (
             ltv_avg_combined_df["LTV avec 15% de la GMV (en DZD)"] / eur_to_dzd_rate
         )
 
