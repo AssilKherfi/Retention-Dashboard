@@ -16,6 +16,7 @@ import re
 from easy_exchange_rates import API
 from st_files_connection import FilesConnection
 import plotly.express as px
+import plotly.graph_objects as go
 
 
 # %%
@@ -290,7 +291,8 @@ users = users[
     )
 ]
 users["createdAt"] = pd.to_datetime(users["createdAt"])
-users["date"] = users["createdAt"].dt.strftime("%Y-%m-%d")
+users["createdAt"] = users["createdAt"].dt.strftime("%Y-%m-%d")
+users["date"] = users["createdAt"]
 users["date"] = pd.to_datetime(users["date"])
 users = users.rename(columns={"Origine": "customer_origine"})
 # %%
@@ -1023,16 +1025,59 @@ def main():
         #         index=True,
         #     )
 
-        # Créer un graphique à barres
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ltv_avg_combined_df.plot(
-            x="Business Catégorie", kind="bar", ax=ax
-        )  # Utilisez "businessCat" au lieu de "Business Catégorie"
-        plt.title("LTV par Business Catégorie")
-        plt.xlabel("Business Catégorie")
-        plt.ylabel("LTV (en DZD)")
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
+        # Créer une fonction pour générer le graphique
+        def generate_ltv_graph(df, devise):
+            fig = go.Figure()
+
+            if devise == "€":
+                columns = ["LTV avec GMV (en €)", "LTV avec 15% de la GMV (en €)"]
+                names = ["LTV avec GMV (en €)", "LTV avec 15% de la GMV (en €)"]
+            else:
+                columns = ["LTV avec GMV (en DZD)", "LTV avec 15% de la GMV (en DZD)"]
+                names = ["LTV avec GMV (en DZD)", "LTV avec 15% de la GMV (en DZD)"]
+
+            for col, name in zip(columns, names):
+                fig.add_trace(
+                    go.Bar(
+                        x=df["Business Catégorie"],
+                        y=df[col],
+                        name=name,
+                    )
+                )
+
+            fig.update_layout(
+                barmode="group",
+                title="LTV par Business Catégorie",
+                xaxis_title="Business Catégorie",
+                yaxis_title="LTV",
+                legend_title="Devise",
+            )
+
+            return fig
+
+        # Afficher le graphique dans Streamlit
+        st.subheader("LTV par Business Catégorie")
+
+        # Sélection de la devise
+        selected_devise = st.selectbox("Sélectionnez la devise :", ["€", "DZD"])
+
+        devise = ""
+
+        if selected_devise != devise:
+            devise = selected_devise
+            st.plotly_chart(generate_ltv_graph(ltv_avg_combined_df, devise))
+
+        # # Téléchargement de l'image du graphique
+        # if st.button("Télécharger le graphique"):
+        #     img_bytes = generate_ltv_graph(ltv_avg_combined_df, devise).to_image(
+        #         format="png"
+        #     )
+        #     st.download_button(
+        #         label="Télécharger le graphique",
+        #         data=img_bytes,
+        #         file_name=f"LTV_Business_Categorie - Devise : {devise}.png",
+        #         mime="image/png",
+        #     )
 
     # Créez une nouvelle page Users
     elif selected_page == "Users":
@@ -1179,16 +1224,16 @@ def main():
         st.subheader("Nombre de Nouveaux Inscrits par Période")
         st.plotly_chart(fig)
 
-        # Génération de l'image de du nombre de nouveau inscrit avec Plotly Express
-        img_bytes = fig.to_image(format="png")
+        # # Génération de l'image de du nombre de nouveau inscrit avec Plotly Express
+        # img_bytes = fig.to_image(format="png")
 
-        # Téléchargement de l'image de la heatmap de la retention
-        st.download_button(
-            label="Télécharger le graphique",
-            data=img_bytes,
-            file_name=f"Nouveaux_Inscrits_Graph - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.png",
-            mime="image/png",
-        )
+        # # Téléchargement de l'image de la heatmap de la retention
+        # st.download_button(
+        #     label="Télécharger le graphique",
+        #     data=img_bytes,
+        #     file_name=f"Nouveaux_Inscrits_Graph - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.png",
+        #     mime="image/png",
+        # )
 
     st.markdown(
         """
