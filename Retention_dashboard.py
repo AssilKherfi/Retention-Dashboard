@@ -22,10 +22,10 @@ import plotly.graph_objects as go
 # %%
 # Fonction pour télécharger et charger un DataFrame depuis une URL S3
 @st.cache_data  # Ajoutez le décorateur de mise en cache
-# def load_data_s3(bucket_name, file_name):
-#     response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
-#     object_content = response["Body"].read().decode("utf-8")
-#     return pd.read_csv(StringIO(object_content), delimiter=",", low_memory=False)
+def load_data_s3(bucket_name, file_name):
+    response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
+    object_content = response["Body"].read().decode("utf-8")
+    return pd.read_csv(StringIO(object_content), delimiter=",", low_memory=False)
 
 
 # # Accéder aux secrets de la section "s3_credentials"
@@ -1061,7 +1061,7 @@ def main():
         # Sélection de la devise
         selected_devise = st.selectbox("Sélectionnez la devise :", ["€", "DZD"])
 
-        devise = "€"
+        devise = ""
 
         if selected_devise != devise:
             devise = selected_devise
