@@ -1306,6 +1306,10 @@ def main():
         color: #ffffff !important; /* Couleur du texte en blanc lorsque survolé */
         font-weight: bold;
     }
+
+    .e1vs0wn31{
+        background-color: #D4D4D4 !important; /*
+    }
     </style>
     """,
         unsafe_allow_html=True,
