@@ -61,45 +61,15 @@ import plotly.graph_objects as go
 # orders = dataframes["orders"]
 # # users = dataframes["users"]
 
-# conn = st.experimental_connection("s3", type=FilesConnection)
-# orders = conn.read(
-#     "one-data-lake/csv_database/orders.csv",
-#     input_format="csv",
-#     ttl=600,
-#     low_memory=False,
-# )
-# users = conn.read(
-#     "one-data-lake/csv_database/users_2023.csv",
-#     input_format="csv",
-#     ttl=600,
-#     low_memory=False,
-# )
-
-
-def load_data_s3(file_path, input_format="csv", ttl=600, low_memory=False):
-    # Créez la connexion S3 en utilisant st.experimental_connection
-    conn = st.experimental_connection("s3", type=FilesConnection)
-
-    # Lisez les données depuis S3 en utilisant la connexion
-    data = conn.read(
-        file_path,
-        input_format=input_format,
-        ttl=ttl,
-        low_memory=low_memory,
-    )
-
-    return data
-
-
-# Chargez les données depuis S3 en utilisant la fonction mise en cache
-orders = load_data_s3(
-    "votre_bucket/one-data-lake/csv_database/orders.csv",
+conn = st.experimental_connection("s3", type=FilesConnection)
+orders = conn.read(
+    "one-data-lake/csv_database/orders.csv",
     input_format="csv",
     ttl=600,
     low_memory=False,
 )
-users = load_data_s3(
-    "votre_bucket/one-data-lake/csv_database/users_2023.csv",
+users = conn.read(
+    "one-data-lake/csv_database/users_2023.csv",
     input_format="csv",
     ttl=600,
     low_memory=False,
