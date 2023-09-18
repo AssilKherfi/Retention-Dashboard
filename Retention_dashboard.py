@@ -314,7 +314,6 @@ orders = orders[
         "customer_phone",
         "customer_email",
         "total_amount_dzd",
-        "customer_origine",
     ]
 ]
 
