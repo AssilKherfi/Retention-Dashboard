@@ -90,9 +90,7 @@ orders["customer_id"] = [
 orders["businessCat"] = orders["businessCat"].replace(
     ["Recharge mobile", "Recharge mobile / ADSL"], ["Airtime", "Airtime"]
 )
-orders["customer_origine"] = orders["paymentType"].apply(
-    lambda x: "Diaspora" if x == "CARD_PAY" else "Local"
-)
+
 orders = orders[
     ~orders["order_id"].isin(
         [
@@ -316,6 +314,7 @@ orders = orders[
         "customer_phone",
         "customer_email",
         "total_amount_dzd",
+        "customer_origine",
     ]
 ]
 
