@@ -653,6 +653,20 @@ def main():
             customdata=custom_data, hovertemplate="%{customdata}<extra></extra>"
         )
 
+        # Ajoutez les annotations dans les cases de la heatmap
+        for i in range(len(y_labels)):
+            for j in range(len(x_labels)):
+                value = heatmap_data.iloc[i, j]
+                if not pd.isna(value):
+                    fig_retention.add_annotation(
+                        text=f"{value:.2f}%",  # Format du texte à afficher
+                        x=x_labels[j],
+                        y=y_labels[i],
+                        showarrow=False,
+                        font=dict(color="black"),  # Couleur du texte
+                        bgcolor="white",  # Couleur de fond de la case
+                    )
+
         # Créez la heatmap de la matrice de Retention analysis en pourcentage
         cohort_pivot.index = cohort_pivot.index.strftime("%Y-%m")
         cohort_pivot.columns = cohort_pivot.columns.astype(str)
@@ -665,6 +679,20 @@ def main():
 
         # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
         fig_clients = px.imshow(cohort_pivot, x=x_labels, y=y_labels)
+
+        # Ajoutez les annotations dans les cases de la heatmap
+        for i in range(len(y_labels)):
+            for j in range(len(x_labels)):
+                value = cohort_pivot.iloc[i, j]
+                if not pd.isna(value):
+                    fig_clients.add_annotation(
+                        text=value,  # Format du texte à afficher
+                        x=x_labels[j],
+                        y=y_labels[i],
+                        showarrow=False,
+                        font=dict(color="black"),  # Couleur du texte
+                        bgcolor="white",  # Couleur de fond de la case
+                    )
 
         # Créez des onglets pour basculer entre les deux visualisations
         selected_visualization = st.radio(
