@@ -659,7 +659,7 @@ def main():
                 value = heatmap_data.iloc[i, j]
                 if not pd.isna(value):
                     fig_retention.add_annotation(
-                        text=f"{value:.2f}%",  # Format du texte à afficher
+                        text=value,  # Format du texte à afficher
                         x=x_labels[j],
                         y=y_labels[i],
                         showarrow=False,
