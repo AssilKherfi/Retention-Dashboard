@@ -640,7 +640,7 @@ def main():
         )  # Liste des cohortes (2023-01, 2023-02, ...)
 
         # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
-        fig_retention = px.imshow(heatmap_data, text_auto=True, x=x_labels, y=y_labels)
+        fig_retention = px.imshow(heatmap_data, x=x_labels, y=y_labels)
 
         # Personnalisez le texte à afficher pour chaque point de données (gardez deux chiffres après la virgule)
         custom_data = [
@@ -664,7 +664,7 @@ def main():
         )  # Liste des cohortes (2023-01, 2023-02, ...)
 
         # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
-        fig_clients = px.imshow(cohort_pivot, text_auto=True, x=x_labels, y=y_labels)
+        fig_clients = px.imshow(cohort_pivot, x=x_labels, y=y_labels)
 
         # Créez des onglets pour basculer entre les deux visualisations
         selected_visualization = st.radio(
