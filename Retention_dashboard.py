@@ -19,6 +19,7 @@ from st_files_connection import FilesConnection
 import plotly.express as px
 import plotly.graph_objects as go
 
+
 # %%
 # Fonction pour télécharger et charger un DataFrame depuis une URL S3
 @st.cache_data  # Ajoutez le décorateur de mise en cache
@@ -630,8 +631,17 @@ def main():
         # Créez la heatmap de la matrice de Retention analysis en pourcentage
         retention.index = retention.index.strftime("%Y-%m")
         retention.columns = retention.columns.astype(str)
-        retention = retention.replace(np.nan, "", regex=True)
-        heatmap_data = (retention * 100).applymap(lambda x: f"{x:.2f}")
+
+        # Créez une fonction pour formater les valeurs
+        def format_value(x):
+            if not pd.isna(x):
+                return f"{x:.2f}"
+            else:
+                return ""
+
+        # Appliquez la fonction pour formater les valeurs dans le DataFrame
+        heatmap_data = retention * 100
+        heatmap_data = heatmap_data.applymap(format_value)
 
         # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
         x_labels = heatmap_data.columns.tolist()  # Liste des périodes (0, 1, 2, ...)
