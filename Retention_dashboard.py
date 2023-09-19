@@ -674,7 +674,7 @@ def main():
                         y=y_labels[i],
                         showarrow=False,
                         font=dict(color="black"),  # Couleur du texte
-                        bgcolor="white",  # Couleur de fond de la case
+                        # bgcolor="white",  # Couleur de fond de la case
                     )
 
         # Créez la heatmap de la matrice de Retention analysis en pourcentage
