@@ -1,6 +1,7 @@
 # %%
 import streamlit as st
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from operator import attrgetter
@@ -17,7 +18,6 @@ from easy_exchange_rates import API
 from st_files_connection import FilesConnection
 import plotly.express as px
 import plotly.graph_objects as go
-
 
 # %%
 # Fonction pour télécharger et charger un DataFrame depuis une URL S3
@@ -630,7 +630,7 @@ def main():
         # Créez la heatmap de la matrice de Retention analysis en pourcentage
         retention.index = retention.index.strftime("%Y-%m")
         retention.columns = retention.columns.astype(str)
-
+        retention = retention.replace(np.nan, "", regex=True)
         heatmap_data = (retention * 100).applymap(lambda x: f"{x:.2f}")
 
         # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
