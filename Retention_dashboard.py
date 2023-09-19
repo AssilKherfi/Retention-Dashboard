@@ -515,7 +515,7 @@ def main():
 
         # Sélection de la période
         time_period = st.sidebar.radio(
-            "Période", ["Semaine", "Mois"], key="time_period_retention"
+            "Période", ["Mois", "Semaine"], key="time_period_retention"
         )
 
         # Sélection du nombre de périodes précédentes
@@ -625,106 +625,103 @@ def main():
             f"Churn_{col}" for col in churned_customers.columns
         ]
 
-        # Calculer la rétention en pourcentage
-        retention_percentage = (
-            cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0) * 100
-        )
+        retention = cohort_pivot.divide(cohort_pivot.iloc[:, 0], axis=0)
 
-        # Afficher la matrice de rétention
-        st.subheader("Matrice de Rétention")
-        st.dataframe(retention_percentage)
+        # Créez la heatmap de la matrice de Retention analysis en pourcentage
+        retention.index = retention.index.strftime("%Y-%m")
+        retention.columns = retention.columns.astype(str)
 
-        # Téléchargement de la  Rétention
-        retention_percentage_xlsx = to_excel(retention_percentage, include_index=True)
-        st.download_button(
-            "Télécharger la Rétention en Excel (.xlsx)",
-            retention_percentage_xlsx,
-            f"Rétention - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+        heatmap_data = (retention * 100).applymap(lambda x: f"{x:.2f}")
 
-        # Renommer les colonnes de la matrice de rétention
-        cohort_pivot.columns = [
-            f"Retention_{str(col).zfill(2)}" for col in cohort_pivot.columns
+        # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
+        x_labels = heatmap_data.columns.tolist()  # Liste des périodes (0, 1, 2, ...)
+        y_labels = (
+            heatmap_data.index.tolist()
+        )  # Liste des cohortes (2023-01, 2023-02, ...)
+
+        # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
+        fig_retention = px.imshow(heatmap_data, text_auto=True, x=x_labels, y=y_labels)
+
+        # Personnalisez le texte à afficher pour chaque point de données (gardez deux chiffres après la virgule)
+        custom_data = [
+            [f"{value:.2f}%" if value is not None else "" for value in row]
+            for row in (retention * 100).values
         ]
 
-        # Concaténer la matrice de rétention avec les clients qui ont abandonné
-        cohort_analysis = pd.concat([cohort_pivot, churned_customers], axis=1)
+        # Mettez à jour le texte personnalisé dans le graphique
+        fig_retention.update_traces(
+            customdata=custom_data, hovertemplate="%{customdata}<extra></extra>"
+        )
 
-        # Afficher la matrice de rétention mise à jour
-        st.subheader("Matrice de Rétention & Churn")
-        st.dataframe(cohort_analysis)
+        # Créez la heatmap de la matrice de Retention analysis en pourcentage
+        cohort_pivot.index = cohort_pivot.index.strftime("%Y-%m")
+        cohort_pivot.columns = cohort_pivot.columns.astype(str)
 
-        # Téléchargement de la rétention avec churn
-        cohort_analysis_xlsx = to_excel(cohort_analysis, include_index=True)
+        # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
+        x_labels = cohort_pivot.columns.tolist()  # Liste des périodes (0, 1, 2, ...)
+        y_labels = (
+            cohort_pivot.index.tolist()
+        )  # Liste des cohortes (2023-01, 2023-02, ...)
+
+        # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
+        fig_clients = px.imshow(cohort_pivot, text_auto=True, x=x_labels, y=y_labels)
+
+        # Créez des onglets pour basculer entre les deux visualisations
+        selected_visualization = st.radio(
+            "Sélectionnez la visualisation", ["Retention Analysis", "Nombre de Clients"]
+        )
+
+        if selected_visualization == "Retention Analysis":
+            # Affichez la heatmap de l'analyse de rétention
+            st.plotly_chart(fig_retention)  # Utilisez le graphique fig_retention
+        else:
+            # Affichez la heatmap du nombre de clients
+            st.plotly_chart(fig_clients)  # Utilisez le graphique fig_clients
+
+        # # Afficher la matrice de rétention
+        # st.subheader("Matrice de Rétention")
+        # st.dataframe(retention)
+
+        # Téléchargement de la  Rétention
+        retention_analysis_xlsx = to_excel(retention, include_index=True)
         st.download_button(
-            "Télécharger la Rétention & Churn en Excel (.xlsx)",
-            cohort_analysis_xlsx,
-            f"Rétention avec Churn - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+            "Télécharger la Retention analysis en Excel (.xlsx)",
+            retention_analysis_xlsx,
+            f"Retention analysis - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
-        # Afficher la heatmap de la matrice de rétention de la rétention en pourcentage
-        st.subheader("Heatmap de la Rétention (Rétention en %)")
-        plt.figure(figsize=(10, 6))
-        ax = sns.heatmap(
-            retention_percentage, annot=True, cmap="YlGnBu", fmt=".1f", cbar=False
-        )
-
-        for t in ax.texts:
-            t.set_text(f"{float(t.get_text()):.1f}%")
-        plt.title(
-            f"Heatmap de la Rétention (Rétention en %) - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}"
-        )
-        plt.xlabel("Période")
-        plt.ylabel("Cohorte")
-        st.pyplot(plt)
-
-        # Génération de l'image de la heatmap
-        buffer_ret = BytesIO()
-        plt.savefig(buffer_ret, format="png")
-        buffer_ret.seek(0)
-
-        # Téléchargement de l'image de la heatmap de la retention
+        # Téléchargement de la data de Client cohort en excel
+        cohort_pivot_xlsx = to_excel(cohort_pivot, include_index=True)
         st.download_button(
-            label="Télécharger la Heatmap (Rétention en %)",
-            data=buffer_ret,
-            file_name=f"Heatmap de la retention - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.png",
-            mime="image/png",
+            "Télécharger Client cohort en Excel (.xlsx)",
+            cohort_pivot_xlsx,
+            f"Client cohort - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
-        # Afficher la heatmap de la matrice de rétention du churn en pourcentage
-        st.subheader("Heatmap de la Rétention (Churn en %)")
-        plt.figure(figsize=(10, 6))
-        ax = sns.heatmap(
-            churned_customers.divide(cohort_pivot.iloc[:, 0], axis=0) * 100,
-            annot=True,
-            cmap="YlGnBu",
-            fmt=".1f",
-            cbar=False,
-        )
+        # # Renommer les colonnes de la matrice de rétention
+        # cohort_pivot.columns = [
+        #     f"Retention_{str(col).zfill(2)}" for col in cohort_pivot.columns
+        # ]
 
-        for t in ax.texts:
-            t.set_text(f"{float(t.get_text()):.1f}%")
-        plt.title(
-            f"Heatmap de la Rétention (Churn en %) - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}"
-        )
-        plt.xlabel("Période")
-        plt.ylabel("Cohorte")
-        st.pyplot(plt)
+        # # Concaténer la matrice de rétention avec les clients qui ont abandonné
+        # cohort_analysis = pd.concat([cohort_pivot, churned_customers], axis=1)
 
-        # Génération de l'image de la heatmap
-        buffer_churn = BytesIO()
-        plt.savefig(buffer_churn, format="png")
-        buffer_churn.seek(0)
+        # # Afficher la matrice de rétention mise à jour
+        # st.subheader("Matrice de Rétention & Churn")
+        # st.dataframe(cohort_analysis)
 
-        # Téléchargement de l'image de la heatmap de la retention (Churn en %)
-        st.download_button(
-            label="Télécharger la Heatmap (Churn en %)",
-            data=buffer_churn,
-            file_name=f"Heatmap de la retention (churn) - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.png",
-            mime="image/png",
-        )
+        # # Téléchargement de la rétention avec churn
+        # cohort_analysis_xlsx = to_excel(cohort_analysis, include_index=True)
+        # st.download_button(
+        #     "Télécharger la Rétention & Churn en Excel (.xlsx)",
+        #     cohort_analysis_xlsx,
+        #     f"Rétention avec Churn - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+        #     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        # )
+
+    ####################################################################################### LTV PAGES ######################################################################################
 
     # Créez une nouvelle page LTV
     elif selected_page == "Lifetime Value (LTV)":
@@ -735,7 +732,7 @@ def main():
 
         # Sélection de la période
         time_period = st.sidebar.radio(
-            "Période", ["Semaine", "Mois"], key="time_period_ltv"
+            "Période", ["Mois", "Semaine"], key="time_period_ltv"
         )
 
         # Sélection du nombre de périodes précédentes
@@ -1086,7 +1083,7 @@ def main():
 
         # Sélection de la période
         time_period = st.sidebar.radio(
-            "Période", ["Semaine", "Mois"], key="time_period_users"
+            "Période", ["Mois", "Semaine"], key="time_period_users"
         )
 
         # Sélection du nombre de périodes précédentes
