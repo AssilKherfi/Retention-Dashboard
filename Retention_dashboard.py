@@ -29,39 +29,6 @@ def load_data_s3(bucket_name, file_name):
     return pd.read_csv(StringIO(object_content), delimiter=",", low_memory=False)
 
 
-# # Accéder aux secrets de la section "s3_credentials"
-# s3_secrets = st.secrets["s3_credentials"]
-
-# # Créer une session AWS
-# session = boto3.Session(
-#     aws_access_key_id=s3_secrets["AWS_ACCESS_KEY_ID"],
-#     aws_secret_access_key=s3_secrets["AWS_SECRET_ACCESS_KEY"],
-# )
-
-# # Créer un client S3
-# s3_client = session.client("s3")
-
-# # Nom du seau S3
-# bucket_name = "one-data-lake"
-
-# # Liste des noms de fichiers à télécharger depuis S3
-# file_names = [
-#     "csv_database/orders.csv",
-#     # "csv_database/users.csv",
-# ]
-
-# # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
-# dataframes = {}
-
-# # Télécharger et traiter les fichiers
-# for file_name in file_names:
-#     df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
-#     dataframes[df_name] = load_data_s3(bucket_name, file_name)
-
-# # Créer un DataFrame à partir des données
-# orders = dataframes["orders"]
-# # users = dataframes["users"]
-
 conn = st.experimental_connection("s3", type=FilesConnection)
 orders = conn.read(
     "one-data-lake/csv_database/orders.csv",
@@ -388,6 +355,10 @@ def apply_filters(df, status, customer_origine, business_cat, start_date, end_da
     # Convertir start_date et end_date en datetime64[ns]
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
+
+    # Filtre initial : Filtrer à partir de l'année en cours
+    current_year = datetime.now().year
+    filtered_data = filtered_data[filtered_data[date_col].dt.year >= current_year]
 
     # Filtrer les données en fonction de la plage de dates sélectionnée
     filtered_data = filtered_data[
