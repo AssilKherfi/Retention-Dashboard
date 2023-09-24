@@ -356,10 +356,6 @@ def apply_filters(df, status, customer_origine, business_cat, start_date, end_da
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
-    # Filtre initial : Filtrer à partir de l'année en cours
-    current_year = datetime.now().year
-    filtered_data = filtered_data[filtered_data[date_col].dt.year >= current_year]
-
     # Filtrer les données en fonction de la plage de dates sélectionnée
     filtered_data = filtered_data[
         (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
@@ -469,11 +465,12 @@ def main():
         # Sidebar pour les filtres
         st.sidebar.title("Filtres")
 
-        # Filtre initial : Sélectionnez l'année en cours moins 1 an pour start_date
-        current_year = datetime.now().year
-        start_date = (datetime(current_year - 1, 1, 1)).date()
+        # Sélection manuelle de la date de début
+        start_date = st.sidebar.date_input(
+            "Date de début", datetime(datetime.now().year, 1, 1).date()
+        )
         end_date = st.sidebar.date_input(
-            "Date de fin", pd.to_datetime(orders["date"].max())
+            "Date de fin", pd.to_datetime(orders["date"].max()).date()
         )
 
         # Filtres
