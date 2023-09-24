@@ -599,10 +599,16 @@ def main():
         retention.index = retention.index.strftime("%Y-%m")
         retention.columns = retention.columns.astype(str)
 
-        heatmap_data = (retention * 100).applymap(lambda x: f"{x:.2f}")
-        heatmap_data = heatmap_data.astype(
-            float
-        )  # Convertir les données en nombres flottants
+        # Créez une fonction pour formater les valeurs
+        def format_value(x):
+            if not pd.isna(x):
+                return f"{x:.2f}"
+            else:
+                return ""
+
+        # Appliquez la fonction pour formater les valeurs dans le DataFrame
+        heatmap_data = retention * 100
+        heatmap_data = heatmap_data.applymap(format_value)
 
         # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
         x_labels = heatmap_data.columns.tolist()  # Liste des périodes (0, 1, 2, ...)
@@ -611,7 +617,7 @@ def main():
         )  # Liste des cohortes (2023-01, 2023-02, ...)
 
         # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
-        fig_retention = px.imshow(heatmap_data, text_auto=True, x=x_labels, y=y_labels)
+        fig_retention = px.imshow(heatmap_data, x=x_labels, y=y_labels)
 
         # Personnalisez le texte à afficher pour chaque point de données (gardez deux chiffres après la virgule)
         custom_data = [
@@ -624,52 +630,21 @@ def main():
             customdata=custom_data, hovertemplate="%{customdata}<extra></extra>"
         )
 
-        # # Créez une fonction pour formater les valeurs
-        # def format_value(x):
-        #     if not pd.isna(x):
-        #         return f"{x:.2f}"
-        #     else:
-        #         return ""
-
-        # # Appliquez la fonction pour formater les valeurs dans le DataFrame
-        # heatmap_data = retention * 100
-        # heatmap_data = heatmap_data.applymap(format_value)
-
-        # # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
-        # x_labels = heatmap_data.columns.tolist()  # Liste des périodes (0, 1, 2, ...)
-        # y_labels = (
-        #     heatmap_data.index.tolist()
-        # )  # Liste des cohortes (2023-01, 2023-02, ...)
-
-        # # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
-        # fig_retention = px.imshow(heatmap_data, x=x_labels, y=y_labels)
-
-        # # Personnalisez le texte à afficher pour chaque point de données (gardez deux chiffres après la virgule)
-        # custom_data = [
-        #     [f"{value:.2f}%" if value is not None else "" for value in row]
-        #     for row in (retention * 100).values
-        # ]
-
-        # # Mettez à jour le texte personnalisé dans le graphique
-        # fig_retention.update_traces(
-        #     customdata=custom_data, hovertemplate="%{customdata}<extra></extra>"
-        # )
-
-        # # Ajoutez les annotations dans les cases de la heatmap
-        # for i in range(len(y_labels)):
-        #     for j in range(len(x_labels)):
-        #         value = heatmap_data.iloc[i, j]
-        #         if not pd.isna(value):
-        #             font_color = (
-        #                 "black" if j == 0 else "white"
-        #             )  # Noir pour la première colonne, blanc pour les autres
-        #             fig_retention.add_annotation(
-        #                 text=value,  # Format du texte à afficher
-        #                 x=x_labels[j],
-        #                 y=y_labels[i],
-        #                 showarrow=False,
-        #                 font=dict(color=font_color),  # Couleur du texte
-        #             )
+        # Ajoutez les annotations dans les cases de la heatmap
+        for i in range(len(y_labels)):
+            for j in range(len(x_labels)):
+                value = heatmap_data.iloc[i, j]
+                if not pd.isna(value):
+                    font_color = (
+                        "black" if j == 0 else "white"
+                    )  # Noir pour la première colonne, blanc pour les autres
+                    fig_retention.add_annotation(
+                        text=value,  # Format du texte à afficher
+                        x=x_labels[j],
+                        y=y_labels[i],
+                        showarrow=False,
+                        font=dict(color=font_color),  # Couleur du texte
+                    )
 
         # # Créez la heatmap de la matrice de Retention analysis en pourcentage
         # cohort_pivot.index = cohort_pivot.index.strftime("%Y-%m")
