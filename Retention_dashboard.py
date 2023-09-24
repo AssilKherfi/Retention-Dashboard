@@ -619,61 +619,61 @@ def main():
         # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
         fig_retention = px.imshow(heatmap_data, x=x_labels, y=y_labels)
 
-        # # Personnalisez le texte à afficher pour chaque point de données (gardez deux chiffres après la virgule)
-        # custom_data = [
-        #     [f"{value:.2f}%" if value is not None else "" for value in row]
-        #     for row in (retention * 100).values
-        # ]
+        # Personnalisez le texte à afficher pour chaque point de données (gardez deux chiffres après la virgule)
+        custom_data = [
+            [f"{value:.2f}%" if value is not None else "" for value in row]
+            for row in (retention * 100).values
+        ]
 
-        # # Mettez à jour le texte personnalisé dans le graphique
-        # fig_retention.update_traces(
-        #     customdata=custom_data, hovertemplate="%{customdata}<extra></extra>"
-        # )
+        # Mettez à jour le texte personnalisé dans le graphique
+        fig_retention.update_traces(
+            customdata=custom_data, hovertemplate="%{customdata}<extra></extra>"
+        )
 
-        # # Ajoutez les annotations dans les cases de la heatmap
-        # for i in range(len(y_labels)):
-        #     for j in range(len(x_labels)):
-        #         value = heatmap_data.iloc[i, j]
-        #         if not pd.isna(value):
-        #             font_color = (
-        #                 "black" if j == 0 else "white"
-        #             )  # Noir pour la première colonne, blanc pour les autres
-        #             fig_retention.add_annotation(
-        #                 text=value,  # Format du texte à afficher
-        #                 x=x_labels[j],
-        #                 y=y_labels[i],
-        #                 showarrow=False,
-        #                 font=dict(color=font_color),  # Couleur du texte
-        #             )
+        # Ajoutez les annotations dans les cases de la heatmap
+        for i in range(len(y_labels)):
+            for j in range(len(x_labels)):
+                value = heatmap_data.iloc[i, j]
+                if not pd.isna(value):
+                    font_color = (
+                        "black" if j == 0 else "white"
+                    )  # Noir pour la première colonne, blanc pour les autres
+                    fig_retention.add_annotation(
+                        text=value,  # Format du texte à afficher
+                        x=x_labels[j],
+                        y=y_labels[i],
+                        showarrow=False,
+                        font=dict(color=font_color),  # Couleur du texte
+                    )
 
-        # # Créez la heatmap de la matrice de Retention analysis en pourcentage
-        # cohort_pivot.index = cohort_pivot.index.strftime("%Y-%m")
-        # cohort_pivot.columns = cohort_pivot.columns.astype(str)
+        # Créez la heatmap de la matrice du nombre de clients
+        cohort_pivot.index = cohort_pivot.index.strftime("%Y-%m")
+        cohort_pivot.columns = cohort_pivot.columns.astype(str)
 
-        # # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
-        # x_labels = cohort_pivot.columns.tolist()  # Liste des périodes (0, 1, 2, ...)
-        # y_labels = (
-        #     cohort_pivot.index.tolist()
-        # )  # Liste des cohortes (2023-01, 2023-02, ...)
+        # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
+        x_labels = cohort_pivot.columns.tolist()  # Liste des périodes (0, 1, 2, ...)
+        y_labels = (
+            cohort_pivot.index.tolist()
+        )  # Liste des cohortes (2023-01, 2023-02, ...)
 
-        # # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
-        # fig_clients = px.imshow(cohort_pivot, x=x_labels, y=y_labels)
+        # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
+        fig_clients = px.imshow(cohort_pivot, x=x_labels, y=y_labels)
 
-        # # Ajoutez les annotations dans les cases de la heatmap
-        # for i in range(len(y_labels)):
-        #     for j in range(len(x_labels)):
-        #         value = cohort_pivot.iloc[i, j]
-        #         if not pd.isna(value):
-        #             font_color = (
-        #                 "black" if j == 0 else "white"
-        #             )  # Noir pour la première colonne, blanc pour les autres
-        #             fig_clients.add_annotation(
-        #                 text=value,  # Format du texte à afficher
-        #                 x=x_labels[j],
-        #                 y=y_labels[i],
-        #                 showarrow=False,
-        #                 font=dict(color=font_color),  # Couleur du texte
-        #             )
+        # Ajoutez les annotations dans les cases de la heatmap
+        for i in range(len(y_labels)):
+            for j in range(len(x_labels)):
+                value = cohort_pivot.iloc[i, j]
+                if not pd.isna(value):
+                    font_color = (
+                        "black" if j == 0 else "white"
+                    )  # Noir pour la première colonne, blanc pour les autres
+                    fig_clients.add_annotation(
+                        text=value,  # Format du texte à afficher
+                        x=x_labels[j],
+                        y=y_labels[i],
+                        showarrow=False,
+                        font=dict(color=font_color),  # Couleur du texte
+                    )
 
         # # Créez des onglets pour basculer entre les deux visualisations
         # selected_visualization = st.radio(
