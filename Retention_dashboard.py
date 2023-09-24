@@ -287,6 +287,7 @@ orders = orders[
 
 orders = orders[orders["businessCat"].notnull()]
 
+orders_ltv = orders[orders["businessCat"].isin(["Alimentation", "Shopping", "Airtime"])]
 # %%
 # Créez une base de données utilisateur
 # Accédez aux informations de l'utilisateur depuis les secrets
@@ -356,6 +357,9 @@ def apply_filters(df, status, customer_origine, business_cat, start_date, end_da
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
+    # Convertir la colonne de dates en datetime64[ns]
+    filtered_data[date_col] = pd.to_datetime(filtered_data[date_col])
+
     # Filtrer les données en fonction de la plage de dates sélectionnée
     filtered_data = filtered_data[
         (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
@@ -364,7 +368,7 @@ def apply_filters(df, status, customer_origine, business_cat, start_date, end_da
     return filtered_data.copy()
 
 
-def apply_filters_summary(df, status, customer_origine, time_period, num_periods):
+def apply_filters_summary(df, status, customer_origine, start_date, end_date):
     filtered_data = df.copy()
 
     if status != "Tous":
@@ -377,17 +381,16 @@ def apply_filters_summary(df, status, customer_origine, time_period, num_periods
 
     date_col = "date"
 
-    # Calculer la date de début de la période en fonction du nombre de périodes souhaitées
-    if time_period == "Semaine":
-        period_type = "W"
-        start_date = filtered_data[date_col].max() - pd.DateOffset(weeks=num_periods)
-    else:
-        period_type = "M"
-        start_date = filtered_data[date_col].max() - pd.DateOffset(months=num_periods)
+    # Convertir start_date et end_date en datetime64[ns]
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
 
+    # Convertir la colonne de dates en datetime64[ns]
+    filtered_data[date_col] = pd.to_datetime(filtered_data[date_col])
+
+    # Filtrer les données en fonction de la plage de dates sélectionnée
     filtered_data = filtered_data[
-        (filtered_data[date_col] >= start_date)
-        & (filtered_data[date_col] <= filtered_data[date_col].max())
+        (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
     ]
 
     return filtered_data.copy()
@@ -529,7 +532,7 @@ def main():
         # Calculer et afficher l'analyse de cohorte
         st.subheader("Analyse de Cohorte")
         filtered_data.dropna(subset=["customer_id"], inplace=True)
-        filtered_data["date"] = pd.to_datetime(filtered_data["date"])
+        # filtered_data["date"] = pd.to_datetime(filtered_data["date"])
 
         filtered_data["order_period"] = filtered_data["date"].dt.to_period("M")
         filtered_data["cohort"] = (
@@ -675,356 +678,314 @@ def main():
 
     ####################################################################################### LTV PAGES ######################################################################################
 
-    # # Créez une nouvelle page LTV
-    # elif selected_page == "Lifetime Value (LTV)":
-    #     st.header("Lifetime Value (LTV)")
+    # Créez une nouvelle page LTV
+    elif selected_page == "Lifetime Value (LTV)":
+        st.header("Lifetime Value (LTV)")
 
-    #     # Sidebar pour les filtres
-    #     st.sidebar.title("Filtres")
+        # Sidebar pour les filtres
+        st.sidebar.title("Filtres")
 
-    #     # Sélection de la période
-    #     time_period = st.sidebar.radio(
-    #         "Période", ["Mois", "Semaine"], key="time_period_ltv"
-    #     )
+        # Sélection manuelle de la date de début
+        start_date = st.sidebar.date_input(
+            "Date de début", datetime(datetime.now().year, 1, 1).date()
+        )
+        end_date = st.sidebar.date_input(
+            "Date de fin", pd.to_datetime(orders["date"].max()).date()
+        )
 
-    #     # Sélection du nombre de périodes précédentes
-    #     if time_period == "Semaine":
-    #         num_periods_default = 4  # Par défaut, sélectionner 4 semaines
-    #     else:
-    #         num_periods_default = 6  # Par défaut, sélectionner 6 mois
+        # Filtres
+        status_options = ["Tous"] + list(orders["Status"].unique())
+        status = st.sidebar.selectbox("Statut", status_options)
 
-    #     num_periods = st.sidebar.number_input(
-    #         "Nombre de périodes précédentes",
-    #         1,
-    #         36,
-    #         num_periods_default,
-    #         key="num_periods_ltv",
-    #     )
+        customer_origine_options = ["Tous"] + list(orders["customer_origine"].unique())
+        customer_origine = st.sidebar.selectbox(
+            "Customer Origine (diaspora or Local)", customer_origine_options
+        )
 
-    #     # Filtres
-    #     status_options = ["Tous"] + list(orders["Status"].unique())
-    #     status = st.sidebar.selectbox("Statut", status_options)
+        business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
+        business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
 
-    #     customer_origine_options = ["Tous"] + list(orders["customer_origine"].unique())
-    #     customer_origine = st.sidebar.selectbox(
-    #         "Customer Origine (diaspora or Local)", customer_origine_options
-    #     )
+        # Appliquer les filtres
+        filtered_data_ltv = apply_filters(
+            orders_ltv,
+            status,
+            customer_origine,
+            business_cat,
+            start_date,
+            end_date,
+        )
 
-    #     business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
-    #     business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
+        # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
+        ltv_df = filtered_data_ltv.groupby("customer_id").agg(
+            {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
+        )
+        ltv_df.columns = [
+            "Nombre de commandes",
+            "Chiffre d'affaire",
+            "min_date",
+            "max_date",
+        ]
+        ltv_df = ltv_df.reset_index()
 
-    #     # Appliquer les filtres
-    #     filtered_data_ltv = apply_filters(
-    #         orders,
-    #         status,
-    #         customer_origine,
-    #         business_cat,
-    #         time_period,
-    #         num_periods,
-    #     )
+        # Calculer la durée de vie de chaque client en mois sur les données filtrées
+        ltv_df["Durée de vie d’un client (lifetime)"] = (
+            ltv_df["max_date"] - ltv_df["min_date"]
+        ).dt.days / 30
 
-    #     # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
-    #     ltv_df = filtered_data_ltv.groupby("customer_id").agg(
-    #         {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
-    #     )
-    #     ltv_df.columns = [
-    #         "Nombre de commandes",
-    #         "Chiffre d'affaire",
-    #         "min_date",
-    #         "max_date",
-    #     ]
-    #     ltv_df = ltv_df.reset_index()
+        # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
+        ltv_df = ltv_df[ltv_df["Durée de vie d’un client (lifetime)"] > 0]
 
-    #     # Calculer la durée de vie de chaque client en mois sur les données filtrées
-    #     ltv_df["Durée de vie d’un client (lifetime)"] = (
-    #         ltv_df["max_date"] - ltv_df["min_date"]
-    #     ).dt.days / 30
+        # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
+        ltv_df["Panier moyen"] = (
+            ltv_df["Chiffre d'affaire"] / ltv_df["Nombre de commandes"]
+        )
 
-    #     # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
-    #     ltv_df = ltv_df[ltv_df["Durée de vie d’un client (lifetime)"] > 0]
+        # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
+        ltv_df["Fréquence d’achat"] = (
+            ltv_df["Nombre de commandes"]
+            / ltv_df["Durée de vie d’un client (lifetime)"]
+        )
 
-    #     # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
-    #     ltv_df["Panier moyen"] = (
-    #         ltv_df["Chiffre d'affaire"] / ltv_df["Nombre de commandes"]
-    #     )
+        # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
+        ltv_df["LTV"] = (
+            ltv_df["Fréquence d’achat"]
+            * ltv_df["Panier moyen"]
+            * ltv_df["Durée de vie d’un client (lifetime)"]
+        )
 
-    #     # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
-    #     ltv_df["Fréquence d’achat"] = (
-    #         ltv_df["Nombre de commandes"]
-    #         / ltv_df["Durée de vie d’un client (lifetime)"]
-    #     )
+        # Afficher les données filtrées
+        show_ltv_df = st.sidebar.checkbox("Afficher les données")
 
-    #     # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
-    #     ltv_df[f"LTV ({time_period})"] = (
-    #         ltv_df["Fréquence d’achat"]
-    #         * ltv_df["Panier moyen"]
-    #         * ltv_df["Durée de vie d’un client (lifetime)"]
-    #     )
+        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        def to_excel(df, include_index=True):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+                workbook = writer.book
+                worksheet = writer.sheets["Sheet1"]
+                format = workbook.add_format({"num_format": "0.00"})
+                worksheet.set_column("A:A", None, format)
+            processed_data = output.getvalue()
+            return processed_data
 
-    #     # Afficher les données filtrées
-    #     show_ltv_df = st.sidebar.checkbox("Afficher les données")
+        if show_ltv_df:
+            st.subheader("LTV Data")
+            st.dataframe(ltv_df)
 
-    #     # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-    #     def to_excel(df, include_index=True):
-    #         output = BytesIO()
-    #         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-    #             df.to_excel(writer, index=include_index, sheet_name="Sheet1")
-    #             workbook = writer.book
-    #             worksheet = writer.sheets["Sheet1"]
-    #             format = workbook.add_format({"num_format": "0.00"})
-    #             worksheet.set_column("A:A", None, format)
-    #         processed_data = output.getvalue()
-    #         return processed_data
+            # Bouton pour télécharger le DataFrame au format Excel
+            ltv_df_xlsx = to_excel(ltv_df, include_index=False)
+            st.download_button(
+                "Télécharger les données de la LTV en Excel (.xlsx)",
+                ltv_df_xlsx,
+                f"LTV - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
 
-    #     if show_ltv_df:
-    #         st.subheader("LTV Data")
-    #         st.dataframe(ltv_df)
+        # Appliquer les filtres
+        filtered_data_ltv_summary = apply_filters_summary(
+            orders_ltv,
+            status,
+            customer_origine,
+            start_date,
+            end_date,
+        )
 
-    #         # Bouton pour télécharger le DataFrame au format Excel
-    #         ltv_df_xlsx = to_excel(ltv_df, include_index=False)
-    #         st.download_button(
-    #             "Télécharger les données de la LTV en Excel (.xlsx)",
-    #             ltv_df_xlsx,
-    #             f"LTV - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
-    #             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    #         )
+        # Afficher la plage de dates sélectionnée
+        st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
 
-    #     # Afficher la plage de dates sélectionnée
-    #     start_date, end_date = get_date_range(
-    #         filtered_data_ltv, time_period, num_periods
-    #     )
-    #     st.sidebar.write(
-    #         f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
-    #     )
+        # Liste unique de catégories d'entreprise
+        business_cats = filtered_data_ltv_summary["businessCat"].unique()
 
-    #     # Appliquer les filtres
-    #     filtered_data_ltv_summary = apply_filters_summary(
-    #         orders,
-    #         status,
-    #         customer_origine,
-    #         time_period,
-    #         num_periods,
-    #     )
+        # Initialiser une liste pour stocker les résultats par Business Catégorie
+        ltv_results = []
 
-    #     # Liste unique de catégories d'entreprise
-    #     business_cats = filtered_data_ltv_summary["businessCat"].unique()
+        # Parcourir chaque Business Catégorie et calculer la LTV
+        for business_cat in business_cats:
+            # Filtrer les données pour la Business Catégorie actuelle
+            ltv_cat_df = filtered_data_ltv_summary[
+                filtered_data_ltv_summary["businessCat"] == business_cat
+            ]
 
-    #     # Initialiser une liste pour stocker les résultats par Business Catégorie
-    #     ltv_results = []
+            # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
+            ltv_df_summary_cat = ltv_cat_df.groupby("customer_id").agg(
+                {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
+            )
 
-    #     # Parcourir chaque Business Catégorie et calculer la LTV
-    #     for business_cat in business_cats:
-    #         # Filtrer les données pour la Business Catégorie actuelle
-    #         ltv_cat_df = filtered_data_ltv_summary[
-    #             filtered_data_ltv_summary["businessCat"] == business_cat
-    #         ]
+            ltv_df_summary_cat.columns = [
+                "Nombre de commandes",
+                "Chiffre d'affaire",
+                "min_date",
+                "max_date",
+            ]
 
-    #         # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
-    #         ltv_df_summary_cat = ltv_cat_df.groupby("customer_id").agg(
-    #             {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
-    #         )
-    #         ltv_df_summary_cat.columns = [
-    #             "Nombre de commandes",
-    #             "Chiffre d'affaire",
-    #             "min_date",
-    #             "max_date",
-    #         ]
-    #         ltv_df_summary_cat = ltv_df_summary_cat.reset_index()
+            ltv_df_summary_cat = ltv_df_summary_cat.reset_index()
 
-    #         # Calculer la durée de vie de chaque client en mois sur les données filtrées
-    #         ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] = (
-    #             ltv_df_summary_cat["max_date"] - ltv_df_summary_cat["min_date"]
-    #         ).dt.days / 30
+            # Calculer la durée de vie de chaque client en mois sur les données filtrées
+            ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] = (
+                ltv_df_summary_cat["max_date"] - ltv_df_summary_cat["min_date"]
+            ).dt.days / 30
 
-    #         # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
-    #         ltv_df_summary_cat = ltv_df_summary_cat[
-    #             ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] > 0
-    #         ]
+            # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
+            ltv_df_summary_cat = ltv_df_summary_cat[
+                ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] > 0
+            ]
 
-    #         # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
-    #         ltv_df_summary_cat["Panier moyen"] = (
-    #             ltv_df_summary_cat["Chiffre d'affaire"]
-    #             / ltv_df_summary_cat["Nombre de commandes"]
-    #         )
+            # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
+            ltv_df_summary_cat["Panier moyen"] = (
+                ltv_df_summary_cat["Chiffre d'affaire"]
+                / ltv_df_summary_cat["Nombre de commandes"]
+            )
 
-    #         # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
-    #         ltv_df_summary_cat["Fréquence d’achat"] = (
-    #             ltv_df_summary_cat["Nombre de commandes"]
-    #             / ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
-    #         )
+            # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
+            ltv_df_summary_cat["Fréquence d’achat"] = (
+                ltv_df_summary_cat["Nombre de commandes"]
+                / ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
+            )
 
-    #         # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
-    #         ltv_df_summary_cat[f"LTV ({time_period})"] = (
-    #             ltv_df_summary_cat["Fréquence d’achat"]
-    #             * ltv_df_summary_cat["Panier moyen"]
-    #             * ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
-    #         )
+            # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
+            ltv_df_summary_cat["LTV"] = (
+                ltv_df_summary_cat["Fréquence d’achat"]
+                * ltv_df_summary_cat["Panier moyen"]
+                * ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
+            )
 
-    #         # Ajouter une colonne "businessCat" pour indiquer la Business Catégorie
-    #         ltv_df_summary_cat["businessCat"] = business_cat
+            # Ajouter une colonne "businessCat" pour indiquer la Business Catégorie
+            ltv_df_summary_cat["businessCat"] = business_cat
 
-    #         # Ajouter les résultats au tableau de résultats
-    #         ltv_results.append(ltv_df_summary_cat)
+            # Ajouter les résultats au tableau de résultats
+            ltv_results.append(ltv_df_summary_cat)
 
-    #     # Concaténer les résultats de toutes les catégories en un seul DataFrame
-    #     ltv_summary_df = pd.concat(ltv_results, ignore_index=True)
+        # Concaténer les résultats de toutes les catégories en un seul DataFrame
+        ltv_summary_df = pd.concat(ltv_results, ignore_index=True)
 
-    #     # Réorganiser les colonnes si nécessaire
-    #     ltv_summary_df = ltv_summary_df[["businessCat", f"LTV ({time_period})"]]
+        # Réorganiser les colonnes si nécessaire
+        ltv_summary_df = ltv_summary_df[["businessCat", "LTV"]]
 
-    #     # Renommer la colonne f"LTV ({time_period})" en "LTV avec GMV (en DZD)"
-    #     ltv_summary_df.rename(
-    #         columns={f"LTV ({time_period})": "LTV avec GMV (en DZD)"}, inplace=True
-    #     )
+        # Renommer la colonne f"LTV ({time_period})" en "LTV (GMV en DZD)"
+        ltv_summary_df.rename(columns={"LTV": "LTV (GMV en DZD)"}, inplace=True)
 
-    #     # Calculer la moyenne de LTV avec GMV par Business Catégorie
-    #     ltv_avg_with_gmv_by_cat = (
-    #         ltv_summary_df.groupby("businessCat")["LTV avec GMV (en DZD)"]
-    #         .mean()
-    #         .reset_index()
-    #     )
+        # Calculer la moyenne de LTV par Business Catégorie
+        ltv_avg_gmv_by_cat = (
+            ltv_summary_df.groupby("businessCat")["LTV (GMV en DZD)"]
+            .mean()
+            .reset_index()
+        )
 
-    #     # Calculer la moyenne de LTV avec GMV
-    #     ltv_avg_with_gmv = ltv_summary_df[f"LTV avec GMV (en DZD)"].mean()
+        # # Calculer la moyenne de LTV
+        # ltv_avg_with_gmv = ltv_summary_df[f"LTV (GMV en DZD)"].mean()
 
-    #     # Calculer la moyenne de LTV avec 15% de la GMV par Business Catégorie
-    #     ltv_avg_with_15_percent_gmv_by_cat = (
-    #         ltv_summary_df.groupby("businessCat")["LTV avec GMV (en DZD)"]
-    #         .mean()
-    #         .reset_index()
-    #     )
+        # Définir un dictionnaire des pourcentages par catégorie
+        pourcentages_par_categorie = {
+            "Alimentation": 0.10,  # 10%
+            "Shopping": 0.08,  # 8%
+            "Airtime": 0.21,  # 21%
+        }
 
-    #     # Renommer la colonne pour plus de clarté
-    #     ltv_avg_with_15_percent_gmv_by_cat.rename(
-    #         columns={"LTV avec GMV (en DZD)": "LTV avec 15% de la GMV (en DZD)"},
-    #         inplace=True,
-    #     )
+        # Ajouter la colonne "LTV (Marge en DZD)" en multipliant les valeurs de "LTV (GMV en DZD)" par les pourcentages correspondants
+        ltv_avg_gmv_by_cat["LTV (Marge en DZD)"] = ltv_avg_gmv_by_cat.apply(
+            lambda row: row["LTV (GMV en DZD)"]
+            * pourcentages_par_categorie.get(row["businessCat"], 0),
+            axis=1,
+        )
 
-    #     # Appliquer la multiplication par 0.15 à la colonne de LTV avec 15% de la GMV
-    #     ltv_avg_with_15_percent_gmv_by_cat["LTV avec 15% de la GMV (en DZD)"] *= 0.15
+        # Arrondir les colonnes "LTV (GMV en DZD)" et "LTV (Marge en DZD)" à deux décimales
+        ltv_avg_gmv_by_cat[
+            ["LTV (GMV en DZD)", "LTV (Marge en DZD)"]
+        ] = ltv_avg_gmv_by_cat[["LTV (GMV en DZD)", "LTV (Marge en DZD)"]].round(0)
 
-    #     # Fusionner les DataFrames
-    #     ltv_avg_combined_df = pd.merge(
-    #         ltv_avg_with_gmv_by_cat,
-    #         ltv_avg_with_15_percent_gmv_by_cat,
-    #         on="businessCat",
-    #         suffixes=("_GMV", "_15% GMV"),
-    #     ).rename(columns={"businessCat": "Business Catégorie"})
+        # Renommer la colonne "businessCat" en "Business Catégorie"
+        ltv_avg_gmv_by_cat.rename(
+            columns={"businessCat": "Business Catégorie"}, inplace=True
+        )
 
-    #     # Calculer la moyenne de LTV avec 15% de la GMV globale
-    #     ltv_avg_with_15_percent_gmv_global = (
-    #         ltv_summary_df["LTV avec GMV (en DZD)"] * 0.15
-    #     ).mean()
+        # Ajouter les % à la colonne "Business Catégorie"
+        ltv_avg_gmv_by_cat["Business Catégorie"] = ltv_avg_gmv_by_cat[
+            "Business Catégorie"
+        ].replace(
+            ["Alimentation", "Shopping", "Airtime"],
+            ["Alimentation: 10%", "Shopping: 8%", "Airtime: 21%"],
+        )
 
-    #     # Ajouter une ligne pour les totaux globaux
-    #     ltv_avg_combined_df.loc[ltv_avg_combined_df.shape[0]] = [
-    #         "Total Business Catégorie",
-    #         ltv_avg_with_gmv,
-    #         ltv_avg_with_15_percent_gmv_global,
-    #     ]
+        # Créez une instance de l'API (assurez-vous d'importer l'API au préalable)
+        api = API()
 
-    #     # Créez une instance de l'API (assurez-vous d'importer l'API au préalable)
-    #     api = API()
+        # Obtenez la date actuelle
+        # current_date = datetime.now().strftime("%Y-%m-%d")
+        current_date = "2023-09-24"
 
-    #     # Obtenez la date actuelle
-    #     current_date = datetime.now().strftime("%Y-%m-%d")
+        # Obtenez le taux de change entre EUR et DZD pour la date actuelle
+        exchange_rate_today = api.get_exchange_rates(
+            base_currency="EUR",
+            start_date=current_date,
+            end_date=current_date,
+            targets=["DZD"],
+        )
 
-    #     # Obtenez le taux de change entre EUR et DZD pour la date actuelle
-    #     exchange_rate_today = api.get_exchange_rates(
-    #         base_currency="EUR",
-    #         start_date=current_date,
-    #         end_date=current_date,
-    #         targets=["DZD"],
-    #     )
+        # Obtenez le taux de change EUR/DZD
+        eur_to_dzd_rate = exchange_rate_today[current_date]["DZD"]
 
-    #     # Obtenez le taux de change EUR/DZD
-    #     eur_to_dzd_rate = exchange_rate_today[current_date]["DZD"]
+        # Convertir les colonnes de LTV en €o en divisant par le taux de change
+        ltv_avg_gmv_by_cat["LTV (GMV en €)"] = (
+            ltv_avg_gmv_by_cat["LTV (GMV en DZD)"] / eur_to_dzd_rate
+        )
+        ltv_avg_gmv_by_cat["LTV (Marge en €)"] = (
+            ltv_avg_gmv_by_cat["LTV (Marge en DZD)"] / eur_to_dzd_rate
+        )
 
-    #     # Convertir les colonnes de LTV en €o en divisant par le taux de change
-    #     ltv_avg_combined_df["LTV avec GMV (en €)"] = (
-    #         ltv_avg_combined_df["LTV avec GMV (en DZD)"] / eur_to_dzd_rate
-    #     )
-    #     ltv_avg_combined_df["LTV avec 15% de la GMV (en €)"] = (
-    #         ltv_avg_combined_df["LTV avec 15% de la GMV (en DZD)"] / eur_to_dzd_rate
-    #     )
+        # Afficher le tableau de la LTV
+        st.subheader("Moyenne de LTV par Business Catégorie (GMV et Marge de la GMV) :")
+        st.dataframe(ltv_avg_gmv_by_cat)
 
-    #     # Afficher le tableau de la LTV
-    #     st.subheader("LTV par Business Catégorie")
-    #     st.dataframe(ltv_avg_combined_df)
+        # Téléchargement de la LTV
+        ltv_avg_combined_df_xlsx = to_excel(ltv_avg_gmv_by_cat, include_index=False)
+        st.download_button(
+            "Télécharger LTV par Business Catégorie (.xlsx)",
+            ltv_avg_combined_df_xlsx,
+            f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
-    #     # Téléchargement de la LTV
-    #     ltv_avg_combined_df_xlsx = to_excel(ltv_avg_combined_df, include_index=False)
-    #     st.download_button(
-    #         "Télécharger LTV par Business Catégorie (.xlsx)",
-    #         ltv_avg_combined_df_xlsx,
-    #         f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
-    #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    #     )
+        # Créer une fonction pour générer le graphique
+        def generate_ltv_graph(df, devise):
+            fig = go.Figure()
 
-    #     # # Afficher le résumé
-    #     # st.subheader("Résumé de la LTV par Business Catégorie")
-    #     # st.dataframe(ltv_summary_df)
+            if devise == "€":
+                columns = ["LTV (GMV en €)", "LTV (Marge en €)"]
+                names = ["LTV (GMV en €)", "LTV (Marge en €)"]
+            else:
+                columns = ["LTV (GMV en DZD)", "LTV (Marge en DZD)"]
+                names = ["LTV (GMV en DZD)", "LTV (Marge en DZD)"]
 
-    #     # # Téléchargement de la data de rétention
-    #     # if st.button("Télécharger dataframel (.xlsx)"):
-    #     #     ltv_summary_df.to_excel(
-    #     #         f"ltv_summary_df.xlsx",
-    #     #         index=True,
-    #     #     )
+            for col, name in zip(columns, names):
+                fig.add_trace(
+                    go.Bar(
+                        x=df["Business Catégorie"],
+                        y=df[col],
+                        name=name,
+                    )
+                )
 
-    #     # Créer une fonction pour générer le graphique
-    #     def generate_ltv_graph(df, devise):
-    #         fig = go.Figure()
+            fig.update_layout(
+                barmode="group",
+                title="LTV par Business Catégorie",
+                xaxis_title="Business Catégorie",
+                yaxis_title="LTV",
+                legend_title="Devise",
+            )
 
-    #         if devise == "€":
-    #             columns = ["LTV avec GMV (en €)", "LTV avec 15% de la GMV (en €)"]
-    #             names = ["LTV avec GMV (en €)", "LTV avec 15% de la GMV (en €)"]
-    #         else:
-    #             columns = ["LTV avec GMV (en DZD)", "LTV avec 15% de la GMV (en DZD)"]
-    #             names = ["LTV avec GMV (en DZD)", "LTV avec 15% de la GMV (en DZD)"]
+            return fig
 
-    #         for col, name in zip(columns, names):
-    #             fig.add_trace(
-    #                 go.Bar(
-    #                     x=df["Business Catégorie"],
-    #                     y=df[col],
-    #                     name=name,
-    #                 )
-    #             )
+        # Afficher le graphique dans Streamlit
+        st.subheader("LTV par Business Catégorie")
 
-    #         fig.update_layout(
-    #             barmode="group",
-    #             title="LTV par Business Catégorie",
-    #             xaxis_title="Business Catégorie",
-    #             yaxis_title="LTV",
-    #             legend_title="Devise",
-    #         )
+        # Sélection de la devise
+        selected_devise = st.selectbox("Sélectionnez la devise :", ["€", "DZD"])
 
-    #         return fig
+        devise = ""
 
-    #     # Afficher le graphique dans Streamlit
-    #     st.subheader("LTV par Business Catégorie")
-
-    #     # Sélection de la devise
-    #     selected_devise = st.selectbox("Sélectionnez la devise :", ["€", "DZD"])
-
-    #     devise = ""
-
-    #     if selected_devise != devise:
-    #         devise = selected_devise
-    #         st.plotly_chart(generate_ltv_graph(ltv_avg_combined_df, devise))
-
-    #     # # Téléchargement de l'image du graphique
-    #     # if st.button("Télécharger le graphique"):
-    #     #     img_bytes = generate_ltv_graph(ltv_avg_combined_df, devise).to_image(
-    #     #         format="png"
-    #     #     )
-    #     #     st.download_button(
-    #     #         label="Télécharger le graphique",
-    #     #         data=img_bytes,
-    #     #         file_name=f"LTV_Business_Categorie - Devise : {devise}.png",
-    #     #         mime="image/png",
-    #     #     )
+        if selected_devise != devise:
+            devise = selected_devise
+            st.plotly_chart(generate_ltv_graph(ltv_avg_gmv_by_cat, devise))
 
     # # Créez une nouvelle page Users
     # elif selected_page == "Users":
