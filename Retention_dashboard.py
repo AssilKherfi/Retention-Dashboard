@@ -673,8 +673,7 @@ def main():
                         x=x_labels[j],
                         y=y_labels[i],
                         showarrow=False,
-                        font=dict(color="black"),  # Couleur du texte
-                        # bgcolor="white",  # Couleur de fond de la case
+                        font=dict(color="white"),  # Couleur du texte
                     )
 
         # Créez la heatmap de la matrice de Retention analysis en pourcentage
@@ -700,8 +699,7 @@ def main():
                         x=x_labels[j],
                         y=y_labels[i],
                         showarrow=False,
-                        font=dict(color="black"),  # Couleur du texte
-                        bgcolor="white",  # Couleur de fond de la case
+                        font=dict(color="white"),  # Couleur du texte
                     )
 
         # Créez des onglets pour basculer entre les deux visualisations
