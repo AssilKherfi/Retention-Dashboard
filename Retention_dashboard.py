@@ -599,6 +599,28 @@ def main():
         retention.index = retention.index.strftime("%Y-%m")
         retention.columns = retention.columns.astype(str)
 
+        heatmap_data = (retention * 100).applymap(lambda x: f"{x:.2f}")
+
+        # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
+        x_labels = heatmap_data.columns.tolist()  # Liste des périodes (0, 1, 2, ...)
+        y_labels = (
+            heatmap_data.index.tolist()
+        )  # Liste des cohortes (2023-01, 2023-02, ...)
+
+        # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
+        fig_retention = px.imshow(heatmap_data, text_auto=True, x=x_labels, y=y_labels)
+
+        # Personnalisez le texte à afficher pour chaque point de données (gardez deux chiffres après la virgule)
+        custom_data = [
+            [f"{value:.2f}%" if value is not None else "" for value in row]
+            for row in (retention * 100).values
+        ]
+
+        # Mettez à jour le texte personnalisé dans le graphique
+        fig_retention.update_traces(
+            customdata=custom_data, hovertemplate="%{customdata}<extra></extra>"
+        )
+
         # # Créez une fonction pour formater les valeurs
         # def format_value(x):
         #     if not pd.isna(x):
@@ -687,14 +709,14 @@ def main():
         #     # Affichez la heatmap du nombre de clients
         #     st.plotly_chart(fig_clients)  # Utilisez le graphique fig_clients
 
-        # # Téléchargement de la  Rétention
-        # retention_analysis_xlsx = to_excel(retention, include_index=True)
-        # st.download_button(
-        #     "Télécharger la Retention analysis en Excel (.xlsx)",
-        #     retention_analysis_xlsx,
-        #     f"Retention analysis - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
-        #     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        # )
+        # Téléchargement de la  Rétention
+        retention_analysis_xlsx = to_excel(retention, include_index=True)
+        st.download_button(
+            "Télécharger la Retention analysis en Excel (.xlsx)",
+            retention_analysis_xlsx,
+            f"Retention analysis - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, du {start_date} au {end_date}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
         # Téléchargement de la data de Client cohort en excel
         cohort_pivot_xlsx = to_excel(cohort_pivot, include_index=True)
