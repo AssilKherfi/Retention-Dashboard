@@ -617,7 +617,15 @@ def main():
         )  # Liste des cohortes (2023-01, 2023-02, ...)
 
         # Créez un graphique en utilisant px.imshow avec les étiquettes X et Y spécifiées
-        fig_retention = px.imshow(heatmap_data, x=x_labels, y=y_labels)
+        fig_retention = px.imshow(heatmap_data)
+
+        # Mettez à jour les étiquettes de l'axe X et de l'axe Y pour la heatmap de rétention
+        fig_retention.update_xaxes(
+            ticktext=x_labels, tickvals=list(range(len(x_labels)))
+        )
+        fig_retention.update_yaxes(
+            ticktext=y_labels, tickvals=list(range(len(y_labels)))
+        )
 
         # Personnalisez le texte à afficher pour chaque point de données (gardez deux chiffres après la virgule)
         custom_data = [
@@ -640,8 +648,8 @@ def main():
                     )  # Noir pour la première colonne, blanc pour les autres
                     fig_retention.add_annotation(
                         text=f"{value}%",  # Texte à afficher
-                        x=x_labels[j],
-                        y=y_labels[i],
+                        x=j,
+                        y=i,
                         showarrow=False,
                         font=dict(color=font_color),  # Couleur du texte
                     )
