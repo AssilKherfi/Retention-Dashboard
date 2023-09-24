@@ -469,9 +469,9 @@ def main():
         # Sidebar pour les filtres
         st.sidebar.title("Filtres")
 
-        start_date = st.sidebar.date_input(
-            "Date de début", pd.to_datetime(orders["date"].min())
-        )
+        # Filtre initial : Sélectionnez l'année en cours moins 1 an pour start_date
+        current_year = datetime.now().year
+        start_date = (datetime(current_year - 1, 1, 1)).date()
         end_date = st.sidebar.date_input(
             "Date de fin", pd.to_datetime(orders["date"].max())
         )
