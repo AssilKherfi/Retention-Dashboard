@@ -701,7 +701,7 @@ def main():
         st.download_button(
             "Télécharger Client cohort en Excel (.xlsx)",
             cohort_pivot_xlsx,
-            f"Client cohort - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+            f"Client cohort - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, du {start_date} au {end_date}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
