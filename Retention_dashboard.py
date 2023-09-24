@@ -369,7 +369,7 @@ def verify_credentials(username, password):
 
 # Fonction pour appliquer les filtres
 @st.cache_data
-def apply_filters(df, status, customer_origine, business_cat, time_period, num_periods):
+def apply_filters(df, status, customer_origine, business_cat, start_date, end_date):
     filtered_data = df.copy()
 
     if status != "Tous":
@@ -385,20 +385,12 @@ def apply_filters(df, status, customer_origine, business_cat, time_period, num_p
 
     date_col = "date"
 
-    # Calculer la date de début de la période en fonction du nombre de périodes souhaitées
-    if time_period == "Semaine":
-        period_type = "W"
-        start_date = filtered_data[date_col].max() - pd.DateOffset(weeks=num_periods)
-    else:
-        period_type = "M"
-        start_date = filtered_data[date_col].max() - pd.DateOffset(months=num_periods)
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
 
     filtered_data = filtered_data[
-        (filtered_data[date_col] >= start_date)
-        & (filtered_data[date_col] <= filtered_data[date_col].max())
+        (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
     ]
-
-    return filtered_data.copy()
 
 
 def apply_filters_summary(df, status, customer_origine, time_period, num_periods):
@@ -469,18 +461,6 @@ def apply_filters_users(
     return filtered_data.copy()
 
 
-# Fonction pour calculer la plage de dates
-def get_date_range(filtered_data, time_period, num_periods):
-    end_date = filtered_data["date"].max()
-
-    if time_period == "Semaine":
-        start_date = end_date - pd.DateOffset(weeks=num_periods)
-    else:
-        start_date = end_date - pd.DateOffset(months=num_periods)
-
-    return start_date, end_date
-
-
 # Créer une application Streamlit
 def main():
     st.title("Tableau de Bord TemtemOne")
@@ -514,23 +494,11 @@ def main():
         # Sidebar pour les filtres
         st.sidebar.title("Filtres")
 
-        # Sélection de la période
-        time_period = st.sidebar.radio(
-            "Période", ["Mois", "Semaine"], key="time_period_retention"
+        start_date = st.sidebar.date_input(
+            "Date de début", pd.to_datetime(orders["date"].min())
         )
-
-        # Sélection du nombre de périodes précédentes
-        if time_period == "Semaine":
-            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
-        else:
-            num_periods_default = 6  # Par défaut, sélectionner 6 mois
-
-        num_periods = st.sidebar.number_input(
-            "Nombre de périodes précédentes",
-            1,
-            36,
-            num_periods_default,
-            key="num_periods_retention",
+        end_date = st.sidebar.date_input(
+            "Date de fin", pd.to_datetime(orders["date"].max())
         )
 
         # Filtres
@@ -551,10 +519,9 @@ def main():
             status,
             customer_origine,
             business_cat,
-            time_period,
-            num_periods,
+            start_date,
+            end_date,
         )
-
         # Afficher les données filtrées
         show_filtered_data = st.sidebar.checkbox("Afficher les données")
 
@@ -579,36 +546,31 @@ def main():
             st.download_button(
                 "Télécharger les Orders en Excel (.xlsx)",
                 filtered_data_xlsx,
-                f"Orders - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+                f"Orders - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
         # Afficher la plage de dates sélectionnée
-        start_date, end_date = get_date_range(filtered_data, time_period, num_periods)
-        st.sidebar.write(
-            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
-        )
+        st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
 
         # Calculer et afficher l'analyse de cohorte
         st.subheader("Analyse de Cohorte")
         filtered_data.dropna(subset=["customer_id"], inplace=True)
         filtered_data["date"] = pd.to_datetime(filtered_data["date"])
 
-        period_frequency = "W" if time_period == "Semaine" else "M"
-
-        filtered_data["order_period"] = filtered_data["date"].dt.to_period(
-            period_frequency
-        )
+        filtered_data["order_period"] = filtered_data["date"].dt.to_period("M")
         filtered_data["cohort"] = (
             filtered_data.groupby("customer_id")["date"]
             .transform("min")
-            .dt.to_period(period_frequency)
+            .dt.to_period("M")
         )
+
         filtered_data_cohort = (
             filtered_data.groupby(["cohort", "order_period"])
             .agg(n_customers=("customer_id", "nunique"))
             .reset_index(drop=False)
         )
+
         filtered_data_cohort["period_number"] = (
             filtered_data_cohort["order_period"] - filtered_data_cohort["cohort"]
         ).apply(attrgetter("n"))
