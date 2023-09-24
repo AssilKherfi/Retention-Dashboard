@@ -599,7 +599,16 @@ def main():
         retention.index = retention.index.strftime("%Y-%m")
         retention.columns = retention.columns.astype(str)
 
-        heatmap_data = (retention * 100).applymap(lambda x: f"{x:.2f}")
+        # Créez une fonction pour formater les valeurs
+        def format_value(x):
+            if not pd.isna(x):
+                return f"{x:.2f}"
+            else:
+                return ""
+
+        # Appliquez la fonction pour formater les valeurs dans le DataFrame
+        heatmap_data = retention * 100
+        heatmap_data = heatmap_data.applymap(format_value)
 
         # Créez une liste des étiquettes d'axe X (period_number) et d'axe Y (cohort)
         x_labels = heatmap_data.columns.tolist()  # Liste des périodes (0, 1, 2, ...)
