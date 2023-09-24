@@ -385,12 +385,16 @@ def apply_filters(df, status, customer_origine, business_cat, start_date, end_da
 
     date_col = "date"
 
+    # Convertir start_date et end_date en datetime64[ns]
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
+    # Filtrer les données en fonction de la plage de dates sélectionnée
     filtered_data = filtered_data[
         (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
     ]
+
+    return filtered_data.copy()
 
 
 def apply_filters_summary(df, status, customer_origine, time_period, num_periods):
@@ -522,6 +526,7 @@ def main():
             start_date,
             end_date,
         )
+
         # Afficher les données filtrées
         show_filtered_data = st.sidebar.checkbox("Afficher les données")
 
