@@ -687,10 +687,6 @@ def main():
             # Affichez la heatmap du nombre de clients
             st.plotly_chart(fig_clients)  # Utilisez le graphique fig_clients
 
-        # # Afficher la matrice de rétention
-        # st.subheader("Matrice de Rétention")
-        # st.dataframe(retention)
-
         # Téléchargement de la  Rétention
         retention_analysis_xlsx = to_excel(retention, include_index=True)
         st.download_button(
@@ -709,535 +705,514 @@ def main():
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
-        # # Renommer les colonnes de la matrice de rétention
-        # cohort_pivot.columns = [
-        #     f"Retention_{str(col).zfill(2)}" for col in cohort_pivot.columns
-        # ]
-
-        # # Concaténer la matrice de rétention avec les clients qui ont abandonné
-        # cohort_analysis = pd.concat([cohort_pivot, churned_customers], axis=1)
-
-        # # Afficher la matrice de rétention mise à jour
-        # st.subheader("Matrice de Rétention & Churn")
-        # st.dataframe(cohort_analysis)
-
-        # # Téléchargement de la rétention avec churn
-        # cohort_analysis_xlsx = to_excel(cohort_analysis, include_index=True)
-        # st.download_button(
-        #     "Télécharger la Rétention & Churn en Excel (.xlsx)",
-        #     cohort_analysis_xlsx,
-        #     f"Rétention avec Churn - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
-        #     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        # )
-
     ####################################################################################### LTV PAGES ######################################################################################
 
-    # Créez une nouvelle page LTV
-    elif selected_page == "Lifetime Value (LTV)":
-        st.header("Lifetime Value (LTV)")
-
-        # Sidebar pour les filtres
-        st.sidebar.title("Filtres")
-
-        # Sélection de la période
-        time_period = st.sidebar.radio(
-            "Période", ["Mois", "Semaine"], key="time_period_ltv"
-        )
-
-        # Sélection du nombre de périodes précédentes
-        if time_period == "Semaine":
-            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
-        else:
-            num_periods_default = 6  # Par défaut, sélectionner 6 mois
-
-        num_periods = st.sidebar.number_input(
-            "Nombre de périodes précédentes",
-            1,
-            36,
-            num_periods_default,
-            key="num_periods_ltv",
-        )
-
-        # Filtres
-        status_options = ["Tous"] + list(orders["Status"].unique())
-        status = st.sidebar.selectbox("Statut", status_options)
-
-        customer_origine_options = ["Tous"] + list(orders["customer_origine"].unique())
-        customer_origine = st.sidebar.selectbox(
-            "Customer Origine (diaspora or Local)", customer_origine_options
-        )
-
-        business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
-        business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
-
-        # Appliquer les filtres
-        filtered_data_ltv = apply_filters(
-            orders,
-            status,
-            customer_origine,
-            business_cat,
-            time_period,
-            num_periods,
-        )
-
-        # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
-        ltv_df = filtered_data_ltv.groupby("customer_id").agg(
-            {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
-        )
-        ltv_df.columns = [
-            "Nombre de commandes",
-            "Chiffre d'affaire",
-            "min_date",
-            "max_date",
-        ]
-        ltv_df = ltv_df.reset_index()
-
-        # Calculer la durée de vie de chaque client en mois sur les données filtrées
-        ltv_df["Durée de vie d’un client (lifetime)"] = (
-            ltv_df["max_date"] - ltv_df["min_date"]
-        ).dt.days / 30
-
-        # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
-        ltv_df = ltv_df[ltv_df["Durée de vie d’un client (lifetime)"] > 0]
-
-        # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
-        ltv_df["Panier moyen"] = (
-            ltv_df["Chiffre d'affaire"] / ltv_df["Nombre de commandes"]
-        )
-
-        # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
-        ltv_df["Fréquence d’achat"] = (
-            ltv_df["Nombre de commandes"]
-            / ltv_df["Durée de vie d’un client (lifetime)"]
-        )
-
-        # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
-        ltv_df[f"LTV ({time_period})"] = (
-            ltv_df["Fréquence d’achat"]
-            * ltv_df["Panier moyen"]
-            * ltv_df["Durée de vie d’un client (lifetime)"]
-        )
-
-        # Afficher les données filtrées
-        show_ltv_df = st.sidebar.checkbox("Afficher les données")
-
-        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-        def to_excel(df, include_index=True):
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
-                workbook = writer.book
-                worksheet = writer.sheets["Sheet1"]
-                format = workbook.add_format({"num_format": "0.00"})
-                worksheet.set_column("A:A", None, format)
-            processed_data = output.getvalue()
-            return processed_data
-
-        if show_ltv_df:
-            st.subheader("LTV Data")
-            st.dataframe(ltv_df)
-
-            # Bouton pour télécharger le DataFrame au format Excel
-            ltv_df_xlsx = to_excel(ltv_df, include_index=False)
-            st.download_button(
-                "Télécharger les données de la LTV en Excel (.xlsx)",
-                ltv_df_xlsx,
-                f"LTV - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-        # Afficher la plage de dates sélectionnée
-        start_date, end_date = get_date_range(
-            filtered_data_ltv, time_period, num_periods
-        )
-        st.sidebar.write(
-            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
-        )
-
-        # Appliquer les filtres
-        filtered_data_ltv_summary = apply_filters_summary(
-            orders,
-            status,
-            customer_origine,
-            time_period,
-            num_periods,
-        )
-
-        # Liste unique de catégories d'entreprise
-        business_cats = filtered_data_ltv_summary["businessCat"].unique()
-
-        # Initialiser une liste pour stocker les résultats par Business Catégorie
-        ltv_results = []
-
-        # Parcourir chaque Business Catégorie et calculer la LTV
-        for business_cat in business_cats:
-            # Filtrer les données pour la Business Catégorie actuelle
-            ltv_cat_df = filtered_data_ltv_summary[
-                filtered_data_ltv_summary["businessCat"] == business_cat
-            ]
-
-            # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
-            ltv_df_summary_cat = ltv_cat_df.groupby("customer_id").agg(
-                {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
-            )
-            ltv_df_summary_cat.columns = [
-                "Nombre de commandes",
-                "Chiffre d'affaire",
-                "min_date",
-                "max_date",
-            ]
-            ltv_df_summary_cat = ltv_df_summary_cat.reset_index()
-
-            # Calculer la durée de vie de chaque client en mois sur les données filtrées
-            ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] = (
-                ltv_df_summary_cat["max_date"] - ltv_df_summary_cat["min_date"]
-            ).dt.days / 30
-
-            # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
-            ltv_df_summary_cat = ltv_df_summary_cat[
-                ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] > 0
-            ]
-
-            # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
-            ltv_df_summary_cat["Panier moyen"] = (
-                ltv_df_summary_cat["Chiffre d'affaire"]
-                / ltv_df_summary_cat["Nombre de commandes"]
-            )
-
-            # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
-            ltv_df_summary_cat["Fréquence d’achat"] = (
-                ltv_df_summary_cat["Nombre de commandes"]
-                / ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
-            )
-
-            # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
-            ltv_df_summary_cat[f"LTV ({time_period})"] = (
-                ltv_df_summary_cat["Fréquence d’achat"]
-                * ltv_df_summary_cat["Panier moyen"]
-                * ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
-            )
-
-            # Ajouter une colonne "businessCat" pour indiquer la Business Catégorie
-            ltv_df_summary_cat["businessCat"] = business_cat
-
-            # Ajouter les résultats au tableau de résultats
-            ltv_results.append(ltv_df_summary_cat)
-
-        # Concaténer les résultats de toutes les catégories en un seul DataFrame
-        ltv_summary_df = pd.concat(ltv_results, ignore_index=True)
-
-        # Réorganiser les colonnes si nécessaire
-        ltv_summary_df = ltv_summary_df[["businessCat", f"LTV ({time_period})"]]
-
-        # Renommer la colonne f"LTV ({time_period})" en "LTV avec GMV (en DZD)"
-        ltv_summary_df.rename(
-            columns={f"LTV ({time_period})": "LTV avec GMV (en DZD)"}, inplace=True
-        )
-
-        # Calculer la moyenne de LTV avec GMV par Business Catégorie
-        ltv_avg_with_gmv_by_cat = (
-            ltv_summary_df.groupby("businessCat")["LTV avec GMV (en DZD)"]
-            .mean()
-            .reset_index()
-        )
-
-        # Calculer la moyenne de LTV avec GMV
-        ltv_avg_with_gmv = ltv_summary_df[f"LTV avec GMV (en DZD)"].mean()
-
-        # Calculer la moyenne de LTV avec 15% de la GMV par Business Catégorie
-        ltv_avg_with_15_percent_gmv_by_cat = (
-            ltv_summary_df.groupby("businessCat")["LTV avec GMV (en DZD)"]
-            .mean()
-            .reset_index()
-        )
-
-        # Renommer la colonne pour plus de clarté
-        ltv_avg_with_15_percent_gmv_by_cat.rename(
-            columns={"LTV avec GMV (en DZD)": "LTV avec 15% de la GMV (en DZD)"},
-            inplace=True,
-        )
-
-        # Appliquer la multiplication par 0.15 à la colonne de LTV avec 15% de la GMV
-        ltv_avg_with_15_percent_gmv_by_cat["LTV avec 15% de la GMV (en DZD)"] *= 0.15
-
-        # Fusionner les DataFrames
-        ltv_avg_combined_df = pd.merge(
-            ltv_avg_with_gmv_by_cat,
-            ltv_avg_with_15_percent_gmv_by_cat,
-            on="businessCat",
-            suffixes=("_GMV", "_15% GMV"),
-        ).rename(columns={"businessCat": "Business Catégorie"})
-
-        # Calculer la moyenne de LTV avec 15% de la GMV globale
-        ltv_avg_with_15_percent_gmv_global = (
-            ltv_summary_df["LTV avec GMV (en DZD)"] * 0.15
-        ).mean()
-
-        # Ajouter une ligne pour les totaux globaux
-        ltv_avg_combined_df.loc[ltv_avg_combined_df.shape[0]] = [
-            "Total Business Catégorie",
-            ltv_avg_with_gmv,
-            ltv_avg_with_15_percent_gmv_global,
-        ]
-
-        # Créez une instance de l'API (assurez-vous d'importer l'API au préalable)
-        api = API()
-
-        # Obtenez la date actuelle
-        current_date = datetime.now().strftime("%Y-%m-%d")
-
-        # Obtenez le taux de change entre EUR et DZD pour la date actuelle
-        exchange_rate_today = api.get_exchange_rates(
-            base_currency="EUR",
-            start_date=current_date,
-            end_date=current_date,
-            targets=["DZD"],
-        )
-
-        # Obtenez le taux de change EUR/DZD
-        eur_to_dzd_rate = exchange_rate_today[current_date]["DZD"]
-
-        # Convertir les colonnes de LTV en €o en divisant par le taux de change
-        ltv_avg_combined_df["LTV avec GMV (en €)"] = (
-            ltv_avg_combined_df["LTV avec GMV (en DZD)"] / eur_to_dzd_rate
-        )
-        ltv_avg_combined_df["LTV avec 15% de la GMV (en €)"] = (
-            ltv_avg_combined_df["LTV avec 15% de la GMV (en DZD)"] / eur_to_dzd_rate
-        )
-
-        # Afficher le tableau de la LTV
-        st.subheader("LTV par Business Catégorie")
-        st.dataframe(ltv_avg_combined_df)
-
-        # Téléchargement de la LTV
-        ltv_avg_combined_df_xlsx = to_excel(ltv_avg_combined_df, include_index=False)
-        st.download_button(
-            "Télécharger LTV par Business Catégorie (.xlsx)",
-            ltv_avg_combined_df_xlsx,
-            f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
-
-        # # Afficher le résumé
-        # st.subheader("Résumé de la LTV par Business Catégorie")
-        # st.dataframe(ltv_summary_df)
-
-        # # Téléchargement de la data de rétention
-        # if st.button("Télécharger dataframel (.xlsx)"):
-        #     ltv_summary_df.to_excel(
-        #         f"ltv_summary_df.xlsx",
-        #         index=True,
-        #     )
-
-        # Créer une fonction pour générer le graphique
-        def generate_ltv_graph(df, devise):
-            fig = go.Figure()
-
-            if devise == "€":
-                columns = ["LTV avec GMV (en €)", "LTV avec 15% de la GMV (en €)"]
-                names = ["LTV avec GMV (en €)", "LTV avec 15% de la GMV (en €)"]
-            else:
-                columns = ["LTV avec GMV (en DZD)", "LTV avec 15% de la GMV (en DZD)"]
-                names = ["LTV avec GMV (en DZD)", "LTV avec 15% de la GMV (en DZD)"]
-
-            for col, name in zip(columns, names):
-                fig.add_trace(
-                    go.Bar(
-                        x=df["Business Catégorie"],
-                        y=df[col],
-                        name=name,
-                    )
-                )
-
-            fig.update_layout(
-                barmode="group",
-                title="LTV par Business Catégorie",
-                xaxis_title="Business Catégorie",
-                yaxis_title="LTV",
-                legend_title="Devise",
-            )
-
-            return fig
-
-        # Afficher le graphique dans Streamlit
-        st.subheader("LTV par Business Catégorie")
-
-        # Sélection de la devise
-        selected_devise = st.selectbox("Sélectionnez la devise :", ["€", "DZD"])
-
-        devise = ""
-
-        if selected_devise != devise:
-            devise = selected_devise
-            st.plotly_chart(generate_ltv_graph(ltv_avg_combined_df, devise))
-
-        # # Téléchargement de l'image du graphique
-        # if st.button("Télécharger le graphique"):
-        #     img_bytes = generate_ltv_graph(ltv_avg_combined_df, devise).to_image(
-        #         format="png"
-        #     )
-        #     st.download_button(
-        #         label="Télécharger le graphique",
-        #         data=img_bytes,
-        #         file_name=f"LTV_Business_Categorie - Devise : {devise}.png",
-        #         mime="image/png",
-        #     )
-
-    # Créez une nouvelle page Users
-    elif selected_page == "Users":
-        st.header("Users 2023")
-
-        # Sidebar pour les filtres
-        st.sidebar.title("Filtres")
-
-        # Sélection de la période
-        time_period = st.sidebar.radio(
-            "Période", ["Mois", "Semaine"], key="time_period_users"
-        )
-
-        # Sélection du nombre de périodes précédentes
-        if time_period == "Semaine":
-            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
-        else:
-            num_periods_default = 6  # Par défaut, sélectionner 6 mois
-
-        num_periods = st.sidebar.number_input(
-            "Nombre de périodes précédentes",
-            1,
-            36,
-            num_periods_default,
-            key="num_periods_users",
-        )
-
-        # Filtres
-        customer_origine_options = ["Tous"] + list(users["customer_origine"].unique())
-        customer_origine = st.sidebar.selectbox(
-            "Customer Origine (diaspora or Local)", customer_origine_options
-        )
-
-        customer_country_options = ["Tous"] + list(users["customer_country"].unique())
-        customer_country = st.sidebar.selectbox(
-            "Customer Country", customer_country_options
-        )
-
-        # accountTypes_options = ["Tous"] + list(users["accountTypes"].unique())
-        # accountTypes = st.sidebar.selectbox("Account Types", accountTypes_options)
-
-        # tags_options = ["Toutes"] + list(users["tags"].unique())
-        # tags = st.sidebar.selectbox("Tags", tags_options)
-
-        # Appliquer les filtres
-        filtered_data_users = apply_filters_users(
-            users,
-            customer_origine,
-            customer_country,
-            # accountTypes,
-            # tags,
-            time_period,
-            num_periods,
-        )
-
-        # Afficher les données des Users
-        show_filtered_data_users = st.sidebar.checkbox("Afficher les données")
-
-        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-        def to_excel(df, include_index=False):
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
-                workbook = writer.book
-                worksheet = writer.sheets["Sheet1"]
-                format = workbook.add_format({"num_format": "0.00"})
-                worksheet.set_column("A:A", None, format)
-            processed_data = output.getvalue()
-            return processed_data
-
-        if show_filtered_data_users:
-            st.subheader("Data Users")
-            st.dataframe(filtered_data_users)
-
-            # Bouton pour télécharger le DataFrame au format Excel
-            filtered_data_users_xlsx = to_excel(
-                filtered_data_users, include_index=False
-            )
-            st.download_button(
-                "Télécharger les Users en Excel (.xlsx)",
-                filtered_data_users_xlsx,
-                f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-        # Afficher la plage de dates sélectionnée
-        start_date, end_date = get_date_range(
-            filtered_data_users, time_period, num_periods
-        )
-        st.sidebar.write(
-            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
-        )
-
-        # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
-        new_signups = filtered_data_users
-        new_signups = new_signups[
-            [
-                "date",
-                "customer_id",
-                "lastName",
-                "firstName",
-                "phone",
-                "email",
-                "customer_country",
-                "customer_origine",
-            ]
-        ]
-
-        # Affichez les nouveaux inscrits dans le tableau de bord
-        st.subheader("Nouveaux Inscrits")
-        st.dataframe(new_signups)
-
-        # Téléchargement des nouveaux inscrit
-        new_signups_xlsx = to_excel(new_signups, include_index=False)
-        st.download_button(
-            "Télécharger les données des Nouveaux Inscrits (.xlsx)",
-            new_signups_xlsx,
-            f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
-
-        # Agrégez les données par période (semaine ou mois) et comptez le nombre d'inscriptions par période
-        if time_period == "Semaine":
-            new_signups["period"] = new_signups["date"] - pd.to_timedelta(
-                new_signups["date"].dt.dayofweek, unit="D"
-            )
-        else:
-            new_signups["period"] = new_signups["date"].dt.strftime("%Y-%m")
-
-        new_signups_count = (
-            new_signups.groupby("period").size().reset_index(name="count")
-        )
-
-        # Créez un graphique montrant le nombre de nouveaux inscrits par période
-        fig = px.bar(
-            new_signups_count,
-            x="period",
-            y="count",
-            title="Nombre de Nouveaux Inscrits par Période",
-            labels={"period": "Période", "count": "Nombre de Nouveaux Inscrits"},
-        ).update_xaxes(categoryorder="total ascending")
-
-        # Affichez le graphique
-        st.subheader("Nombre de Nouveaux Inscrits par Période")
-        st.plotly_chart(fig)
-
-        # # Génération de l'image de du nombre de nouveau inscrit avec Plotly Express
-        # img_bytes = fig.to_image(format="png")
-
-        # # Téléchargement de l'image de la heatmap de la retention
-        # st.download_button(
-        #     label="Télécharger le graphique",
-        #     data=img_bytes,
-        #     file_name=f"Nouveaux_Inscrits_Graph - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.png",
-        #     mime="image/png",
-        # )
+    # # Créez une nouvelle page LTV
+    # elif selected_page == "Lifetime Value (LTV)":
+    #     st.header("Lifetime Value (LTV)")
+
+    #     # Sidebar pour les filtres
+    #     st.sidebar.title("Filtres")
+
+    #     # Sélection de la période
+    #     time_period = st.sidebar.radio(
+    #         "Période", ["Mois", "Semaine"], key="time_period_ltv"
+    #     )
+
+    #     # Sélection du nombre de périodes précédentes
+    #     if time_period == "Semaine":
+    #         num_periods_default = 4  # Par défaut, sélectionner 4 semaines
+    #     else:
+    #         num_periods_default = 6  # Par défaut, sélectionner 6 mois
+
+    #     num_periods = st.sidebar.number_input(
+    #         "Nombre de périodes précédentes",
+    #         1,
+    #         36,
+    #         num_periods_default,
+    #         key="num_periods_ltv",
+    #     )
+
+    #     # Filtres
+    #     status_options = ["Tous"] + list(orders["Status"].unique())
+    #     status = st.sidebar.selectbox("Statut", status_options)
+
+    #     customer_origine_options = ["Tous"] + list(orders["customer_origine"].unique())
+    #     customer_origine = st.sidebar.selectbox(
+    #         "Customer Origine (diaspora or Local)", customer_origine_options
+    #     )
+
+    #     business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
+    #     business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
+
+    #     # Appliquer les filtres
+    #     filtered_data_ltv = apply_filters(
+    #         orders,
+    #         status,
+    #         customer_origine,
+    #         business_cat,
+    #         time_period,
+    #         num_periods,
+    #     )
+
+    #     # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
+    #     ltv_df = filtered_data_ltv.groupby("customer_id").agg(
+    #         {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
+    #     )
+    #     ltv_df.columns = [
+    #         "Nombre de commandes",
+    #         "Chiffre d'affaire",
+    #         "min_date",
+    #         "max_date",
+    #     ]
+    #     ltv_df = ltv_df.reset_index()
+
+    #     # Calculer la durée de vie de chaque client en mois sur les données filtrées
+    #     ltv_df["Durée de vie d’un client (lifetime)"] = (
+    #         ltv_df["max_date"] - ltv_df["min_date"]
+    #     ).dt.days / 30
+
+    #     # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
+    #     ltv_df = ltv_df[ltv_df["Durée de vie d’un client (lifetime)"] > 0]
+
+    #     # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
+    #     ltv_df["Panier moyen"] = (
+    #         ltv_df["Chiffre d'affaire"] / ltv_df["Nombre de commandes"]
+    #     )
+
+    #     # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
+    #     ltv_df["Fréquence d’achat"] = (
+    #         ltv_df["Nombre de commandes"]
+    #         / ltv_df["Durée de vie d’un client (lifetime)"]
+    #     )
+
+    #     # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
+    #     ltv_df[f"LTV ({time_period})"] = (
+    #         ltv_df["Fréquence d’achat"]
+    #         * ltv_df["Panier moyen"]
+    #         * ltv_df["Durée de vie d’un client (lifetime)"]
+    #     )
+
+    #     # Afficher les données filtrées
+    #     show_ltv_df = st.sidebar.checkbox("Afficher les données")
+
+    #     # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+    #     def to_excel(df, include_index=True):
+    #         output = BytesIO()
+    #         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    #             df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+    #             workbook = writer.book
+    #             worksheet = writer.sheets["Sheet1"]
+    #             format = workbook.add_format({"num_format": "0.00"})
+    #             worksheet.set_column("A:A", None, format)
+    #         processed_data = output.getvalue()
+    #         return processed_data
+
+    #     if show_ltv_df:
+    #         st.subheader("LTV Data")
+    #         st.dataframe(ltv_df)
+
+    #         # Bouton pour télécharger le DataFrame au format Excel
+    #         ltv_df_xlsx = to_excel(ltv_df, include_index=False)
+    #         st.download_button(
+    #             "Télécharger les données de la LTV en Excel (.xlsx)",
+    #             ltv_df_xlsx,
+    #             f"LTV - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+    #             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    #         )
+
+    #     # Afficher la plage de dates sélectionnée
+    #     start_date, end_date = get_date_range(
+    #         filtered_data_ltv, time_period, num_periods
+    #     )
+    #     st.sidebar.write(
+    #         f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
+    #     )
+
+    #     # Appliquer les filtres
+    #     filtered_data_ltv_summary = apply_filters_summary(
+    #         orders,
+    #         status,
+    #         customer_origine,
+    #         time_period,
+    #         num_periods,
+    #     )
+
+    #     # Liste unique de catégories d'entreprise
+    #     business_cats = filtered_data_ltv_summary["businessCat"].unique()
+
+    #     # Initialiser une liste pour stocker les résultats par Business Catégorie
+    #     ltv_results = []
+
+    #     # Parcourir chaque Business Catégorie et calculer la LTV
+    #     for business_cat in business_cats:
+    #         # Filtrer les données pour la Business Catégorie actuelle
+    #         ltv_cat_df = filtered_data_ltv_summary[
+    #             filtered_data_ltv_summary["businessCat"] == business_cat
+    #         ]
+
+    #         # Grouper les commandes par 'customer_id' et calculer le nombre de commandes et le montant total dépensé pour chaque client sur les données filtrées
+    #         ltv_df_summary_cat = ltv_cat_df.groupby("customer_id").agg(
+    #             {"order_id": "count", "total_amount_dzd": "sum", "date": ["min", "max"]}
+    #         )
+    #         ltv_df_summary_cat.columns = [
+    #             "Nombre de commandes",
+    #             "Chiffre d'affaire",
+    #             "min_date",
+    #             "max_date",
+    #         ]
+    #         ltv_df_summary_cat = ltv_df_summary_cat.reset_index()
+
+    #         # Calculer la durée de vie de chaque client en mois sur les données filtrées
+    #         ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] = (
+    #             ltv_df_summary_cat["max_date"] - ltv_df_summary_cat["min_date"]
+    #         ).dt.days / 30
+
+    #         # Supprimer les clients ayant une durée de vie nulle (uniquement une commande) sur les données filtrées
+    #         ltv_df_summary_cat = ltv_df_summary_cat[
+    #             ltv_df_summary_cat["Durée de vie d’un client (lifetime)"] > 0
+    #         ]
+
+    #         # Diviser le montant total dépensé par le nombre de commandes pour obtenir la valeur moyenne des commandes sur les données filtrées
+    #         ltv_df_summary_cat["Panier moyen"] = (
+    #             ltv_df_summary_cat["Chiffre d'affaire"]
+    #             / ltv_df_summary_cat["Nombre de commandes"]
+    #         )
+
+    #         # Diviser le nombre de commandes par la durée de vie de chaque client pour obtenir la fréquence d'achat sur les données filtrées
+    #         ltv_df_summary_cat["Fréquence d’achat"] = (
+    #             ltv_df_summary_cat["Nombre de commandes"]
+    #             / ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
+    #         )
+
+    #         # Calculer la LTV en multipliant la fréquence d'achat par la valeur moyenne des commandes et en multipliant le résultat par la durée de vie du client en mois sur les données filtrées
+    #         ltv_df_summary_cat[f"LTV ({time_period})"] = (
+    #             ltv_df_summary_cat["Fréquence d’achat"]
+    #             * ltv_df_summary_cat["Panier moyen"]
+    #             * ltv_df_summary_cat["Durée de vie d’un client (lifetime)"]
+    #         )
+
+    #         # Ajouter une colonne "businessCat" pour indiquer la Business Catégorie
+    #         ltv_df_summary_cat["businessCat"] = business_cat
+
+    #         # Ajouter les résultats au tableau de résultats
+    #         ltv_results.append(ltv_df_summary_cat)
+
+    #     # Concaténer les résultats de toutes les catégories en un seul DataFrame
+    #     ltv_summary_df = pd.concat(ltv_results, ignore_index=True)
+
+    #     # Réorganiser les colonnes si nécessaire
+    #     ltv_summary_df = ltv_summary_df[["businessCat", f"LTV ({time_period})"]]
+
+    #     # Renommer la colonne f"LTV ({time_period})" en "LTV avec GMV (en DZD)"
+    #     ltv_summary_df.rename(
+    #         columns={f"LTV ({time_period})": "LTV avec GMV (en DZD)"}, inplace=True
+    #     )
+
+    #     # Calculer la moyenne de LTV avec GMV par Business Catégorie
+    #     ltv_avg_with_gmv_by_cat = (
+    #         ltv_summary_df.groupby("businessCat")["LTV avec GMV (en DZD)"]
+    #         .mean()
+    #         .reset_index()
+    #     )
+
+    #     # Calculer la moyenne de LTV avec GMV
+    #     ltv_avg_with_gmv = ltv_summary_df[f"LTV avec GMV (en DZD)"].mean()
+
+    #     # Calculer la moyenne de LTV avec 15% de la GMV par Business Catégorie
+    #     ltv_avg_with_15_percent_gmv_by_cat = (
+    #         ltv_summary_df.groupby("businessCat")["LTV avec GMV (en DZD)"]
+    #         .mean()
+    #         .reset_index()
+    #     )
+
+    #     # Renommer la colonne pour plus de clarté
+    #     ltv_avg_with_15_percent_gmv_by_cat.rename(
+    #         columns={"LTV avec GMV (en DZD)": "LTV avec 15% de la GMV (en DZD)"},
+    #         inplace=True,
+    #     )
+
+    #     # Appliquer la multiplication par 0.15 à la colonne de LTV avec 15% de la GMV
+    #     ltv_avg_with_15_percent_gmv_by_cat["LTV avec 15% de la GMV (en DZD)"] *= 0.15
+
+    #     # Fusionner les DataFrames
+    #     ltv_avg_combined_df = pd.merge(
+    #         ltv_avg_with_gmv_by_cat,
+    #         ltv_avg_with_15_percent_gmv_by_cat,
+    #         on="businessCat",
+    #         suffixes=("_GMV", "_15% GMV"),
+    #     ).rename(columns={"businessCat": "Business Catégorie"})
+
+    #     # Calculer la moyenne de LTV avec 15% de la GMV globale
+    #     ltv_avg_with_15_percent_gmv_global = (
+    #         ltv_summary_df["LTV avec GMV (en DZD)"] * 0.15
+    #     ).mean()
+
+    #     # Ajouter une ligne pour les totaux globaux
+    #     ltv_avg_combined_df.loc[ltv_avg_combined_df.shape[0]] = [
+    #         "Total Business Catégorie",
+    #         ltv_avg_with_gmv,
+    #         ltv_avg_with_15_percent_gmv_global,
+    #     ]
+
+    #     # Créez une instance de l'API (assurez-vous d'importer l'API au préalable)
+    #     api = API()
+
+    #     # Obtenez la date actuelle
+    #     current_date = datetime.now().strftime("%Y-%m-%d")
+
+    #     # Obtenez le taux de change entre EUR et DZD pour la date actuelle
+    #     exchange_rate_today = api.get_exchange_rates(
+    #         base_currency="EUR",
+    #         start_date=current_date,
+    #         end_date=current_date,
+    #         targets=["DZD"],
+    #     )
+
+    #     # Obtenez le taux de change EUR/DZD
+    #     eur_to_dzd_rate = exchange_rate_today[current_date]["DZD"]
+
+    #     # Convertir les colonnes de LTV en €o en divisant par le taux de change
+    #     ltv_avg_combined_df["LTV avec GMV (en €)"] = (
+    #         ltv_avg_combined_df["LTV avec GMV (en DZD)"] / eur_to_dzd_rate
+    #     )
+    #     ltv_avg_combined_df["LTV avec 15% de la GMV (en €)"] = (
+    #         ltv_avg_combined_df["LTV avec 15% de la GMV (en DZD)"] / eur_to_dzd_rate
+    #     )
+
+    #     # Afficher le tableau de la LTV
+    #     st.subheader("LTV par Business Catégorie")
+    #     st.dataframe(ltv_avg_combined_df)
+
+    #     # Téléchargement de la LTV
+    #     ltv_avg_combined_df_xlsx = to_excel(ltv_avg_combined_df, include_index=False)
+    #     st.download_button(
+    #         "Télécharger LTV par Business Catégorie (.xlsx)",
+    #         ltv_avg_combined_df_xlsx,
+    #         f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+    #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    #     )
+
+    #     # # Afficher le résumé
+    #     # st.subheader("Résumé de la LTV par Business Catégorie")
+    #     # st.dataframe(ltv_summary_df)
+
+    #     # # Téléchargement de la data de rétention
+    #     # if st.button("Télécharger dataframel (.xlsx)"):
+    #     #     ltv_summary_df.to_excel(
+    #     #         f"ltv_summary_df.xlsx",
+    #     #         index=True,
+    #     #     )
+
+    #     # Créer une fonction pour générer le graphique
+    #     def generate_ltv_graph(df, devise):
+    #         fig = go.Figure()
+
+    #         if devise == "€":
+    #             columns = ["LTV avec GMV (en €)", "LTV avec 15% de la GMV (en €)"]
+    #             names = ["LTV avec GMV (en €)", "LTV avec 15% de la GMV (en €)"]
+    #         else:
+    #             columns = ["LTV avec GMV (en DZD)", "LTV avec 15% de la GMV (en DZD)"]
+    #             names = ["LTV avec GMV (en DZD)", "LTV avec 15% de la GMV (en DZD)"]
+
+    #         for col, name in zip(columns, names):
+    #             fig.add_trace(
+    #                 go.Bar(
+    #                     x=df["Business Catégorie"],
+    #                     y=df[col],
+    #                     name=name,
+    #                 )
+    #             )
+
+    #         fig.update_layout(
+    #             barmode="group",
+    #             title="LTV par Business Catégorie",
+    #             xaxis_title="Business Catégorie",
+    #             yaxis_title="LTV",
+    #             legend_title="Devise",
+    #         )
+
+    #         return fig
+
+    #     # Afficher le graphique dans Streamlit
+    #     st.subheader("LTV par Business Catégorie")
+
+    #     # Sélection de la devise
+    #     selected_devise = st.selectbox("Sélectionnez la devise :", ["€", "DZD"])
+
+    #     devise = ""
+
+    #     if selected_devise != devise:
+    #         devise = selected_devise
+    #         st.plotly_chart(generate_ltv_graph(ltv_avg_combined_df, devise))
+
+    #     # # Téléchargement de l'image du graphique
+    #     # if st.button("Télécharger le graphique"):
+    #     #     img_bytes = generate_ltv_graph(ltv_avg_combined_df, devise).to_image(
+    #     #         format="png"
+    #     #     )
+    #     #     st.download_button(
+    #     #         label="Télécharger le graphique",
+    #     #         data=img_bytes,
+    #     #         file_name=f"LTV_Business_Categorie - Devise : {devise}.png",
+    #     #         mime="image/png",
+    #     #     )
+
+    # # Créez une nouvelle page Users
+    # elif selected_page == "Users":
+    #     st.header("Users 2023")
+
+    #     # Sidebar pour les filtres
+    #     st.sidebar.title("Filtres")
+
+    #     # Sélection de la période
+    #     time_period = st.sidebar.radio(
+    #         "Période", ["Mois", "Semaine"], key="time_period_users"
+    #     )
+
+    #     # Sélection du nombre de périodes précédentes
+    #     if time_period == "Semaine":
+    #         num_periods_default = 4  # Par défaut, sélectionner 4 semaines
+    #     else:
+    #         num_periods_default = 6  # Par défaut, sélectionner 6 mois
+
+    #     num_periods = st.sidebar.number_input(
+    #         "Nombre de périodes précédentes",
+    #         1,
+    #         36,
+    #         num_periods_default,
+    #         key="num_periods_users",
+    #     )
+
+    #     # Filtres
+    #     customer_origine_options = ["Tous"] + list(users["customer_origine"].unique())
+    #     customer_origine = st.sidebar.selectbox(
+    #         "Customer Origine (diaspora or Local)", customer_origine_options
+    #     )
+
+    #     customer_country_options = ["Tous"] + list(users["customer_country"].unique())
+    #     customer_country = st.sidebar.selectbox(
+    #         "Customer Country", customer_country_options
+    #     )
+
+    #     # accountTypes_options = ["Tous"] + list(users["accountTypes"].unique())
+    #     # accountTypes = st.sidebar.selectbox("Account Types", accountTypes_options)
+
+    #     # tags_options = ["Toutes"] + list(users["tags"].unique())
+    #     # tags = st.sidebar.selectbox("Tags", tags_options)
+
+    #     # Appliquer les filtres
+    #     filtered_data_users = apply_filters_users(
+    #         users,
+    #         customer_origine,
+    #         customer_country,
+    #         # accountTypes,
+    #         # tags,
+    #         time_period,
+    #         num_periods,
+    #     )
+
+    #     # Afficher les données des Users
+    #     show_filtered_data_users = st.sidebar.checkbox("Afficher les données")
+
+    #     # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+    #     def to_excel(df, include_index=False):
+    #         output = BytesIO()
+    #         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    #             df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+    #             workbook = writer.book
+    #             worksheet = writer.sheets["Sheet1"]
+    #             format = workbook.add_format({"num_format": "0.00"})
+    #             worksheet.set_column("A:A", None, format)
+    #         processed_data = output.getvalue()
+    #         return processed_data
+
+    #     if show_filtered_data_users:
+    #         st.subheader("Data Users")
+    #         st.dataframe(filtered_data_users)
+
+    #         # Bouton pour télécharger le DataFrame au format Excel
+    #         filtered_data_users_xlsx = to_excel(
+    #             filtered_data_users, include_index=False
+    #         )
+    #         st.download_button(
+    #             "Télécharger les Users en Excel (.xlsx)",
+    #             filtered_data_users_xlsx,
+    #             f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+    #             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    #         )
+
+    #     # Afficher la plage de dates sélectionnée
+    #     start_date, end_date = get_date_range(
+    #         filtered_data_users, time_period, num_periods
+    #     )
+    #     st.sidebar.write(
+    #         f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
+    #     )
+
+    #     # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
+    #     new_signups = filtered_data_users
+    #     new_signups = new_signups[
+    #         [
+    #             "date",
+    #             "customer_id",
+    #             "lastName",
+    #             "firstName",
+    #             "phone",
+    #             "email",
+    #             "customer_country",
+    #             "customer_origine",
+    #         ]
+    #     ]
+
+    #     # Affichez les nouveaux inscrits dans le tableau de bord
+    #     st.subheader("Nouveaux Inscrits")
+    #     st.dataframe(new_signups)
+
+    #     # Téléchargement des nouveaux inscrit
+    #     new_signups_xlsx = to_excel(new_signups, include_index=False)
+    #     st.download_button(
+    #         "Télécharger les données des Nouveaux Inscrits (.xlsx)",
+    #         new_signups_xlsx,
+    #         f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+    #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    #     )
+
+    #     # Agrégez les données par période (semaine ou mois) et comptez le nombre d'inscriptions par période
+    #     if time_period == "Semaine":
+    #         new_signups["period"] = new_signups["date"] - pd.to_timedelta(
+    #             new_signups["date"].dt.dayofweek, unit="D"
+    #         )
+    #     else:
+    #         new_signups["period"] = new_signups["date"].dt.strftime("%Y-%m")
+
+    #     new_signups_count = (
+    #         new_signups.groupby("period").size().reset_index(name="count")
+    #     )
+
+    #     # Créez un graphique montrant le nombre de nouveaux inscrits par période
+    #     fig = px.bar(
+    #         new_signups_count,
+    #         x="period",
+    #         y="count",
+    #         title="Nombre de Nouveaux Inscrits par Période",
+    #         labels={"period": "Période", "count": "Nombre de Nouveaux Inscrits"},
+    #     ).update_xaxes(categoryorder="total ascending")
+
+    #     # Affichez le graphique
+    #     st.subheader("Nombre de Nouveaux Inscrits par Période")
+    #     st.plotly_chart(fig)
+
+    #     # # Génération de l'image de du nombre de nouveau inscrit avec Plotly Express
+    #     # img_bytes = fig.to_image(format="png")
+
+    #     # # Téléchargement de l'image de la heatmap de la retention
+    #     # st.download_button(
+    #     #     label="Télécharger le graphique",
+    #     #     data=img_bytes,
+    #     #     file_name=f"Nouveaux_Inscrits_Graph - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.png",
+    #     #     mime="image/png",
+    #     # )
 
     st.markdown(
         """
