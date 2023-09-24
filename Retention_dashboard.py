@@ -888,10 +888,15 @@ def main():
             axis=1,
         )
 
-        # Arrondir les colonnes "LTV (GMV en DZD)" et "LTV (Marge en DZD)" à deux décimales
+        # Arrondir les colonnes "LTV (GMV en DZD)" et "LTV (Marge en DZD)" à zéro décimal
         ltv_avg_gmv_by_cat[
             ["LTV (GMV en DZD)", "LTV (Marge en DZD)"]
         ] = ltv_avg_gmv_by_cat[["LTV (GMV en DZD)", "LTV (Marge en DZD)"]].round(0)
+
+        # Convertir les colonnes en types de données entiers
+        ltv_avg_gmv_by_cat[
+            ["LTV (GMV en DZD)", "LTV (Marge en DZD)"]
+        ] = ltv_avg_gmv_by_cat[["LTV (GMV en DZD)", "LTV (Marge en DZD)"]].astype(int)
 
         # Renommer la colonne "businessCat" en "Business Catégorie"
         ltv_avg_gmv_by_cat.rename(
@@ -937,11 +942,11 @@ def main():
         st.dataframe(ltv_avg_gmv_by_cat)
 
         # Téléchargement de la LTV
-        ltv_avg_combined_df_xlsx = to_excel(ltv_avg_gmv_by_cat, include_index=False)
+        ltv_avg_gmv_by_cat_xlsx = to_excel(ltv_avg_gmv_by_cat, include_index=False)
         st.download_button(
             "Télécharger LTV par Business Catégorie (.xlsx)",
-            ltv_avg_combined_df_xlsx,
-            f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+            ltv_avg_gmv_by_cat_xlsx,
+            f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, du {start_date} au {end_date}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
