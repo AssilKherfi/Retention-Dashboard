@@ -695,7 +695,7 @@ def main():
         # Ajoutez les annotations dans les cases de la heatmap
         for i in range(len(y_labels)):
             for j in range(len(x_labels)):
-                value = heatmap_data.iloc[i, j]
+                value = cohort_pivot.iloc[i, j]
                 if not pd.isna(value):
                     font_color = (
                         "black" if j == 0 else "white"
