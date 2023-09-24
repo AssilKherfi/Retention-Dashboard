@@ -668,12 +668,15 @@ def main():
             for j in range(len(x_labels)):
                 value = heatmap_data.iloc[i, j]
                 if not pd.isna(value):
+                    font_color = (
+                        "black" if j == 0 else "white"
+                    )  # Noir pour la première colonne, blanc pour les autres
                     fig_retention.add_annotation(
                         text=value,  # Format du texte à afficher
                         x=x_labels[j],
                         y=y_labels[i],
                         showarrow=False,
-                        font=dict(color="white"),  # Couleur du texte
+                        font=dict(color=font_color),  # Couleur du texte
                     )
 
         # Créez la heatmap de la matrice de Retention analysis en pourcentage
@@ -692,14 +695,17 @@ def main():
         # Ajoutez les annotations dans les cases de la heatmap
         for i in range(len(y_labels)):
             for j in range(len(x_labels)):
-                value = cohort_pivot.iloc[i, j]
+                value = heatmap_data.iloc[i, j]
                 if not pd.isna(value):
+                    font_color = (
+                        "black" if j == 0 else "white"
+                    )  # Noir pour la première colonne, blanc pour les autres
                     fig_clients.add_annotation(
                         text=value,  # Format du texte à afficher
                         x=x_labels[j],
                         y=y_labels[i],
                         showarrow=False,
-                        font=dict(color="white"),  # Couleur du texte
+                        font=dict(color=font_color),  # Couleur du texte
                     )
 
         # Créez des onglets pour basculer entre les deux visualisations
