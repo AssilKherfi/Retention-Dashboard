@@ -1048,9 +1048,9 @@ def main():
 
         # Sélection du nombre de périodes précédentes
         if time_period == "Semaine":
-            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
+            num_periods_default = 1  # Par défaut, sélectionner 4 semaines
         else:
-            num_periods_default = 6  # Par défaut, sélectionner 6 mois
+            num_periods_default = 1  # Par défaut, sélectionner 6 mois
 
         num_periods = st.sidebar.number_input(
             "Nombre de périodes précédentes",
@@ -1122,9 +1122,6 @@ def main():
         start_date, end_date = get_date_range(
             filtered_data_users, time_period, num_periods
         )
-        st.sidebar.write(
-            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
-        )
 
         # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
         new_signups = filtered_data_users
@@ -1159,6 +1156,10 @@ def main():
                 f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
+
+        st.sidebar.write(
+            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
+        )
 
         # Sélection de la granularité de la période
         granularity = st.radio(
