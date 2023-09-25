@@ -1205,15 +1205,15 @@ def main():
                 "Catégorie": [
                     "Nouveaux Inscrit",
                     "Acheté (COMPLETED)",
-                    "Commandé",
                     "N'a pas acheté",
+                    "Commandé",
                     "N'a pas commandé",
                 ],
                 "Nombre": [
                     total_new_signups,
                     new_signups_completed,
-                    new_signups_ordered,
                     new_signups_not_completed,
+                    new_signups_ordered,
                     new_signups_not_ordered,
                 ],
             }
