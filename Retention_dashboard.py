@@ -1156,15 +1156,6 @@ def main():
             orders_users, new_signups_copy, how="inner", on="customer_id"
         )
 
-        # Créer des widgets interactifs pour les filtres
-        status = st.multiselect(
-            "Sélectionnez le statut", new_signups_orders["Status"].unique()
-        )
-        business_cat = st.multiselect(
-            "Sélectionnez la Business Catégorie",
-            new_signups_orders["businessCat"].unique(),
-        )
-
         # Affichez les orders des nouveaux inscrits dans le tableau de bord
 
         show_new_signups_orders = st.sidebar.checkbox(
@@ -1173,24 +1164,10 @@ def main():
 
         if show_new_signups_orders:
             st.subheader("Orders des Nouveaux Inscrits")
-
-            # Appliquer les filtres aux données
-            filtered_data_new_signups_orders = new_signups_orders.copy()
-            if status:
-                filtered_data_new_signups_orders = filtered_data_new_signups_orders[
-                    filtered_data_new_signups_orders["Status"].isin(status)
-                ]
-            if business_cat:
-                filtered_data_new_signups_orders = filtered_data_new_signups_orders[
-                    filtered_data_new_signups_orders["businessCat"].isin(business_cat)
-                ]
-
-            st.dataframe(filtered_data_new_signups_orders)
+            st.dataframe(show_new_signups_orders)
 
             # Téléchargement des nouveaux inscrit
-            new_signups_orders_xlsx = to_excel(
-                filtered_data_new_signups_orders, include_index=False
-            )
+            new_signups_orders_xlsx = to_excel(new_signups_orders, include_index=False)
             st.download_button(
                 "Télécharger les données des Orders des Nouveaux Inscrits (.xlsx)",
                 new_signups_orders_xlsx,
