@@ -1156,6 +1156,30 @@ def main():
             orders_users, new_signups_copy, how="inner", on="customer_id"
         )
 
+        # Créer des widgets interactifs pour les filtres
+        status = st.multiselect(
+            "Sélectionnez le statut", new_signups_orders["Status"].unique()
+        )
+        business_cat = st.multiselect(
+            "Sélectionnez la Business Catégorie",
+            new_signups_orders["businessCat"].unique(),
+        )
+
+        # Appliquer les filtres aux données
+        filtered_data_new_signups_orders = new_signups_orders.copy()
+        if status:
+            filtered_data_new_signups_orders = filtered_data_new_signups_orders[
+                filtered_data_new_signups_orders["Status"].isin(status)
+            ]
+        if business_cat:
+            filtered_data_new_signups_orders = filtered_data_new_signups_orders[
+                filtered_data_new_signups_orders["businessCat"].isin(business_cat)
+            ]
+
+        # Affichez les nouveaux inscrits dans le tableau de bord
+        st.subheader("Orders des Nouveaux Inscrits")
+        st.dataframe(filtered_data_new_signups_orders)
+
         # Affichez les orders des nouveaux inscrits dans le tableau de bord
 
         show_new_signups_orders = st.sidebar.checkbox(
@@ -1194,7 +1218,7 @@ def main():
         )
 
         # Nombre de nouveaux inscrits qui n'ont pas acheté
-        new_signups_not_completed = total_new_signups - new_signups_completed
+        new_signups_not_completed = new_signups_ordered - new_signups_completed
 
         # Nombre de nouveaux inscrits qui n'ont pas du tout commandé
         new_signups_not_ordered = total_new_signups - new_signups_ordered
