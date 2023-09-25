@@ -888,16 +888,6 @@ def main():
             axis=1,
         )
 
-        # Arrondir les colonnes "LTV (GMV en DZD)" et "LTV (Marge en DZD)" à zéro décimal
-        ltv_avg_gmv_by_cat[
-            ["LTV (GMV en DZD)", "LTV (Marge en DZD)"]
-        ] = ltv_avg_gmv_by_cat[["LTV (GMV en DZD)", "LTV (Marge en DZD)"]].round(0)
-
-        # Convertir les colonnes en types de données entiers
-        ltv_avg_gmv_by_cat[
-            ["LTV (GMV en DZD)", "LTV (Marge en DZD)"]
-        ] = ltv_avg_gmv_by_cat[["LTV (GMV en DZD)", "LTV (Marge en DZD)"]].astype(int)
-
         # Renommer la colonne "businessCat" en "Business Catégorie"
         ltv_avg_gmv_by_cat.rename(
             columns={"businessCat": "Business Catégorie"}, inplace=True
@@ -936,6 +926,46 @@ def main():
         ltv_avg_gmv_by_cat["LTV (Marge en €)"] = (
             ltv_avg_gmv_by_cat["LTV (Marge en DZD)"] / eur_to_dzd_rate
         )
+
+        # Arrondir les colonnes "LTV (GMV en DZD)" et "LTV (Marge en DZD)" à zéro décimal
+        ltv_avg_gmv_by_cat[
+            [
+                "LTV (GMV en DZD)",
+                "LTV (Marge en DZD)",
+                "LTV (GMV en €)",
+                "LTV (Marge en €)",
+            ]
+        ] = ltv_avg_gmv_by_cat[
+            [
+                "LTV (GMV en DZD)",
+                "LTV (Marge en DZD)",
+                "LTV (GMV en €)",
+                "LTV (Marge en €)",
+            ]
+        ].round(
+            0
+        )
+
+        # Convertir les colonnes en types de données entiers
+        ltv_avg_gmv_by_cat[
+            [
+                "LTV (GMV en DZD)",
+                "LTV (Marge en DZD)",
+                "LTV (GMV en €)",
+                "LTV (Marge en €)",
+            ]
+        ] = ltv_avg_gmv_by_cat[
+            [
+                "LTV (GMV en DZD)",
+                "LTV (Marge en DZD)",
+                "LTV (GMV en €)",
+                "LTV (Marge en €)",
+            ]
+        ].astype(
+            int
+        )
+
+        pd.options.display.float_format = "{:.2f}".format
 
         # Afficher le tableau de la LTV
         st.subheader("Moyenne de LTV par Business Catégorie (GMV et Marge de la GMV) :")
