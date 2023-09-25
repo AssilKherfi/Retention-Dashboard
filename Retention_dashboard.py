@@ -1176,9 +1176,9 @@ def main():
                 filtered_data_new_signups_orders["businessCat"].isin(business_cat)
             ]
 
-        # Affichez les nouveaux inscrits dans le tableau de bord
-        st.subheader("Orders des Nouveaux Inscrits")
-        st.dataframe(filtered_data_new_signups_orders)
+        # # Affichez les nouveaux inscrits dans le tableau de bord
+        # st.subheader("Orders des Nouveaux Inscrits")
+        # st.dataframe(filtered_data_new_signups_orders)
 
         # Affichez les orders des nouveaux inscrits dans le tableau de bord
 
@@ -1191,7 +1191,9 @@ def main():
             st.dataframe(show_new_signups_orders)
 
             # Téléchargement des nouveaux inscrit
-            new_signups_orders_xlsx = to_excel(new_signups_orders, include_index=False)
+            new_signups_orders_xlsx = to_excel(
+                filtered_data_new_signups_orders, include_index=False
+            )
             st.download_button(
                 "Télécharger les données des Orders des Nouveaux Inscrits (.xlsx)",
                 new_signups_orders_xlsx,
