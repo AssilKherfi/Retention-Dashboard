@@ -435,6 +435,18 @@ def apply_filters_users(
     return filtered_data.copy()
 
 
+# Fonction pour calculer la plage de dates
+def get_date_range(filtered_data, time_period, num_periods):
+    end_date = filtered_data["date"].max()
+
+    if time_period == "Semaine":
+        start_date = end_date - pd.DateOffset(weeks=num_periods)
+    else:
+        start_date = end_date - pd.DateOffset(months=num_periods)
+
+    return start_date, end_date
+
+
 # Créer une application Streamlit
 def main():
     st.title("Tableau de Bord TemtemOne")
@@ -1022,161 +1034,192 @@ def main():
             devise = selected_devise
             st.plotly_chart(generate_ltv_graph(ltv_avg_gmv_by_cat, devise))
 
-    # # Créez une nouvelle page Users
-    # elif selected_page == "Users":
-    #     st.header("Users 2023")
+    # Créez une nouvelle page Users
+    elif selected_page == "Users":
+        st.header("Users 2023")
 
-    #     # Sidebar pour les filtres
-    #     st.sidebar.title("Filtres")
+        # Sidebar pour les filtres
+        st.sidebar.title("Filtres")
 
-    #     # Sélection de la période
-    #     time_period = st.sidebar.radio(
-    #         "Période", ["Mois", "Semaine"], key="time_period_users"
-    #     )
+        # Sélection de la période
+        time_period = st.sidebar.radio(
+            "Période", ["Mois", "Semaine"], key="time_period_users"
+        )
 
-    #     # Sélection du nombre de périodes précédentes
-    #     if time_period == "Semaine":
-    #         num_periods_default = 4  # Par défaut, sélectionner 4 semaines
-    #     else:
-    #         num_periods_default = 6  # Par défaut, sélectionner 6 mois
+        # Sélection du nombre de périodes précédentes
+        if time_period == "Semaine":
+            num_periods_default = 4  # Par défaut, sélectionner 4 semaines
+        else:
+            num_periods_default = 6  # Par défaut, sélectionner 6 mois
 
-    #     num_periods = st.sidebar.number_input(
-    #         "Nombre de périodes précédentes",
-    #         1,
-    #         36,
-    #         num_periods_default,
-    #         key="num_periods_users",
-    #     )
+        num_periods = st.sidebar.number_input(
+            "Nombre de périodes précédentes",
+            1,
+            36,
+            num_periods_default,
+            key="num_periods_users",
+        )
 
-    #     # Filtres
-    #     customer_origine_options = ["Tous"] + list(users["customer_origine"].unique())
-    #     customer_origine = st.sidebar.selectbox(
-    #         "Customer Origine (diaspora or Local)", customer_origine_options
-    #     )
+        # Filtres
+        customer_origine_options = ["Tous"] + list(users["customer_origine"].unique())
+        customer_origine = st.sidebar.selectbox(
+            "Customer Origine (diaspora or Local)", customer_origine_options
+        )
 
-    #     customer_country_options = ["Tous"] + list(users["customer_country"].unique())
-    #     customer_country = st.sidebar.selectbox(
-    #         "Customer Country", customer_country_options
-    #     )
+        customer_country_options = ["Tous"] + list(users["customer_country"].unique())
+        customer_country = st.sidebar.selectbox(
+            "Customer Country", customer_country_options
+        )
 
-    #     # accountTypes_options = ["Tous"] + list(users["accountTypes"].unique())
-    #     # accountTypes = st.sidebar.selectbox("Account Types", accountTypes_options)
+        # accountTypes_options = ["Tous"] + list(users["accountTypes"].unique())
+        # accountTypes = st.sidebar.selectbox("Account Types", accountTypes_options)
 
-    #     # tags_options = ["Toutes"] + list(users["tags"].unique())
-    #     # tags = st.sidebar.selectbox("Tags", tags_options)
+        # tags_options = ["Toutes"] + list(users["tags"].unique())
+        # tags = st.sidebar.selectbox("Tags", tags_options)
 
-    #     # Appliquer les filtres
-    #     filtered_data_users = apply_filters_users(
-    #         users,
-    #         customer_origine,
-    #         customer_country,
-    #         # accountTypes,
-    #         # tags,
-    #         time_period,
-    #         num_periods,
-    #     )
+        # Appliquer les filtres
+        filtered_data_users = apply_filters_users(
+            users,
+            customer_origine,
+            customer_country,
+            # accountTypes,
+            # tags,
+            time_period,
+            num_periods,
+        )
 
-    #     # Afficher les données des Users
-    #     show_filtered_data_users = st.sidebar.checkbox("Afficher les données")
+        # Afficher les données des Users
+        show_filtered_data_users = st.sidebar.checkbox("Afficher les données des Users")
 
-    #     # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-    #     def to_excel(df, include_index=False):
-    #         output = BytesIO()
-    #         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-    #             df.to_excel(writer, index=include_index, sheet_name="Sheet1")
-    #             workbook = writer.book
-    #             worksheet = writer.sheets["Sheet1"]
-    #             format = workbook.add_format({"num_format": "0.00"})
-    #             worksheet.set_column("A:A", None, format)
-    #         processed_data = output.getvalue()
-    #         return processed_data
+        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        def to_excel(df, include_index=False):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+                workbook = writer.book
+                worksheet = writer.sheets["Sheet1"]
+                format = workbook.add_format({"num_format": "0.00"})
+                worksheet.set_column("A:A", None, format)
+            processed_data = output.getvalue()
+            return processed_data
 
-    #     if show_filtered_data_users:
-    #         st.subheader("Data Users")
-    #         st.dataframe(filtered_data_users)
+        if show_filtered_data_users:
+            st.subheader("Data Users")
+            st.dataframe(filtered_data_users)
 
-    #         # Bouton pour télécharger le DataFrame au format Excel
-    #         filtered_data_users_xlsx = to_excel(
-    #             filtered_data_users, include_index=False
-    #         )
-    #         st.download_button(
-    #             "Télécharger les Users en Excel (.xlsx)",
-    #             filtered_data_users_xlsx,
-    #             f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
-    #             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    #         )
+            # Bouton pour télécharger le DataFrame au format Excel
+            filtered_data_users_xlsx = to_excel(
+                filtered_data_users, include_index=False
+            )
+            st.download_button(
+                "Télécharger les Users en Excel (.xlsx)",
+                filtered_data_users_xlsx,
+                f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
 
-    #     # Afficher la plage de dates sélectionnée
-    #     start_date, end_date = get_date_range(
-    #         filtered_data_users, time_period, num_periods
-    #     )
-    #     st.sidebar.write(
-    #         f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
-    #     )
+        # Afficher la plage de dates sélectionnée
+        start_date, end_date = get_date_range(
+            filtered_data_users, time_period, num_periods
+        )
+        st.sidebar.write(
+            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
+        )
 
-    #     # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
-    #     new_signups = filtered_data_users
-    #     new_signups = new_signups[
-    #         [
-    #             "date",
-    #             "customer_id",
-    #             "lastName",
-    #             "firstName",
-    #             "phone",
-    #             "email",
-    #             "customer_country",
-    #             "customer_origine",
-    #         ]
-    #     ]
+        # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
+        new_signups = filtered_data_users
+        new_signups = new_signups[
+            [
+                "date",
+                "customer_id",
+                "lastName",
+                "firstName",
+                "phone",
+                "email",
+                "customer_country",
+                "customer_origine",
+            ]
+        ]
 
-    #     # Affichez les nouveaux inscrits dans le tableau de bord
-    #     st.subheader("Nouveaux Inscrits")
-    #     st.dataframe(new_signups)
+        # Afficher les données des Users
+        show_filtered_data_users = st.sidebar.checkbox(
+            "Afficher la liste des nouveaux inscrits"
+        )
 
-    #     # Téléchargement des nouveaux inscrit
-    #     new_signups_xlsx = to_excel(new_signups, include_index=False)
-    #     st.download_button(
-    #         "Télécharger les données des Nouveaux Inscrits (.xlsx)",
-    #         new_signups_xlsx,
-    #         f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
-    #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    #     )
+        # Affichez les nouveaux inscrits dans le tableau de bord
+        if show_filtered_data_users:
+            st.subheader("Nouveaux Inscrits")
+            st.dataframe(new_signups)
 
-    #     # Agrégez les données par période (semaine ou mois) et comptez le nombre d'inscriptions par période
-    #     if time_period == "Semaine":
-    #         new_signups["period"] = new_signups["date"] - pd.to_timedelta(
-    #             new_signups["date"].dt.dayofweek, unit="D"
-    #         )
-    #     else:
-    #         new_signups["period"] = new_signups["date"].dt.strftime("%Y-%m")
+            # Téléchargement des nouveaux inscrit
+            new_signups_xlsx = to_excel(new_signups, include_index=False)
+            st.download_button(
+                "Télécharger les données des Nouveaux Inscrits (.xlsx)",
+                new_signups_xlsx,
+                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
 
-    #     new_signups_count = (
-    #         new_signups.groupby("period").size().reset_index(name="count")
-    #     )
+        # Sélection de la granularité de la période
+        granularity = st.radio(
+            "Granularité de la période",
+            ["Jour", "Semaine", "Mois"],
+            key="granularity_users",
+        )
 
-    #     # Créez un graphique montrant le nombre de nouveaux inscrits par période
-    #     fig = px.bar(
-    #         new_signups_count,
-    #         x="period",
-    #         y="count",
-    #         title="Nombre de Nouveaux Inscrits par Période",
-    #         labels={"period": "Période", "count": "Nombre de Nouveaux Inscrits"},
-    #     ).update_xaxes(categoryorder="total ascending")
+        # Créez une nouvelle colonne "period" pour définir les cohortes en fonction de la granularité sélectionnée
+        if granularity == "Jour":
+            new_signups["period"] = new_signups["date"]
+            period_duration = pd.Timedelta(days=1)  # Une journée
+        elif granularity == "Semaine":
+            new_signups["period"] = new_signups["date"] - pd.to_timedelta(
+                (new_signups["date"].dt.dayofweek + 1) % 7, unit="D"
+            )
+            period_duration = pd.Timedelta(days=7)  # Une semaine
+        else:
+            new_signups["period"] = new_signups["date"].dt.strftime(
+                "%Y-%m"
+            )  # Convertir en format "YYYY-MM"
+            period_duration = pd.Timedelta(days=31)  # Un mois
 
-    #     # Affichez le graphique
-    #     st.subheader("Nombre de Nouveaux Inscrits par Période")
-    #     st.plotly_chart(fig)
+        # Agrégez les données par période (jour, semaine ou mois) et comptez le nombre total d'inscriptions pour le mois
+        if period_duration:
+            new_signups_count = (
+                new_signups.groupby("period").size().reset_index(name="count")
+            )
+        else:
+            new_signups_count = (
+                new_signups.groupby("period")
+                .size()
+                .reset_index(name="count")
+                .groupby("period")
+                .sum()
+                .reset_index()
+            )
 
-    #     # # Génération de l'image de du nombre de nouveau inscrit avec Plotly Express
-    #     # img_bytes = fig.to_image(format="png")
+        # Assurez-vous que la dernière période se termine exactement à la fin de la période sélectionnée
+        if len(new_signups_count) > 0 and period_duration:
+            first_period_start = new_signups_count["period"].min()
+            last_period_end = first_period_start + period_duration
+            new_signups_count.loc[0, "period"] = last_period_end
 
-    #     # # Téléchargement de l'image de la heatmap de la retention
-    #     # st.download_button(
-    #     #     label="Télécharger le graphique",
-    #     #     data=img_bytes,
-    #     #     file_name=f"Nouveaux_Inscrits_Graph - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.png",
-    #     #     mime="image/png",
-    #     # )
+        # Créez un graphique montrant le nombre de nouveaux inscrits par période
+        if period_duration:
+            period_label = f"Période par {granularity}"
+        else:
+            period_label = "Mois"
+
+        fig = px.bar(
+            new_signups_count,
+            x="period",
+            y="count",
+            title=f"Nombre de Nouveaux Inscrits par {period_label}",
+            labels={"period": period_label, "count": "Nombre de Nouveaux Inscrits"},
+        ).update_xaxes(categoryorder="total ascending")
+
+        # Affichez le graphique
+        st.subheader(f"Nombre de Nouveaux Inscrits par {period_label}")
+        st.plotly_chart(fig)
 
     st.markdown(
         """
