@@ -1131,6 +1131,7 @@ def main():
             )
 
         orders_users = orders.copy()
+        orders_users = orders_users[orders_users["date"] >= "2023-01-01"]
         orders_users = orders_users[
             [
                 "date",
@@ -1215,7 +1216,7 @@ def main():
 
         # Sélection de la granularité de la période
         granularity = st.radio(
-            "Granularité de la période",
+            "Sélectionnez la période",
             ["Jour", "Semaine", "Mois"],
             key="granularity_users",
         )
@@ -1277,7 +1278,7 @@ def main():
             y="Catégorie",
             orientation="h",
             text="Nombre",
-            title=f"Statistiques des Nouveaux Inscrits par {period_label}",
+            title=f"Statistiques des Nouveaux Inscrits",
         )
 
         # Personnalisez le graphique
