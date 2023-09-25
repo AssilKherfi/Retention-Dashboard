@@ -396,9 +396,7 @@ def apply_filters_summary(df, status, customer_origine, start_date, end_date):
     return filtered_data.copy()
 
 
-def apply_filters_users(
-    df, customer_origine, customer_country, time_period, num_periods
-):
+def apply_filters_users(df, customer_origine, customer_country, start_date, end_date):
     filtered_data = df.copy()
 
     if customer_origine != "Tous":
@@ -419,32 +417,19 @@ def apply_filters_users(
 
     date_col = "date"
 
-    # Calculer la date de début de la période en fonction du nombre de périodes souhaitées
-    if time_period == "Semaine":
-        period_type = "W"
-        start_date = filtered_data[date_col].max() - pd.DateOffset(weeks=num_periods)
-    else:
-        period_type = "M"
-        start_date = filtered_data[date_col].max() - pd.DateOffset(months=num_periods)
+    # Convertir start_date et end_date en datetime64[ns]
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
 
+    # Convertir la colonne de dates en datetime64[ns]
+    filtered_data[date_col] = pd.to_datetime(filtered_data[date_col])
+
+    # Filtrer les données en fonction de la plage de dates sélectionnée
     filtered_data = filtered_data[
-        (filtered_data[date_col] >= start_date)
-        & (filtered_data[date_col] <= filtered_data[date_col].max())
+        (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
     ]
 
     return filtered_data.copy()
-
-
-# Fonction pour calculer la plage de dates
-def get_date_range(filtered_data, time_period, num_periods):
-    end_date = filtered_data["date"].max()
-
-    if time_period == "Semaine":
-        start_date = end_date - pd.DateOffset(weeks=num_periods)
-    else:
-        start_date = end_date - pd.DateOffset(months=num_periods)
-
-    return start_date, end_date
 
 
 # Créer une application Streamlit
@@ -917,8 +902,8 @@ def main():
         api = API()
 
         # Obtenez la date actuelle
-        # current_date = datetime.now().strftime("%Y-%m-%d")
-        current_date = "2023-09-24"
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        # current_date = "2023-09-24"
 
         # Obtenez le taux de change entre EUR et DZD pour la date actuelle
         exchange_rate_today = api.get_exchange_rates(
@@ -1041,23 +1026,12 @@ def main():
         # Sidebar pour les filtres
         st.sidebar.title("Filtres")
 
-        # Sélection de la période
-        time_period = st.sidebar.radio(
-            "Période", ["Mois", "Semaine"], key="time_period_users"
+        # Sélection manuelle de la date de début
+        start_date = st.sidebar.date_input(
+            "Date de début", datetime(datetime.now().year, 1, 1).date()
         )
-
-        # Sélection du nombre de périodes précédentes
-        if time_period == "Semaine":
-            num_periods_default = 1  # Par défaut, sélectionner 4 semaines
-        else:
-            num_periods_default = 1  # Par défaut, sélectionner 6 mois
-
-        num_periods = st.sidebar.number_input(
-            "Nombre de périodes précédentes",
-            1,
-            36,
-            num_periods_default,
-            key="num_periods_users",
+        end_date = st.sidebar.date_input(
+            "Date de fin", pd.to_datetime(orders["date"].max()).date()
         )
 
         # Filtres
@@ -1084,8 +1058,8 @@ def main():
             customer_country,
             # accountTypes,
             # tags,
-            time_period,
-            num_periods,
+            start_date,
+            end_date,
         )
 
         # Afficher les données des Users
@@ -1114,14 +1088,12 @@ def main():
             st.download_button(
                 "Télécharger les Users en Excel (.xlsx)",
                 filtered_data_users_xlsx,
-                f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+                f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
         # Afficher la plage de dates sélectionnée
-        start_date, end_date = get_date_range(
-            filtered_data_users, time_period, num_periods
-        )
+        st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
 
         # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
         new_signups = filtered_data_users
@@ -1153,13 +1125,9 @@ def main():
             st.download_button(
                 "Télécharger les données des Nouveaux Inscrits (.xlsx)",
                 new_signups_xlsx,
-                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
-
-        st.sidebar.write(
-            f"Plage de dates sélectionnée : du {start_date.strftime('%d-%m-%Y')} au {end_date.strftime('%d-%m-%Y')}"
-        )
 
         # Sélection de la granularité de la période
         granularity = st.radio(
@@ -1198,7 +1166,7 @@ def main():
                 .reset_index()
             )
 
-        # Assurez-vous que la dernière période se termine exactement à la fin de la période sélectionnée
+        # S'assurer que la dernière période se termine exactement à la fin de la période sélectionnée
         if len(new_signups_count) > 0 and period_duration:
             first_period_start = new_signups_count["period"].min()
             last_period_end = first_period_start + period_duration
@@ -1220,6 +1188,102 @@ def main():
 
         # Affichez le graphique
         st.subheader(f"Nombre de Nouveaux Inscrits par {period_label}")
+        st.plotly_chart(fig)
+
+        orders_users = orders.copy()
+        orders_users = orders_users[
+            [
+                "date",
+                "customer_id",
+                "order_id",
+                "Status",
+                "customer_origine",
+                "businessCat",
+            ]
+        ].rename(columns={"customer_origine": "customer_origine_orders"})
+
+        new_signups_copy = new_signups.copy()
+        new_signups_copy = new_signups_copy.rename(
+            columns={"date": "registration_date"}
+        )
+        new_signups_orders = pd.merge(
+            orders_users, new_signups_copy, how="inner", on="customer_id"
+        )
+
+        # Affichez les orders des nouveaux inscrits dans le tableau de bord
+
+        show_new_signups_orders = st.sidebar.checkbox(
+            "Afficher la liste des orders des nouveaux inscrits"
+        )
+
+        if show_new_signups_orders:
+            st.subheader("Orders des Nouveaux Inscrits")
+            st.dataframe(show_new_signups_orders)
+
+            # Téléchargement des nouveaux inscrit
+            new_signups_orders_xlsx = to_excel(new_signups_orders, include_index=False)
+            st.download_button(
+                "Télécharger les données des Orders des Nouveaux Inscrits (.xlsx)",
+                new_signups_orders_xlsx,
+                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+        # Nombre total de nouveaux inscrits
+        total_new_signups = len(new_signups)
+
+        # Nombre de nouveaux inscrits qui ont acheté (Status COMPLETED)
+        new_signups_completed = len(
+            new_signups_orders[
+                new_signups_orders["Status"] == "COMPLETED"
+            ].drop_duplicates(subset="customer_id")
+        )
+
+        # Nombre de nouveaux inscrits qui ont commandé (en comptant les order_id)
+        new_signups_ordered = len(
+            new_signups_orders.drop_duplicates(subset="customer_id")
+        )
+
+        # Nombre de nouveaux inscrits qui n'ont pas acheté
+        new_signups_not_completed = total_new_signups - new_signups_completed
+
+        # Nombre de nouveaux inscrits qui n'ont pas du tout commandé
+        new_signups_not_ordered = total_new_signups - new_signups_ordered
+
+        # Créez un DataFrame pour les statistiques
+        stats_data = pd.DataFrame(
+            {
+                "Catégorie": [
+                    "Nouveaux Inscrit",
+                    "Acheté (COMPLETED)",
+                    "Commandé",
+                    "N'a pas acheté",
+                    "N'a pas commandé",
+                ],
+                "Nombre": [
+                    total_new_signups,
+                    new_signups_completed,
+                    new_signups_ordered,
+                    new_signups_not_completed,
+                    new_signups_not_ordered,
+                ],
+            }
+        )
+
+        # Créez un graphique à barres horizontal
+        fig = px.bar(
+            stats_data,
+            x="Nombre",
+            y="Catégorie",
+            orientation="h",
+            text="Nombre",
+            title="Statistiques des Nouveaux Inscrits",
+        )
+
+        # Personnalisez le graphique
+        fig.update_traces(texttemplate="%{text}", textposition="outside")
+
+        # Affichez le graphique
         st.plotly_chart(fig)
 
     st.markdown(
