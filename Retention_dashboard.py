@@ -897,7 +897,11 @@ def main():
             "Business Catégorie"
         ].replace(
             ["Alimentation", "Shopping", "Airtime"],
-            ["Alimentation: 10%", "Shopping: 8%", "Airtime: 21%"],
+            [
+                "Alimentation (10% de marge)",
+                "Shopping: (8% de marge)",
+                "Airtime: (21% de marge)",
+            ],
         )
 
         # Créez une instance de l'API (assurez-vous d'importer l'API au préalable)
@@ -1217,7 +1221,7 @@ def main():
         # Sélection de la granularité de la période
         granularity = st.radio(
             "Sélectionnez la période",
-            ["Jour", "Semaine", "Mois"],
+            ["Mois", "Semaine", "Jour"],
             key="granularity_users",
         )
 
