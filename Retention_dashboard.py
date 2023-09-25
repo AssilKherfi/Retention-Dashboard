@@ -256,6 +256,7 @@ users = users[
         ]
     )
 ]
+
 users["createdAt"] = pd.to_datetime(users["createdAt"])
 users["createdAt"] = users["createdAt"].dt.strftime("%Y-%m-%d")
 users["date"] = users["createdAt"]
@@ -776,7 +777,7 @@ def main():
             st.download_button(
                 "Télécharger les données de la LTV en Excel (.xlsx)",
                 ltv_df_xlsx,
-                f"LTV - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, pour les {num_periods} derniers {time_period}.xlsx",
+                f"LTV - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status},du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
