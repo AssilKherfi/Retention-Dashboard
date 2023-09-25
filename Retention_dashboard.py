@@ -458,6 +458,8 @@ def main():
         ["Retention", "Lifetime Value (LTV)", "Users"],
     )
 
+    ####################################################################################   RETENTION PAGES   #####################################################################
+
     if selected_page == "Retention":
         # Contenu de la page "Tableau de Bord de Retention"
         st.header("Retention")
@@ -673,7 +675,7 @@ def main():
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
-    ####################################################################################### LTV PAGES ######################################################################################
+    ####################################################################################   LTV PAGES   #####################################################################
 
     # Créez une nouvelle page LTV
     elif selected_page == "Lifetime Value (LTV)":
@@ -1019,6 +1021,8 @@ def main():
             devise = selected_devise
             st.plotly_chart(generate_ltv_graph(ltv_avg_gmv_by_cat, devise))
 
+    ####################################################################################   USERS PAGES   #####################################################################
+
     # Créez une nouvelle page Users
     elif selected_page == "Users":
         st.header("Users 2023")
@@ -1092,9 +1096,6 @@ def main():
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
-        # Afficher la plage de dates sélectionnée
-        st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
-
         # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
         new_signups = filtered_data_users
         new_signups = new_signups[
@@ -1128,67 +1129,6 @@ def main():
                 f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
-
-        # Sélection de la granularité de la période
-        granularity = st.radio(
-            "Granularité de la période",
-            ["Jour", "Semaine", "Mois"],
-            key="granularity_users",
-        )
-
-        # Créez une nouvelle colonne "period" pour définir les cohortes en fonction de la granularité sélectionnée
-        if granularity == "Jour":
-            new_signups["period"] = new_signups["date"]
-            period_duration = pd.Timedelta(days=1)  # Une journée
-        elif granularity == "Semaine":
-            new_signups["period"] = new_signups["date"] - pd.to_timedelta(
-                (new_signups["date"].dt.dayofweek + 1) % 7, unit="D"
-            )
-            period_duration = pd.Timedelta(days=7)  # Une semaine
-        else:
-            new_signups["period"] = new_signups["date"].dt.strftime(
-                "%Y-%m"
-            )  # Convertir en format "YYYY-MM"
-            period_duration = pd.Timedelta(days=31)  # Un mois
-
-        # Agrégez les données par période (jour, semaine ou mois) et comptez le nombre total d'inscriptions pour le mois
-        if period_duration:
-            new_signups_count = (
-                new_signups.groupby("period").size().reset_index(name="count")
-            )
-        else:
-            new_signups_count = (
-                new_signups.groupby("period")
-                .size()
-                .reset_index(name="count")
-                .groupby("period")
-                .sum()
-                .reset_index()
-            )
-
-        # S'assurer que la dernière période se termine exactement à la fin de la période sélectionnée
-        if len(new_signups_count) > 0 and period_duration:
-            first_period_start = new_signups_count["period"].min()
-            last_period_end = first_period_start + period_duration
-            new_signups_count.loc[0, "period"] = last_period_end
-
-        # Créez un graphique montrant le nombre de nouveaux inscrits par période
-        if period_duration:
-            period_label = f"Période par {granularity}"
-        else:
-            period_label = "Mois"
-
-        fig = px.bar(
-            new_signups_count,
-            x="period",
-            y="count",
-            title=f"Nombre de Nouveaux Inscrits par {period_label}",
-            labels={"period": period_label, "count": "Nombre de Nouveaux Inscrits"},
-        ).update_xaxes(categoryorder="total ascending")
-
-        # Affichez le graphique
-        st.subheader(f"Nombre de Nouveaux Inscrits par {period_label}")
-        st.plotly_chart(fig)
 
         orders_users = orders.copy()
         orders_users = orders_users[
@@ -1225,9 +1165,12 @@ def main():
             st.download_button(
                 "Télécharger les données des Orders des Nouveaux Inscrits (.xlsx)",
                 new_signups_orders_xlsx,
-                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, pour les {num_periods} derniers {time_period}.xlsx",
+                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
+
+        # Afficher la plage de dates sélectionnée
+        st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
 
         # Nombre total de nouveaux inscrits
         total_new_signups = len(new_signups)
@@ -1270,21 +1213,90 @@ def main():
             }
         )
 
+        # Sélection de la granularité de la période
+        granularity = st.radio(
+            "Granularité de la période",
+            ["Jour", "Semaine", "Mois"],
+            key="granularity_users",
+        )
+
+        # Créez une nouvelle colonne "period" pour définir les cohortes en fonction de la granularité sélectionnée
+        if granularity == "Jour":
+            new_signups["period"] = new_signups["date"]
+            period_duration = pd.Timedelta(days=1)  # Une journée
+        elif granularity == "Semaine":
+            new_signups["period"] = new_signups["date"] - pd.to_timedelta(
+                (new_signups["date"].dt.dayofweek + 1) % 7, unit="D"
+            )
+            period_duration = pd.Timedelta(days=7)  # Une semaine
+        else:
+            new_signups["period"] = new_signups["date"].dt.strftime(
+                "%Y-%m"
+            )  # Convertir en format "YYYY-MM"
+            period_duration = pd.Timedelta(days=31)  # Un mois
+
+        # Agrégez les données par période (jour, semaine ou mois) et comptez le nombre total d'inscriptions pour le mois
+        if period_duration:
+            new_signups_count = (
+                new_signups.groupby("period").size().reset_index(name="count")
+            )
+        else:
+            new_signups_count = (
+                new_signups.groupby("period")
+                .size()
+                .reset_index(name="count")
+                .groupby("period")
+                .sum()
+                .reset_index()
+            )
+
+        # Assurez-vous que la dernière période se termine exactement à la fin de la période sélectionnée
+        if len(new_signups_count) > 0 and period_duration:
+            first_period_start = new_signups_count["period"].min()
+            last_period_end = first_period_start + period_duration
+            new_signups_count.loc[0, "period"] = last_period_end
+
+        # Créez un graphique montrant le nombre de nouveaux inscrits par période
+        if period_duration:
+            period_label = f"{granularity}"
+        else:
+            period_label = "Mois"
+
+        fig_nmb_usr = px.bar(
+            new_signups_count,
+            x="period",
+            y="count",
+            title=f"Nombre de Nouveaux Inscrits par {period_label}",
+            labels={"period": period_label, "count": "Nombre de Nouveaux Inscrits"},
+        ).update_xaxes(categoryorder="total ascending")
+
         # Créez un graphique à barres horizontal
-        fig = px.bar(
+        fig_stat = px.bar(
             stats_data,
             x="Nombre",
             y="Catégorie",
             orientation="h",
             text="Nombre",
-            title="Statistiques des Nouveaux Inscrits",
+            title=f"Statistiques des Nouveaux Inscrits par {period_label}",
         )
 
         # Personnalisez le graphique
-        fig.update_traces(texttemplate="%{text}", textposition="outside")
+        fig_stat.update_traces(texttemplate="%{text}", textposition="outside")
 
-        # Affichez le graphique
-        st.plotly_chart(fig)
+        # Créez des onglets pour basculer entre les deux visualisations
+        selected_visualization = st.radio(
+            "Sélectionnez la visualisation",
+            ["Nombre de Nouveaux Inscrits", "Statistiques des Nouveaux Inscrits"],
+        )
+
+        if selected_visualization == "Nombre de Nouveaux Inscrits":
+            # Affichez la heatmap de l'analyse de rétention
+            st.plotly_chart(fig_nmb_usr)  # Utilisez le graphique fig_nmb_usr
+        else:
+            # Affichez la heatmap du nombre de clients
+            st.plotly_chart(fig_stat)  # Utilisez le graphique fig_stat
+
+    ####################################################################################   CSS STYLE   #####################################################################
 
     st.markdown(
         """
