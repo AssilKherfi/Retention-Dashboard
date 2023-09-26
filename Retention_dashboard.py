@@ -1302,6 +1302,83 @@ def main():
             # Affichez la heatmap du nombre de clients
             st.plotly_chart(fig_stat)  # Utilisez le graphique fig_stat
 
+        # Filtrer les données pour n'inclure que les achats (Status COMPLETED)
+        completed_orders = new_signups_orders[
+            new_signups_orders["Status"] == "COMPLETED"
+        ]
+
+        # Supprimer la colonne "Status" pour avoir des customer_id uniques par businessCat
+        completed_orders = completed_orders.drop(columns=["Status"])
+
+        # Grouper les données par "businessCat" et compter le nombre de customer_id uniques
+        businesscat_stats_completed = (
+            completed_orders.groupby(["businessCat"])
+            .agg({"customer_id": "nunique"})
+            .reset_index()
+        )
+
+        # Créer un graphique à barres empilées
+        fig_businesscat_completed = px.bar(
+            businesscat_stats_completed,
+            x="businessCat",
+            y="customer_id",
+            title="Nombre de personnes ayant acheté par businessCat",
+        )
+        fig_businesscat_completed.update_layout(barmode="stack")
+
+        # # Afficher le graphique
+        # st.plotly_chart(fig_businesscat_completed)
+
+        # Renommer les valeurs de la colonne "Status" qui ne sont pas "COMPLETED" en "NOT COMPLETED"
+        filtered_data_new_signups_orders_copy = new_signups_orders.copy()
+        filtered_data_new_signups_orders_copy[
+            "Status"
+        ] = filtered_data_new_signups_orders_copy["Status"].map(
+            lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
+        )
+
+        # Filtrer les données pour n'inclure que les statuts "NOT COMPLETED"
+        not_completed_orders = filtered_data_new_signups_orders_copy[
+            filtered_data_new_signups_orders_copy["Status"] == "NOT COMPLETED"
+        ]
+
+        # Grouper les données par "businessCat" et compter le nombre de customer_id uniques
+        businesscat_stats_ordered = (
+            not_completed_orders.groupby(["businessCat"])
+            .agg({"customer_id": "nunique"})
+            .reset_index()
+        )
+
+        # Créer un graphique à barres empilées
+        fig_businesscat_ordered = px.bar(
+            businesscat_stats_ordered,
+            x="businessCat",
+            y="customer_id",
+            title="Nombre de personnes n'ayant pas acheté par businessCat",
+        )
+        fig_businesscat_ordered.update_layout(barmode="stack")
+
+        # # Afficher le graphique
+        # st.plotly_chart(fig_businesscat_ordered)
+
+        # Créez des onglets pour basculer entre les deux visualisations
+        selected_visualization = st.radio(
+            "Sélectionnez la visualisation",
+            [
+                "Nombre de personnes ayant acheté par businessCat",
+                "Nombre de personnes n'ayant pas acheté par businessCat",
+            ],
+        )
+
+        if selected_visualization == "Nombre de personnes ayant acheté par businessCat":
+            # Affichez la heatmap de l'analyse de rétention
+            st.plotly_chart(
+                fig_businesscat_completed
+            )  # Utilisez le graphique fig_nmb_usr
+        else:
+            # Affichez la heatmap du nombre de clients
+            st.plotly_chart(fig_businesscat_ordered)  # Utilisez le graphique fig_stat
+
     ####################################################################################   CSS STYLE   #####################################################################
 
     st.markdown(
