@@ -144,10 +144,10 @@ secrets = load_secrets()
 # Charger les données depuis S3 en fonction du mode
 for file_name in file_names:
     df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
-    if mode == "codespaces":
-        dataframes[df_name] = load_data_from_s3_with_toml(secrets, bucket_name, file_name)
-    else:
+    if mode == "production":
         dataframes[df_name] = load_data_from_s3_with_connection(bucket_name, file_name)
+    else:
+        dataframes[df_name] = load_data_from_s3_with_toml(secrets, bucket_name, file_name)
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
