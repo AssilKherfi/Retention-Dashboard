@@ -367,10 +367,10 @@ users = users[
     )
 ]
 
-users["createdAt"] = pd.to_datetime(users["createdAt"])
-users["createdAt"] = users["createdAt"].dt.strftime("%Y-%m-%d")
-users["date"] = users["createdAt"]
-users["date"] = pd.to_datetime(users["date"])
+users.loc[:, "createdAt"] = pd.to_datetime(users["createdAt"])
+users.loc[:, "createdAt"] = users["createdAt"].dt.strftime("%Y-%m-%d")
+users.loc[:, "date"] = users["createdAt"]
+users.loc[:, "date"] = pd.to_datetime(users["date"])
 users = users.rename(columns={"Origine": "customer_origine"})
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
