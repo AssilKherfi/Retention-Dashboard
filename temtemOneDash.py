@@ -132,7 +132,7 @@ bucket_name = "one-data-lake"
 # Liste des noms de fichiers à télécharger depuis S3
 file_names = [
     "csv_database/orders.csv",
-    "csv_database/users.csv",
+    "csv_database/users_2023.csv",
 ]
 
 # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
