@@ -151,7 +151,7 @@ for file_name in file_names:
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
-users = dataframes["users"]
+users = dataframes["users_2023"]
 
 # %%
 pd.set_option("display.max_columns", None)
