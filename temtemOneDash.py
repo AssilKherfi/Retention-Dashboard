@@ -124,7 +124,7 @@ def load_data_from_s3_with_connection(bucket_name, file_name):
     )
 
 # Mode de fonctionnement (Codespaces ou production en ligne)
-mode = "codespaces"  # Vous pouvez définir ceci en fonction de votre environnement
+mode = "production"  # Vous pouvez définir ceci en fonction de votre environnement
 
 # Nom du seau S3
 bucket_name = "one-data-lake"
