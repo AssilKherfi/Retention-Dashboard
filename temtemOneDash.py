@@ -1093,11 +1093,30 @@ def main():
             columns={"businessCat": "Business Catégorie"}, inplace=True
         )
 
+
+
         # pd.options.display.float_format = "{:.2f}".format
 
-        # Afficher le tableau de la LTV
+        # Calculer le pourcentage entre "LTV (Marge en dzd)" et "LTV (GMV en dzd)" pour chaque catégorie d'entreprise
+        ltv_avg_by_cat["Pourcentage Marge vs GMV"] = (
+            (ltv_avg_by_cat["LTV (Marge en dzd)"] / ltv_avg_by_cat["LTV (GMV en dzd)"]) * 100
+        )
+
+        # Formater la colonne "Business Catégorie" avec le pourcentage
+        ltv_avg_by_cat["Business Catégorie"] = (
+            ltv_avg_by_cat["Business Catégorie"] + " (" + ltv_avg_by_cat["Pourcentage Marge vs GMV"].round(2).astype(str) + "%)"
+        )
+
+         # Afficher le tableau de la LTV
         st.subheader("Moyenne de LTV par Business Catégorie (GMV et Marge de la GMV) :")
         st.dataframe(ltv_avg_by_cat)
+
+        # # Afficher le pourcentage sous forme de texte
+        # for index, row in ltv_avg_by_cat.iterrows():
+        #     business_cat = row["Business Catégorie"]
+        #     percentage = row["Pourcentage Marge vs GMV"]
+        #     st.text(f"Marge {business_cat} % = {percentage:.2f}%")
+
 
         # Téléchargement de la LTV
         ltv_avg_by_cat_xlsx = to_excel(ltv_avg_by_cat, include_index=False)
@@ -1276,6 +1295,7 @@ def main():
         new_signups_copy = new_signups_copy.rename(
             columns={"date": "registration_date"}
         )
+
         new_signups_orders = pd.merge(
             orders_users, new_signups_copy, how="inner", on="customer_id"
         )
@@ -1288,7 +1308,7 @@ def main():
 
         if show_new_signups_orders:
             st.subheader("Orders des Nouveaux Inscrits")
-            st.dataframe(show_new_signups_orders)
+            st.dataframe(new_signups_orders)
 
             # Téléchargement des nouveaux inscrit
             new_signups_orders_xlsx = to_excel(new_signups_orders, include_index=False)
