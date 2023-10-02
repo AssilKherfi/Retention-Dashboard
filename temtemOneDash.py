@@ -1288,7 +1288,9 @@ def main():
                 "Status",
                 "customer_origine",
                 "businessCat",
+                "total_amount_dzd"
             ]
+
         ].rename(columns={"customer_origine": "customer_origine_orders"})
 
         new_signups_copy = new_signups.copy()
@@ -1298,6 +1300,14 @@ def main():
 
         new_signups_orders = pd.merge(
             orders_users, new_signups_copy, how="inner", on="customer_id"
+        )
+
+        new_signups_orders['New_status'] = new_signups_orders['Status']
+        new_signups_orders = new_signups_orders.copy()
+        new_signups_orders[
+            "New_status"
+        ] = new_signups_orders["New_status"].map(
+            lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
         )
 
         # Affichez les orders des nouveaux inscrits dans le tableau de bord
@@ -1446,82 +1456,103 @@ def main():
             # Affichez la heatmap du nombre de clients
             st.plotly_chart(fig_stat)  # Utilisez le graphique fig_stat
 
-        # Filtrer les données pour n'inclure que les achats (Status COMPLETED)
-        completed_orders = new_signups_orders[
-            new_signups_orders["Status"] == "COMPLETED"
-        ]
+        # # Filtrer les données pour n'inclure que les achats (Status COMPLETED)
+        # completed_orders = new_signups_orders[
+        #     new_signups_orders["Status"] == "COMPLETED"
+        # ]
 
-        # Supprimer la colonne "Status" pour avoir des customer_id uniques par businessCat
-        completed_orders = completed_orders.drop(columns=["Status"])
+        # # Supprimer la colonne "Status" pour avoir des customer_id uniques par businessCat
+        # completed_orders = completed_orders.drop(columns=["Status"])
 
-        # Grouper les données par "businessCat" et compter le nombre de customer_id uniques
-        businesscat_stats_completed = (
-            completed_orders.groupby(["businessCat"])
-            .agg({"customer_id": "nunique"})
-            .reset_index()
-        )
+        # # Grouper les données par "businessCat" et compter le nombre de customer_id uniques
+        # businesscat_stats_completed = (
+        #     completed_orders.groupby(["businessCat"])
+        #     .agg({"customer_id": "nunique"})
+        #     .reset_index()
+        # )
 
-        # Créer un graphique à barres empilées
-        fig_businesscat_completed = px.bar(
-            businesscat_stats_completed,
-            x="businessCat",
-            y="customer_id",
-            title="Nombre de personnes ayant acheté par businessCat",
-        )
-        fig_businesscat_completed.update_layout(barmode="stack")
+        # # Créer un graphique à barres empilées
+        # fig_businesscat_completed = px.bar(
+        #     businesscat_stats_completed,
+        #     x="businessCat",
+        #     y="customer_id",
+        #     title="Nombre de personnes ayant acheté par businessCat",
+        # )
+        # fig_businesscat_completed.update_layout(barmode="stack")
 
-        # # Afficher le graphique
-        # st.plotly_chart(fig_businesscat_completed)
+        # # # Afficher le graphique
+        # # st.plotly_chart(fig_businesscat_completed)
 
-        # Renommer les valeurs de la colonne "Status" qui ne sont pas "COMPLETED" en "NOT COMPLETED"
-        filtered_data_new_signups_orders_copy = new_signups_orders.copy()
-        filtered_data_new_signups_orders_copy[
-            "Status"
-        ] = filtered_data_new_signups_orders_copy["Status"].map(
-            lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
-        )
+        # # Renommer les valeurs de la colonne "Status" qui ne sont pas "COMPLETED" en "NOT COMPLETED"
+        # filtered_data_new_signups_orders_copy = new_signups_orders.copy()
+        # filtered_data_new_signups_orders_copy[
+        #     "Status"
+        # ] = filtered_data_new_signups_orders_copy["Status"].map(
+        #     lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
+        # )
 
-        # Filtrer les données pour n'inclure que les statuts "NOT COMPLETED"
-        not_completed_orders = filtered_data_new_signups_orders_copy[
-            filtered_data_new_signups_orders_copy["Status"] == "NOT COMPLETED"
-        ]
+        # # Filtrer les données pour n'inclure que les statuts "NOT COMPLETED"
+        # not_completed_orders = filtered_data_new_signups_orders_copy[
+        #     filtered_data_new_signups_orders_copy["Status"] == "NOT COMPLETED"
+        # ]
 
-        # Grouper les données par "businessCat" et compter le nombre de customer_id uniques
-        businesscat_stats_ordered = (
-            not_completed_orders.groupby(["businessCat"])
-            .agg({"customer_id": "nunique"})
-            .reset_index()
-        )
+        # # Grouper les données par "businessCat" et compter le nombre de customer_id uniques
+        # businesscat_stats_ordered = (
+        #     not_completed_orders.groupby(["businessCat"])
+        #     .agg({"customer_id": "nunique"})
+        #     .reset_index()
+        # )
 
-        # Créer un graphique à barres empilées
-        fig_businesscat_ordered = px.bar(
-            businesscat_stats_ordered,
-            x="businessCat",
-            y="customer_id",
-            title="Nombre de personnes n'ayant pas acheté par businessCat",
-        )
-        fig_businesscat_ordered.update_layout(barmode="stack")
+        # # Créer un graphique à barres empilées
+        # fig_businesscat_ordered = px.bar(
+        #     businesscat_stats_ordered,
+        #     x="businessCat",
+        #     y="customer_id",
+        #     title="Nombre de personnes n'ayant pas acheté par businessCat",
+        # )
+        # fig_businesscat_ordered.update_layout(barmode="stack")
 
-        # # Afficher le graphique
-        # st.plotly_chart(fig_businesscat_ordered)
+        # # # Afficher le graphique
+        # # st.plotly_chart(fig_businesscat_ordered)
 
-        # Créez des onglets pour basculer entre les deux visualisations
-        selected_visualization = st.radio(
-            "Sélectionnez la visualisation",
-            [
-                "Nombre de personnes ayant acheté par businessCat",
-                "Nombre de personnes n'ayant pas acheté par businessCat",
-            ],
-        )
+        # # Créez des onglets pour basculer entre les deux visualisations
+        # selected_visualization = st.radio(
+        #     "Sélectionnez la visualisation",
+        #     [
+        #         "Nombre de personnes ayant acheté par businessCat",
+        #         "Nombre de personnes n'ayant pas acheté par businessCat",
+        #     ],
+        # )
 
-        if selected_visualization == "Nombre de personnes ayant acheté par businessCat":
-            # Affichez la heatmap de l'analyse de rétention
-            st.plotly_chart(
-                fig_businesscat_completed
-            )  # Utilisez le graphique fig_nmb_usr
-        else:
-            # Affichez la heatmap du nombre de clients
-            st.plotly_chart(fig_businesscat_ordered)  # Utilisez le graphique fig_stat
+        # if selected_visualization == "Nombre de personnes ayant acheté par businessCat":
+        #     # Affichez la heatmap de l'analyse de rétention
+        #     st.plotly_chart(
+        #         fig_businesscat_completed
+        #     )  # Utilisez le graphique fig_nmb_usr
+        # else:
+        #     # Affichez la heatmap du nombre de clients
+        #     st.plotly_chart(fig_businesscat_ordered)  # Utilisez le graphique fig_stat
+
+        new_signups_orders_copy = new_signups_orders.copy()
+        new_signups_orders_copy['New_status'] = new_signups_orders_copy['New_status'].replace({
+            'COMPLETED': 'Acheté',
+            'NOT COMPLETED': 'Pas Acheté)'
+        })
+
+        # Supprimez les doublons de customer_id dans chaque businessCat et New_status
+        unique_customers = new_signups_orders_copy.drop_duplicates(subset=['businessCat', 'New_status', 'customer_id'])
+
+        # Créez une table pivot pour obtenir le nombre de clients uniques par businessCat et New_status
+        pivot_table = pd.pivot_table(unique_customers, values='customer_id', index=['businessCat', 'New_status'], aggfunc='count').reset_index()
+
+        # Créez le graphique en entonnoir avec Plotly
+        fig = px.funnel(pivot_table, x='customer_id', y='businessCat', color='New_status',
+                        title='Funnel de Nouveaux client ayant acheté/pas acheté par Business Catégorie (Clients Uniques)',
+                        labels={'businessCat': 'Business Catégorie', 'customer_id': 'Nombre de Clients'},
+                        category_orders={"businessCat": ["Catégorie 1", "Catégorie 2", "Catégorie 3"]})
+
+        # Affichez le graphique
+        st.plotly_chart(fig)
 
     ####################################################################################   CSS STYLE   #####################################################################
 
