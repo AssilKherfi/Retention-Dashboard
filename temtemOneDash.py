@@ -1363,7 +1363,7 @@ def main():
                     "Commandé",
                     "N'a pas commandé",
                 ],
-                "Nombre": [
+                "Nombre de Clients": [
                     total_new_signups,
                     new_signups_completed,
                     new_signups_not_completed,
@@ -1433,10 +1433,10 @@ def main():
         # Créez un graphique à barres horizontal
         fig_stat = px.bar(
             stats_data,
-            x="Nombre",
+            x="Nombre de Clients",
             y="Catégorie",
             orientation="h",
-            text="Nombre",
+            text="Nombre de Clients",
             title=f"Statistiques des Nouveaux Inscrits",
         )
 
@@ -1533,10 +1533,11 @@ def main():
         #     # Affichez la heatmap du nombre de clients
         #     st.plotly_chart(fig_businesscat_ordered)  # Utilisez le graphique fig_stat
 
+        # Remplacez les valeurs de New_status
         new_signups_orders_copy = new_signups_orders.copy()
         new_signups_orders_copy['New_status'] = new_signups_orders_copy['New_status'].replace({
-            'COMPLETED': 'Acheté',
-            'NOT COMPLETED': 'Pas Acheté)'
+            'COMPLETED': 'Nombre de nouveaux inscrits ayant acheté',
+            'NOT COMPLETED': "Nombre de nouveaux inscrits n'ayant pas acheté"
         })
 
         # Supprimez les doublons de customer_id dans chaque businessCat et New_status
@@ -1544,6 +1545,13 @@ def main():
 
         # Créez une table pivot pour obtenir le nombre de clients uniques par businessCat et New_status
         pivot_table = pd.pivot_table(unique_customers, values='customer_id', index=['businessCat', 'New_status'], aggfunc='count').reset_index()
+
+        # Regroupez par businessCat pour obtenir le nombre total de personnes ayant passé une commande
+        total_commandes = pivot_table.groupby('businessCat')['customer_id'].sum().reset_index()
+        total_commandes['New_status'] = "Nombre de nouveaux inscrits ayant commandé"
+
+        # Concaténez le total des commandes au DataFrame pivot original
+        pivot_table = pd.concat([pivot_table, total_commandes], ignore_index=True)
 
         # Créez le graphique en entonnoir avec Plotly
         fig = px.funnel(pivot_table, x='customer_id', y='businessCat', color='New_status',
