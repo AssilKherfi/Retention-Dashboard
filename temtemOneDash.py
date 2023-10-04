@@ -133,6 +133,7 @@ file_names = [
     "csv_database/orders.csv",
     "csv_database/ltv_data.csv",
     "csv_database/users_2023.csv",
+    "csv_database/geoloc_wilaya.csv",
 ]
 
 # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
@@ -153,6 +154,7 @@ for file_name in file_names:
 orders = dataframes["orders"]
 ltv_data = dataframes["ltv_data"]
 users = dataframes["users_2023"]
+geoloc_wilaya = dataframes["geoloc_wilaya"]
 
 # %%
 pd.set_option("display.max_columns", None)
@@ -376,6 +378,8 @@ users["createdAt"] = users["createdAt"].dt.strftime("%Y-%m-%d")
 users["date"] = users["createdAt"]
 users["date"] = pd.to_datetime(users["date"])
 users = users.rename(columns={"Origine": "customer_origine"})
+
+
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
 orders["date"] = pd.to_datetime(orders["date"])
@@ -570,7 +574,7 @@ def main():
     # Créer un menu de navigation
     selected_page = st.sidebar.selectbox(
         "Sélectionnez un Tableau de Bord",
-        ["Retention", "Lifetime Value (LTV)", "Users"],
+        ["Retention", "Lifetime Value (LTV)", "Users", "Concentration des clients par commune, Algérie"],
     )
 
     ####################################################################################   RETENTION PAGES   #####################################################################
@@ -1561,6 +1565,63 @@ def main():
 
         # Affichez le graphique
         st.plotly_chart(fig)
+
+    ####################################################################################   USERS PAGES   #####################################################################
+
+    # Créez une nouvelle page concentration des clients
+    elif selected_page == "Concentration des clients par commune, Algérie":
+        st.header("Concentration des clients par commune, Algérie")
+
+        # Créez une liste des régions (wilayas) pour le filtre
+        wilaya_list = geoloc_wilaya['region_delivery_address'].unique()
+        selected_wilaya = st.selectbox("Sélectionnez une wilaya :", wilaya_list)
+
+        # Filtrer les données en fonction de la région (wilaya) sélectionnée
+        filtered_data = geoloc_wilaya[geoloc_wilaya['region_delivery_address'] == selected_wilaya]
+
+        # Étape 1 : Regrouper par commune et compter le nombre de clients par commune
+        commune_counts = filtered_data['commune_delivery_address'].value_counts().reset_index()
+        commune_counts.columns = ['commune_delivery_address', 'nombre_clients']
+
+        # Étape 2 : Obtenez les coordonnées de chaque commune (utilisez la première entrée de chaque groupe)
+        commune_coordinates = filtered_data.groupby('commune_delivery_address').agg({'Latitude': 'first', 'Longitude': 'first'}).reset_index()
+
+        # Créez la carte en utilisant Plotly Graph Objects en utilisant le nombre de clients par commune pour la taille des marqueurs
+        fig = go.Figure()
+
+        for i, row in commune_counts.iterrows():
+            fig.add_trace(go.Scattermapbox(
+                lat=[commune_coordinates.loc[i, 'Latitude']],
+                lon=[commune_coordinates.loc[i, 'Longitude']],
+                mode='markers+text',
+                text=[f'Commune: {row["commune_delivery_address"]}<br>Nombre de Clients: {row["nombre_clients"]}'],
+                marker=dict(
+                    size=row['nombre_clients'],
+                    sizemode='diameter',
+                    opacity=0.7
+                ),
+                name=row["commune_delivery_address"]
+            ))
+
+        fig.update_layout(
+            title=f'Concentration des clients pour la wilaya de {selected_wilaya}, Algérie',
+            autosize=True,
+            hovermode='closest',
+            mapbox=dict(
+                style="open-street-map",
+                bearing=0,
+                center=dict(
+                    lat=28.0339,  # Latitude approximative du centre de l'Algérie
+                    lon=1.6596    # Longitude approximative du centre de l'Algérie
+                ),
+                pitch=0,
+                zoom=5
+            )
+        )
+
+        st.plotly_chart(fig)
+
+
 
     ####################################################################################   CSS STYLE   #####################################################################
 
