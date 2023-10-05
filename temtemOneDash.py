@@ -1701,6 +1701,10 @@ def main():
         color: #ffffff !important; /* Couleur du texte en blanc lorsque survolé */
         font-weight: bold;
     }
+    
+    .ex0cdmw0 {
+        color: #860102
+    }
 
     .e1vs0wn31{
         background-color: #D4D4D4 !important; /*
