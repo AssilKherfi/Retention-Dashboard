@@ -1571,28 +1571,61 @@ def main():
     # Créez une nouvelle page concentration des clients
     elif selected_page == "Concentration des clients par commune, Algérie":
         st.header("Concentration des clients par commune, Algérie")
-
+        
         # Créez une liste des régions (wilayas) pour le filtre
         wilaya_list = geoloc_wilaya['region_delivery_address'].unique()
         selected_wilaya = st.selectbox("Sélectionnez une wilaya :", wilaya_list)
 
-        # Filtrer les données en fonction de la région (wilaya) sélectionnée
-        filtered_data = geoloc_wilaya[geoloc_wilaya['region_delivery_address'] == selected_wilaya]
 
-        # Étape 1 : Regrouper par commune et compter le nombre de clients par commune
-        commune_counts = filtered_data['commune_delivery_address'].value_counts().reset_index()
+        commune_counts = geoloc_wilaya['commune_delivery_address'].value_counts().reset_index()
         commune_counts.columns = ['commune_delivery_address', 'nombre_clients']
 
-        # Étape 2 : Obtenez les coordonnées de chaque commune (utilisez la première entrée de chaque groupe)
-        commune_coordinates = filtered_data.groupby('commune_delivery_address').agg({'Latitude': 'first', 'Longitude': 'first'}).reset_index()
+        commune_coordinates = geoloc_wilaya.groupby('commune_delivery_address').agg({'Latitude': 'first', 'Longitude': 'first'}).reset_index()
+        commune_data = pd.merge(commune_coordinates, commune_counts, on='commune_delivery_address')
+        region_data = geoloc_wilaya[['commune_delivery_address', 'region_delivery_address']]
 
-        # Créez la carte en utilisant Plotly Graph Objects en utilisant le nombre de clients par commune pour la taille des marqueurs
+        merged_data = pd.merge(commune_data, region_data,how='left', on='commune_delivery_address')
+        merged_data = merged_data.drop_duplicates(subset='commune_delivery_address')
+
+        # Afficher les données filtrées
+        show_merged_data = st.sidebar.checkbox("Afficher les données")
+
+        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        def to_excel(df, include_index=True):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+                workbook = writer.book
+                worksheet = writer.sheets["Sheet1"]
+                format = workbook.add_format({"num_format": "0.00"})
+                worksheet.set_column("A:A", None, format)
+            processed_data = output.getvalue()
+            return processed_data
+
+        if show_merged_data:
+            st.subheader("Nombre des Clients par Communes")
+            st.dataframe(merged_data)
+
+            # Bouton pour télécharger le DataFrame au format Excel
+            merged_data_xlsx = to_excel(merged_data, include_index=False)
+            st.download_button(
+                "Télécharger les Orders en Excel (.xlsx)",
+                merged_data_xlsx,
+                f"Nombre des Clients par Communes .xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+        # Filtrer les données en fonction de la région (wilaya) sélectionnée
+        filtered_data = merged_data[merged_data['region_delivery_address'] == selected_wilaya]
+        
+
+        # Créez la carte en utilisant Plotly Graph Objects avec les données filtrées
         fig = go.Figure()
 
-        for i, row in commune_counts.iterrows():
+        for i, row in filtered_data.iterrows():
             fig.add_trace(go.Scattermapbox(
-                lat=[commune_coordinates.loc[i, 'Latitude']],
-                lon=[commune_coordinates.loc[i, 'Longitude']],
+                lat=[row['Latitude']],
+                lon=[row['Longitude']],
                 mode='markers+text',
                 text=[f'Commune: {row["commune_delivery_address"]}<br>Nombre de Clients: {row["nombre_clients"]}'],
                 marker=dict(
@@ -1604,19 +1637,21 @@ def main():
             ))
 
         fig.update_layout(
-            title=f'Concentration des clients pour la wilaya de {selected_wilaya}, Algérie',
+            title=f'Concentration des clients par commune, {selected_wilaya}',  # Mettez à jour le titre avec la wilaya sélectionnée
             autosize=True,
             hovermode='closest',
             mapbox=dict(
-                style="open-street-map",
+                style="carto-positron",
                 bearing=0,
                 center=dict(
-                    lat=28.0339,  # Latitude approximative du centre de l'Algérie
-                    lon=1.6596    # Longitude approximative du centre de l'Algérie
+                    lat=filtered_data['Latitude'].mean(),  # Centre sur la moyenne des latitudes des communes
+                    lon=filtered_data['Longitude'].mean()  # Centre sur la moyenne des longitudes des communes
                 ),
                 pitch=0,
                 zoom=5
-            )
+            ),
+            width=1200,  # Largeur souhaitée en pixels
+            height=800,  # Hauteur souhaitée en pixels
         )
 
         st.plotly_chart(fig)
