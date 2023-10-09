@@ -278,6 +278,110 @@ orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
 
 ltv_data["total_amount_eur"] = ltv_data["total_amount_dzd"] * ltv_data['EUR']
 ltv_data = ltv_data[ltv_data['businessCat'].isin(['Airtime', 'Alimentation', 'Shopping'])]
+ltv_data["order_id"] = ltv_data["order_id"].astype(str)
+ltv_data["customer_id"] = ltv_data["customer_id"].astype(str)
+ltv_data = ltv_data[~ltv_data["job_status"].isin(["ABANDONED"])]
+ltv_data = ltv_data[
+    ~ltv_data["order_id"].isin(
+        [
+            "734138951872",
+            "811738356736",
+            "648042957760",
+            "239046556928",
+            "423486580736",
+            "536463465088",
+        ]
+    )
+]
+ltv_data = ltv_data[
+    ~ltv_data["customer_id"].isin(
+        [
+            "2059318.0",
+            "1506025442.0",
+            "1694397201.0",
+            "2830181885.0",
+            "5620828389.0",
+            "4064611739.0",
+            "3385745613.0",
+            "2281370.0",
+            "64438759505.0",
+            "569994573568.0",
+            "1628682.0",
+            "310179181696.0",
+            "878446.0",
+            "3643707.0",
+            "2253354.0",
+            "1771017743.0",
+            "727840660224.0",
+            "2280761953.0",
+            "2864429.0",
+            "1505970032.0",
+            "1517116.0",
+            "929482210496.0",
+            "5884716233.0",
+            "22781605568.0",
+            "2794629.0",
+            "47201675489.0",
+            "6072524763.0",
+            "2342577.0",
+            "1440074.0",
+            "3666483.0",
+            "449701472960.0",
+            "869120.0",
+            "7304625963.0",
+            "2214784702.0",
+            "869883.0",
+            "2851778338.0",
+            "3000794.0",
+            "1898245261.0",
+            "9816298466.0",
+            "7021529167.0",
+            "3017838801.0",
+            "5624710564.0",
+            "1584024035.0",
+            "2485567.0",
+            "2763532338.0",
+            "841024809600.0",
+            "1739473.0",
+            "2183725.0",
+            "3788062.0",
+            "23400912794.0",
+            "150321448192.0",
+            "461317394880.0",
+            "2208215.0",
+            "3669307840.0",
+            "610335616576.0",
+            "7478577450.0",
+            "13153632574.0",
+            "2815691755.0",
+            "879984.0",
+            "3312616.0",
+            "548088380288.0",
+            "3526036.0",
+            "2367635120.0",
+            "24957125457.0",
+            "459557812544.0",
+            "1290757210.0",
+            "507345740736.0",
+            "2558315057.0",
+            "819751.0",
+            "407181581440.0",
+            "1412707541.0",
+            "1419613392.0",
+            "4068655.0",
+            "303655560704.0",
+            "2389210.0",
+            "2765139.0",
+            "504153462208.0",
+            "2100305133.0",
+            "653243920384.0",
+            "1253878877.0",
+            "43255929830.0",
+        ]
+    )
+]
+
+ltv_data = ltv_data[ltv_data['job_status']=='COMPLETED']
 
 users["customer_id"] = users["customer_id"].astype(str)
 users["customer_id"] = [
@@ -406,7 +510,6 @@ orders = orders[
 
 orders = orders[orders["businessCat"].notnull()]
 
-orders_ltv = orders[orders["businessCat"].isin(["Alimentation", "Shopping", "Airtime"])]
 # %%
 # Créez une base de données utilisateur
 # Accédez aux informations de l'utilisateur depuis les secrets
@@ -486,12 +589,35 @@ def apply_filters(df, status, customer_origine, business_cat, start_date, end_da
 
     return filtered_data.copy()
 
-
-def apply_filters_summary(df, status, customer_origine, start_date, end_date):
+def apply_filters_ltv(df, customer_origine, business_cat, start_date, end_date):
     filtered_data = df.copy()
 
-    if status != "Tous":
-        filtered_data = filtered_data[filtered_data["Status"] == status]
+    if customer_origine != "Tous":
+        filtered_data = filtered_data[
+            filtered_data["customer_origine"] == customer_origine
+        ]
+
+    if business_cat != "Toutes":
+        filtered_data = filtered_data[filtered_data["businessCat"] == business_cat]    
+
+    date_col = "date"
+
+    # Convertir start_date et end_date en datetime64[ns]
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
+    # Convertir la colonne de dates en datetime64[ns]
+    filtered_data[date_col] = pd.to_datetime(filtered_data[date_col])
+
+    # Filtrer les données en fonction de la plage de dates sélectionnée
+    filtered_data = filtered_data[
+        (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
+    ]
+
+    return filtered_data.copy()
+
+def apply_filters_summary(df, customer_origine, start_date, end_date):
+    filtered_data = df.copy()
 
     if customer_origine != "Tous":
         filtered_data = filtered_data[
@@ -812,21 +938,18 @@ def main():
         )
 
         # Filtres
-        status_options = ["Tous"] + list(orders["Status"].unique())
-        status = st.sidebar.selectbox("Statut", status_options)
 
-        customer_origine_options = ["Tous"] + list(orders["customer_origine"].unique())
+        customer_origine_options = ["Tous"] + list(ltv_data["customer_origine"].unique())
         customer_origine = st.sidebar.selectbox(
             "Customer Origine (diaspora or Local)", customer_origine_options
         )
 
-        business_cat_options = ["Toutes"] + list(orders["businessCat"].unique())
+        business_cat_options = ["Toutes"] + list(ltv_data["businessCat"].unique())
         business_cat = st.sidebar.selectbox("Business catégorie", business_cat_options)
 
         # Appliquer les filtres
-        filtered_data_ltv = apply_filters(
+        filtered_data_ltv = apply_filters_ltv(
             ltv_data,
-            status,
             customer_origine,
             business_cat,
             start_date,
@@ -930,14 +1053,13 @@ def main():
             st.download_button(
                 "Télécharger les données de la LTV en Excel (.xlsx)",
                 ltv_df_xlsx,
-                f"LTV - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status},du {start_date} au {end_date}.xlsx",
+                f"LTV - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
         # Appliquer les filtres
         filtered_data_ltv_summary = apply_filters_summary(
             ltv_data,
-            status,
             customer_origine,
             start_date,
             end_date,
@@ -1044,12 +1166,15 @@ def main():
         # Concaténer les résultats de toutes les catégories en un seul DataFrame
         ltv_summary_df = pd.concat(ltv_results, ignore_index=True)
 
+
         # Réorganiser les colonnes si nécessaire
-        ltv_summary_df = ltv_summary_df[["businessCat", "LTV (GMV en dzd)", "LTV (GMV en €)", "LTV (Marge en dzd)", "LTV (Marge en €)"]]
+        ltv_summary_df = ltv_summary_df[["businessCat", "LTV (GMV en €)", "LTV (Marge en €)", "LTV (GMV en dzd)", "LTV (Marge en dzd)"]]
+        
+        # st.write(ltv_summary_df)
 
         # Calculer la moyenne de LTV par Business Catégorie
         ltv_avg_by_cat = (
-            ltv_summary_df.groupby("businessCat")[["LTV (GMV en dzd)", "LTV (GMV en €)", "LTV (Marge en dzd)", "LTV (Marge en €)"]]
+            ltv_summary_df.groupby("businessCat")[["LTV (GMV en €)", "LTV (Marge en €)", "LTV (GMV en dzd)", "LTV (Marge en dzd)"]]
             .mean()
             .reset_index()
         )
@@ -1111,7 +1236,9 @@ def main():
             ltv_avg_by_cat["Business Catégorie"] + " (" + ltv_avg_by_cat["Pourcentage Marge vs GMV"].round(2).astype(str) + "%)"
         )
 
-         # Afficher le tableau de la LTV
+        ltv_avg_by_cat = ltv_avg_by_cat.drop(columns=["Pourcentage Marge vs GMV"])
+        
+        # Afficher le tableau de la LTV
         st.subheader("Moyenne de LTV par Business Catégorie (GMV et Marge de la GMV) :")
         st.dataframe(ltv_avg_by_cat)
 
@@ -1127,7 +1254,7 @@ def main():
         st.download_button(
             "Télécharger LTV par Business Catégorie (.xlsx)",
             ltv_avg_by_cat_xlsx,
-            f"LTV par Business Catégorie - ORIGINE : {customer_origine} - STATUS : {status}, du {start_date} au {end_date}.xlsx",
+            f"LTV par Business Catégorie - ORIGINE : {customer_origine}, du {start_date} au {end_date}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
