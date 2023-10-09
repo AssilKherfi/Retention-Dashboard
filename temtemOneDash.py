@@ -18,78 +18,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import toml
+import gspread
+import json
+from oauth2client.service_account import ServiceAccountCredentials
 
 # %%
-# # Fonction pour télécharger et charger un DataFrame depuis une URL S3
-# @st.cache_data  # Ajoutez le décorateur de mise en cache
-
-
-# def load_data_s3(bucket_name, file_name):
-#     response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
-#     object_content = response["Body"].read().decode("utf-8")
-#     return pd.read_csv(StringIO(object_content), delimiter=",", low_memory=False)
-
-
-# # Charger le fichier secrets.toml
-
-# # Obtenez le chemin complet vers le fichier secrets.toml
-# secrets_file_path = os.path.join(".streamlit", "secrets.toml")
-
-# # Chargez le fichier secrets.toml
-# secrets = toml.load(secrets_file_path)
-
-# # Accéder aux valeurs AWS_ACCESS_KEY_ID et AWS_SECRET_ACCESS_KEY
-# aws_access_key_id = secrets["s3_credentials"]["AWS_ACCESS_KEY_ID"]
-# aws_secret_access_key = secrets["s3_credentials"]["AWS_SECRET_ACCESS_KEY"]
-
-
-# # Récupérez AWS_ACCESS_KEY_ID et AWS_SECRET_KEY depuis les variables d'environnement
-# aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
-# aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
-
-# # Accéder aux secrets de la section "s3_credentials"
-# s3_client = boto3.client(
-#     "s3",
-#     aws_access_key_id=aws_access_key_id,
-#     aws_secret_access_key=aws_secret_key,
-# )
-
-# # Nom du seau S3
-# bucket_name = "one-data-lake"
-
-# # Liste des noms de fichiers à télécharger depuis S3
-# file_names = [
-#     "csv_database/orders.csv",
-#     "csv_database/users.csv",
-# ]
-
-# # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
-# dataframes = {}
-
-# # Télécharger et traiter les fichiers
-# for file_name in file_names:
-#     df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
-#     dataframes[df_name] = load_data_s3(bucket_name, file_name)
-
-# # Créer un DataFrame à partir des données
-# orders = dataframes["orders"]
-# users = dataframes["users"]
-
-# # st.secrets.clear()
-# # conn = st.experimental_connection("s3", type=FilesConnection)
-# # orders = conn.read(
-# #     "one-data-lake/csv_database/orders.csv",
-# #     input_format="csv",
-# #     ttl=600,
-# #     low_memory=False,
-# # )
-# # users = conn.read(
-# #     "one-data-lake/csv_database/users_2023.csv",
-# #     input_format="csv",
-# #     ttl=600,
-# #     low_memory=False,
-# # )
-
 # Fonction pour charger les secrets depuis le fichier secrets.toml
 def load_secrets():
     # Obtenez le chemin complet vers le fichier secrets.toml
@@ -122,6 +55,19 @@ def load_data_from_s3_with_connection(bucket_name, file_name):
         low_memory=False,
     )
 
+# Fonction pour charger key_google.json depuis S3 en tant qu'objet JSON
+def load_key_google_json_from_s3(secrets, bucket_name, file_name):
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=secrets["s3_credentials"]["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=secrets["s3_credentials"]["AWS_SECRET_ACCESS_KEY"],
+    )
+    response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
+    object_content = response["Body"].read().decode("utf-8")
+    
+    # Utilisez la bibliothèque json pour charger le contenu en tant qu'objet JSON
+    return json.loads(object_content)    
+
 # Mode de fonctionnement (Codespaces ou production en ligne)
 mode = "production"  # Vous pouvez définir ceci en fonction de votre environnement
 
@@ -134,6 +80,7 @@ file_names = [
     "csv_database/ltv_data.csv",
     "csv_database/users_2023.csv",
     "csv_database/geoloc_wilaya.csv",
+    "key_google_json/key_google.json",
 ]
 
 # Dictionnaire pour stocker les DataFrames correspondants aux fichiers
@@ -142,13 +89,20 @@ dataframes = {}
 # Charger les secrets
 secrets = load_secrets()
 
+# Charger key_google.json en tant qu'objet JSON
+if mode == "production":
+    key_google_json = load_key_google_json_from_s3(secrets, bucket_name, "key_google_json/key_google.json")
+else:
+    key_google_json = load_key_google_json_from_s3(secrets, bucket_name, "key_google_json/key_google.json")
+
 # Charger les données depuis S3 en fonction du mode
 for file_name in file_names:
-    df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
-    if mode == "production":
-        dataframes[df_name] = load_data_from_s3_with_connection(bucket_name, file_name)
-    else:
-        dataframes[df_name] = load_data_from_s3_with_toml(secrets, bucket_name, file_name)
+    if "key_google_json" not in file_name:
+        df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
+        if mode == "production":
+            dataframes[df_name] = load_data_from_s3_with_connection(bucket_name, file_name)
+        else:
+            dataframes[df_name] = load_data_from_s3_with_toml(secrets, bucket_name, file_name)
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
@@ -483,6 +437,11 @@ users["date"] = users["createdAt"]
 users["date"] = pd.to_datetime(users["date"])
 users = users.rename(columns={"Origine": "customer_origine"})
 
+# key_google_json contient le contenu du fichier key_google.json que vous avez chargé depuis S3
+creds = ServiceAccountCredentials.from_json_keyfile_dict(key_google_json)
+
+# Autoriser l'accès à Google Sheets en utilisant les informations d'authentification
+gc = gspread.authorize(creds)
 
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
@@ -675,7 +634,6 @@ def apply_filters_users(df, customer_origine, customer_country, start_date, end_
     ]
 
     return filtered_data.copy()
-
 
 # Créer une application Streamlit
 def main():
@@ -1344,6 +1302,24 @@ def main():
             start_date,
             end_date,
         )
+
+        # Ouvrez la feuille Google Sheets par son nom
+        spreadsheet_name = "Téléchargement"  # Remplacez par le nom de votre feuille
+        worksheet_name = "telechargement"  # Remplacez par le nom de l'onglet que vous souhaitez lire
+
+        try:
+            spreadsheet = gc.open(spreadsheet_name)
+            worksheet = spreadsheet.worksheet(worksheet_name)
+            # Lire les données de la feuille Google Sheets en tant que DataFrame pandas
+            df = pd.DataFrame(worksheet.get_all_records())
+            
+            # st.title("Lecture de la feuille Google Sheets")
+            
+            # # Affichez les données de la feuille Google Sheets en tant que tableau
+            # st.table(df)
+        except gspread.exceptions.SpreadsheetNotFound:
+            st.error(f"La feuille '{spreadsheet_name}' ou l'onglet '{worksheet_name}' n'a pas été trouvé.")
+
 
         # Afficher les données des Users
         show_filtered_data_users = st.sidebar.checkbox("Afficher les données des Users")
