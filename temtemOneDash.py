@@ -1749,14 +1749,26 @@ def main():
         # Créez la carte en utilisant Plotly Graph Objects avec les données filtrées
         fig = go.Figure()
 
+        # Définissez une échelle logarithmique pour ajuster la taille des cercles en fonction du nombre de clients
+        min_size = 5  # Taille minimale des cercles
+        max_size = 20  # Taille maximale des cercles
+        min_clients = filtered_data['nombre_clients'].min()
+        max_clients = filtered_data['nombre_clients'].max()
+
+        fig = go.Figure()
+
         for i, row in filtered_data.iterrows():
+            num_clients = row['nombre_clients']
+            # Appliquez une échelle logarithmique pour ajuster la taille en fonction du nombre de clients
+            size = np.interp(np.log(num_clients), [np.log(min_clients), np.log(max_clients)], [min_size, max_size])
+            
             fig.add_trace(go.Scattermapbox(
                 lat=[row['Latitude']],
                 lon=[row['Longitude']],
                 mode='markers+text',
-                text=[f'Commune: {row["commune_delivery_address"]}<br>Nombre de Clients: {row["nombre_clients"]}'],
+                text=[f'Commune: {row["commune_delivery_address"]}<br>Nombre de Clients: {num_clients}'],
                 marker=dict(
-                    size=row['nombre_clients'],
+                    size=size,
                     sizemode='diameter',
                     opacity=0.7
                 ),
@@ -1777,8 +1789,8 @@ def main():
                 pitch=0,
                 zoom=5
             ),
-            width=1200,  # Largeur souhaitée en pixels
-            height=800,  # Hauteur souhaitée en pixels
+            width=800,  # Largeur souhaitée en pixels
+            height=600,  # Hauteur souhaitée en pixels
         )
 
         st.plotly_chart(fig)
