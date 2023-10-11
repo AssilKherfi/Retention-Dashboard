@@ -10,7 +10,7 @@ pip==23.2.1
 bcrypt
 openpyxl
 XlsxWriter
-s3fs
+s3fs==2023.9.2
 gcsfs
 plotly==5.1.0
 kaleido

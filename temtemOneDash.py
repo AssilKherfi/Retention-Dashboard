@@ -443,6 +443,24 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(key_google_json)
 # Autoriser l'accès à Google Sheets en utilisant les informations d'authentification
 gc = gspread.authorize(creds)
 
+# Ouvrez la feuille Google Sheets par son nom
+spreadsheet_name = "Téléchargement"  # Remplacez par le nom de votre feuille
+worksheet_name = "telechargement"  # Remplacez par le nom de l'onglet que vous souhaitez lire
+
+try:
+    spreadsheet = gc.open(spreadsheet_name)
+    worksheet = spreadsheet.worksheet(worksheet_name)
+    # Lire les données de la feuille Google Sheets en tant que DataFrame pandas
+    telechargement = pd.DataFrame(worksheet.get_all_records())
+
+    
+    # st.title("Lecture de la feuille Google Sheets")
+    
+    # # Affichez les données de la feuille Google Sheets en tant que tableau
+    # st.table(telechargement)
+except gspread.exceptions.SpreadsheetNotFound:
+    st.error(f"La feuille '{spreadsheet_name}' ou l'onglet '{worksheet_name}' n'a pas été trouvé.")
+
 # %%
 # Filtrer le DataFrame pour ne contenir que les colonnes nécessaires
 orders["date"] = pd.to_datetime(orders["date"])
@@ -518,11 +536,11 @@ def verify_credentials(username, password):
 
 # Fonction pour appliquer les filtres
 @st.cache_data
-def apply_filters(df, status, customer_origine, business_cat, start_date, end_date):
+def apply_filters(df, customer_origine, business_cat, start_date, end_date):
     filtered_data = df.copy()
 
-    if status != "Tous":
-        filtered_data = filtered_data[filtered_data["Status"] == status]
+    # if status != "Tous":
+    #     filtered_data = filtered_data[filtered_data["Status"] == status]
 
     if customer_origine != "Tous":
         filtered_data = filtered_data[
@@ -634,6 +652,7 @@ def apply_filters_users(df, customer_origine, customer_country, start_date, end_
     ]
 
     return filtered_data.copy()
+    
 
 # Créer une application Streamlit
 def main():
@@ -678,9 +697,9 @@ def main():
             "Date de fin", pd.to_datetime(orders["date"].max()).date()
         )
 
-        # Filtres
-        status_options = ["Tous"] + list(orders["Status"].unique())
-        status = st.sidebar.selectbox("Statut", status_options)
+        # # Filtres
+        # status_options = ["Tous"] + list(orders["Status"].unique())
+        # status = st.sidebar.selectbox("Statut", status_options)
 
         customer_origine_options = ["Tous"] + list(orders["customer_origine"].unique())
         customer_origine = st.sidebar.selectbox(
@@ -693,12 +712,13 @@ def main():
         # Appliquer les filtres
         filtered_data = apply_filters(
             orders,
-            status,
             customer_origine,
             business_cat,
             start_date,
             end_date,
         )
+
+        filtered_data = filtered_data[filtered_data["Status"] == "COMPLETED"]
 
         # Afficher les données filtrées
         show_filtered_data = st.sidebar.checkbox("Afficher les données")
@@ -724,7 +744,7 @@ def main():
             st.download_button(
                 "Télécharger les Orders en Excel (.xlsx)",
                 filtered_data_xlsx,
-                f"Orders - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, du {start_date} au {end_date}.xlsx",
+                f"Orders - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
@@ -865,7 +885,7 @@ def main():
         st.download_button(
             "Télécharger la Retention analysis en Excel (.xlsx)",
             retention_analysis_xlsx,
-            f"Retention analysis - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, du {start_date} au {end_date}.xlsx",
+            f"Retention analysis - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat}, du {start_date} au {end_date}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
@@ -874,7 +894,7 @@ def main():
         st.download_button(
             "Télécharger Client cohort en Excel (.xlsx)",
             cohort_pivot_xlsx,
-            f"Client cohort - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat} - STATUS : {status}, du {start_date} au {end_date}.xlsx",
+            f"Client cohort - ORIGINE : {customer_origine} - BUSINESS CATÈGORIE : {business_cat}, du {start_date} au {end_date}.xlsx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
@@ -1303,23 +1323,12 @@ def main():
             end_date,
         )
 
-        # Ouvrez la feuille Google Sheets par son nom
-        spreadsheet_name = "Téléchargement"  # Remplacez par le nom de votre feuille
-        worksheet_name = "telechargement"  # Remplacez par le nom de l'onglet que vous souhaitez lire
-
-        try:
-            spreadsheet = gc.open(spreadsheet_name)
-            worksheet = spreadsheet.worksheet(worksheet_name)
-            # Lire les données de la feuille Google Sheets en tant que DataFrame pandas
-            df = pd.DataFrame(worksheet.get_all_records())
-            
-            # st.title("Lecture de la feuille Google Sheets")
-            
-            # # Affichez les données de la feuille Google Sheets en tant que tableau
-            # st.table(df)
-        except gspread.exceptions.SpreadsheetNotFound:
-            st.error(f"La feuille '{spreadsheet_name}' ou l'onglet '{worksheet_name}' n'a pas été trouvé.")
-
+        filtered_data_download = apply_filters_summary(
+            telechargement,
+            customer_origine,
+            start_date,
+            end_date,
+        )
 
         # Afficher les données des Users
         show_filtered_data_users = st.sidebar.checkbox("Afficher les données des Users")
@@ -1350,6 +1359,8 @@ def main():
                 f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
+
+                                        ###################
 
         # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
         new_signups = filtered_data_users
@@ -1454,32 +1465,6 @@ def main():
             new_signups_orders.drop_duplicates(subset="customer_id")
         )
 
-        # Nombre de nouveaux inscrits qui n'ont pas acheté
-        new_signups_not_completed = new_signups_ordered - new_signups_completed
-
-        # Nombre de nouveaux inscrits qui n'ont pas du tout commandé
-        new_signups_not_ordered = total_new_signups - new_signups_ordered
-
-        # Créez un DataFrame pour les statistiques
-        stats_data = pd.DataFrame(
-            {
-                "Catégorie": [
-                    "Nouveaux Inscrit",
-                    "Acheté (COMPLETED)",
-                    "N'a pas acheté",
-                    "Commandé",
-                    "N'a pas commandé",
-                ],
-                "Nombre de Clients": [
-                    total_new_signups,
-                    new_signups_completed,
-                    new_signups_not_completed,
-                    new_signups_ordered,
-                    new_signups_not_ordered,
-                ],
-            }
-        )
-
         # Sélection de la granularité de la période
         granularity = st.radio(
             "Sélectionnez la période",
@@ -1537,18 +1522,63 @@ def main():
             labels={"period": period_label, "count": "Nombre de Nouveaux Inscrits"},
         ).update_xaxes(categoryorder="total ascending")
 
-        # Créez un graphique à barres horizontal
-        fig_stat = px.bar(
-            stats_data,
-            x="Nombre de Clients",
-            y="Catégorie",
-            orientation="h",
-            text="Nombre de Clients",
-            title=f"Statistiques des Nouveaux Inscrits",
+        # Créez une liste de toutes les catégories de business
+        all_categories = ["Toutes les catégories"] + list(new_signups_orders["businessCat"].unique())
+
+        selected_business_cat = st.selectbox(
+            "Sélectionnez la catégorie de business",
+            all_categories
         )
 
+        # Dupliquez new_signups_orders pour créer new_signups_orders_copy
+        new_signups_orders_copy = new_signups_orders.copy()
+
+        if selected_business_cat == "Toutes les catégories":
+            filtered_data = new_signups_orders_copy
+        else:
+            filtered_data = new_signups_orders_copy[new_signups_orders_copy["businessCat"] == selected_business_cat]
+
+        # st.dataframe(filtered_data)
+
+        # Calculez les mesures directement sur les données filtrées
+        total_filtered_downloads = filtered_data_download['Téléchargement'].sum()
+        total_filtered_new_signups = len(new_signups.drop_duplicates(subset="customer_id"))
+        filtered_new_signups_completed = len(
+            filtered_data[filtered_data["New_status"] == "COMPLETED"].drop_duplicates(subset="customer_id")
+        )
+        filtered_new_signups_ordered = len(
+            filtered_data.drop_duplicates(subset="customer_id")
+        )
+        filtered_new_signups_not_completed = filtered_new_signups_ordered - filtered_new_signups_completed
+        filtered_new_signups_not_ordered = total_filtered_new_signups - filtered_new_signups_ordered
+
+        # Créez un DataFrame avec les mesures calculées
+        filtered_stats_data = pd.DataFrame({
+            'Mesure': ["Nombre de téléchargement", "Nombre de Nouveaux Inscrit", "Nombre Nouveaux Inscrit qui n'ont jamais effectué une commande",
+                        "Nombre Nouveaux Inscrit qui ont effectué au moins une commande", "Nombre Nouveaux Inscrit qui ont effectué au moins une commande avec achat", 
+                        "Nombre Nouveaux Inscrit qui ont effectué au moins une commande sans achat"],
+            'Valeur': [total_filtered_downloads, total_filtered_new_signups, filtered_new_signups_not_ordered,
+                        filtered_new_signups_ordered, filtered_new_signups_completed, filtered_new_signups_not_completed]
+        })
+
+        # Utilisez les données calculées pour créer le graphique
+        fig_filtered_stat = go.Figure(go.Bar(
+            x=filtered_stats_data['Valeur'],
+            y=filtered_stats_data['Mesure'],
+            orientation='h',
+            marker=dict(color=['blue', 'green', 'red', 'purple', 'orange', 'yellow']),
+            text=filtered_stats_data['Valeur'],
+        ))
+
         # Personnalisez le graphique
-        fig_stat.update_traces(texttemplate="%{text}", textposition="outside")
+        fig_filtered_stat.update_traces(texttemplate='%{text}', textposition='outside')
+
+        # Personnalisez la mise en page
+        fig_filtered_stat.update_layout(
+            title=f'Statistiques des Nouveaux Inscrits - {selected_business_cat}',
+            xaxis_title='Valeur',
+            yaxis_title='Mesure'
+        )
 
         # Créez des onglets pour basculer entre les deux visualisations
         selected_visualization = st.radio(
@@ -1561,113 +1591,7 @@ def main():
             st.plotly_chart(fig_nmb_usr)  # Utilisez le graphique fig_nmb_usr
         else:
             # Affichez la heatmap du nombre de clients
-            st.plotly_chart(fig_stat)  # Utilisez le graphique fig_stat
-
-        # # Filtrer les données pour n'inclure que les achats (Status COMPLETED)
-        # completed_orders = new_signups_orders[
-        #     new_signups_orders["Status"] == "COMPLETED"
-        # ]
-
-        # # Supprimer la colonne "Status" pour avoir des customer_id uniques par businessCat
-        # completed_orders = completed_orders.drop(columns=["Status"])
-
-        # # Grouper les données par "businessCat" et compter le nombre de customer_id uniques
-        # businesscat_stats_completed = (
-        #     completed_orders.groupby(["businessCat"])
-        #     .agg({"customer_id": "nunique"})
-        #     .reset_index()
-        # )
-
-        # # Créer un graphique à barres empilées
-        # fig_businesscat_completed = px.bar(
-        #     businesscat_stats_completed,
-        #     x="businessCat",
-        #     y="customer_id",
-        #     title="Nombre de personnes ayant acheté par businessCat",
-        # )
-        # fig_businesscat_completed.update_layout(barmode="stack")
-
-        # # # Afficher le graphique
-        # # st.plotly_chart(fig_businesscat_completed)
-
-        # # Renommer les valeurs de la colonne "Status" qui ne sont pas "COMPLETED" en "NOT COMPLETED"
-        # filtered_data_new_signups_orders_copy = new_signups_orders.copy()
-        # filtered_data_new_signups_orders_copy[
-        #     "Status"
-        # ] = filtered_data_new_signups_orders_copy["Status"].map(
-        #     lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
-        # )
-
-        # # Filtrer les données pour n'inclure que les statuts "NOT COMPLETED"
-        # not_completed_orders = filtered_data_new_signups_orders_copy[
-        #     filtered_data_new_signups_orders_copy["Status"] == "NOT COMPLETED"
-        # ]
-
-        # # Grouper les données par "businessCat" et compter le nombre de customer_id uniques
-        # businesscat_stats_ordered = (
-        #     not_completed_orders.groupby(["businessCat"])
-        #     .agg({"customer_id": "nunique"})
-        #     .reset_index()
-        # )
-
-        # # Créer un graphique à barres empilées
-        # fig_businesscat_ordered = px.bar(
-        #     businesscat_stats_ordered,
-        #     x="businessCat",
-        #     y="customer_id",
-        #     title="Nombre de personnes n'ayant pas acheté par businessCat",
-        # )
-        # fig_businesscat_ordered.update_layout(barmode="stack")
-
-        # # # Afficher le graphique
-        # # st.plotly_chart(fig_businesscat_ordered)
-
-        # # Créez des onglets pour basculer entre les deux visualisations
-        # selected_visualization = st.radio(
-        #     "Sélectionnez la visualisation",
-        #     [
-        #         "Nombre de personnes ayant acheté par businessCat",
-        #         "Nombre de personnes n'ayant pas acheté par businessCat",
-        #     ],
-        # )
-
-        # if selected_visualization == "Nombre de personnes ayant acheté par businessCat":
-        #     # Affichez la heatmap de l'analyse de rétention
-        #     st.plotly_chart(
-        #         fig_businesscat_completed
-        #     )  # Utilisez le graphique fig_nmb_usr
-        # else:
-        #     # Affichez la heatmap du nombre de clients
-        #     st.plotly_chart(fig_businesscat_ordered)  # Utilisez le graphique fig_stat
-
-        # Remplacez les valeurs de New_status
-        new_signups_orders_copy = new_signups_orders.copy()
-        new_signups_orders_copy['New_status'] = new_signups_orders_copy['New_status'].replace({
-            'COMPLETED': 'Nombre de nouveaux inscrits ayant acheté',
-            'NOT COMPLETED': "Nombre de nouveaux inscrits n'ayant pas acheté"
-        })
-
-        # Supprimez les doublons de customer_id dans chaque businessCat et New_status
-        unique_customers = new_signups_orders_copy.drop_duplicates(subset=['businessCat', 'New_status', 'customer_id'])
-
-        # Créez une table pivot pour obtenir le nombre de clients uniques par businessCat et New_status
-        pivot_table = pd.pivot_table(unique_customers, values='customer_id', index=['businessCat', 'New_status'], aggfunc='count').reset_index()
-
-        # Regroupez par businessCat pour obtenir le nombre total de personnes ayant passé une commande
-        total_commandes = pivot_table.groupby('businessCat')['customer_id'].sum().reset_index()
-        total_commandes['New_status'] = "Nombre de nouveaux inscrits ayant commandé"
-
-        # Concaténez le total des commandes au DataFrame pivot original
-        pivot_table = pd.concat([pivot_table, total_commandes], ignore_index=True)
-
-        # Créez le graphique en entonnoir avec Plotly
-        fig = px.funnel(pivot_table, x='customer_id', y='businessCat', color='New_status',
-                        title='Funnel de Nouveaux client ayant acheté/pas acheté par Business Catégorie (Clients Uniques)',
-                        labels={'businessCat': 'Business Catégorie', 'customer_id': 'Nombre de Clients'},
-                        category_orders={"businessCat": ["Catégorie 1", "Catégorie 2", "Catégorie 3"]})
-
-        # Affichez le graphique
-        st.plotly_chart(fig)
+            st.plotly_chart(fig_filtered_stat)  # Utilisez le graphique fig_filtered_stat
 
     ####################################################################################   USERS PAGES   #####################################################################
 
