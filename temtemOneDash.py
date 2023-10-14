@@ -496,9 +496,9 @@ for sheet_name in sheet_names:
 
 # Concaténer tous les DataFrames dans un seul DataFrame
 first_open_data = pd.concat(dfs, ignore_index=True).drop_duplicates(subset='email', keep='first')
-first_open_df_users = pd.merge(users_info, first_open_data, how="inner", on='email')
+new_signups_first_open_data = pd.merge(users_info, first_open_data, how="inner", on='email')
 
-# st.dataframe(first_open_df_users)
+# st.dataframe(new_signups_first_open_data)
 
 # Nom de la feuille et de l'onglet
 sheet_name = "Utilisateur qui sont arrivé au Payment_method_screen"
@@ -1374,7 +1374,7 @@ def main():
         # tags = st.sidebar.selectbox("Tags", tags_options)
 
         # Appliquer les filtres
-        filtered_data_users = apply_filters_users(
+        filtered_new_signups = apply_filters_users(
             users,
             customer_origine,
             customer_country,
@@ -1391,14 +1391,17 @@ def main():
             end_date,
         )
 
-        filtered_first_open_df_users = apply_filters_summary(
-            first_open_df_users,
+        filtered_new_signups_first_open = apply_filters_summary(
+            new_signups_first_open_data,
             customer_origine,
             start_date,
             end_date,
         )
+        
+        filtered_new_signups_first_open = filtered_new_signups_first_open.drop_duplicates(subset="email")
 
-        # st.dataframe(filtered_first_open_df_users)
+
+        # st.dataframe(filtered_new_signups_first_open)
 
         filtered_new_signups_checkout_data = apply_filters_summary(
             new_signups_checkout,
@@ -1406,10 +1409,11 @@ def main():
             start_date,
             end_date,
         )
+        filtered_new_signups_checkout_data = filtered_new_signups_checkout_data.drop_duplicates(subset="email")
         # st.dataframe(filtered_new_signups_checkout_data)
 
         # Afficher les données des Users
-        show_filtered_data_users = st.sidebar.checkbox("Afficher les données des Users")
+        show_filtered_new_signups = st.sidebar.checkbox("Afficher les données des Users")
 
         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
         def to_excel(df, include_index=False):
@@ -1423,17 +1427,17 @@ def main():
             processed_data = output.getvalue()
             return processed_data
 
-        if show_filtered_data_users:
+        if show_filtered_new_signups:
             st.subheader("Data Users")
-            st.dataframe(filtered_data_users)
+            st.dataframe(filtered_new_signups)
 
             # Bouton pour télécharger le DataFrame au format Excel
-            filtered_data_users_xlsx = to_excel(
-                filtered_data_users, include_index=False
+            filtered_new_signups_xlsx = to_excel(
+                filtered_new_signups, include_index=False
             )
             st.download_button(
                 "Télécharger les Users en Excel (.xlsx)",
-                filtered_data_users_xlsx,
+                filtered_new_signups_xlsx,
                 f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
@@ -1441,7 +1445,7 @@ def main():
                                         ###################
 
         # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
-        new_signups = filtered_data_users
+        new_signups = filtered_new_signups
         new_signups = new_signups[
             [
                 "date",
@@ -1454,25 +1458,6 @@ def main():
                 "customer_origine",
             ]
         ]
-
-        # Afficher les données des Users
-        show_filtered_data_users = st.sidebar.checkbox(
-            "Afficher la liste des nouveaux inscrits"
-        )
-
-        # Affichez les nouveaux inscrits dans le tableau de bord
-        if show_filtered_data_users:
-            st.subheader("Nouveaux Inscrits")
-            st.dataframe(new_signups)
-
-            # Téléchargement des nouveaux inscrit
-            new_signups_xlsx = to_excel(new_signups, include_index=False)
-            st.download_button(
-                "Télécharger les données des Nouveaux Inscrits (.xlsx)",
-                new_signups_xlsx,
-                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
 
         orders_users = orders.copy()
         orders_users = orders_users[orders_users["date"] >= "2023-01-01"]
@@ -1494,15 +1479,15 @@ def main():
             columns={"date": "registration_date"}
         )
 
-        new_signups_orders = pd.merge(
+        new_signups_ordered = pd.merge(
             orders_users, new_signups_copy, how="inner", on="customer_id"
         )
 
-        new_signups_orders['New_status'] = new_signups_orders['Status']
-        new_signups_orders = new_signups_orders.copy()
-        new_signups_orders[
+        new_signups_ordered['New_status'] = new_signups_ordered['Status']
+        new_signups_ordered = new_signups_ordered.copy()
+        new_signups_ordered[
             "New_status"
-        ] = new_signups_orders["New_status"].map(
+        ] = new_signups_ordered["New_status"].map(
             lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
         )
 
@@ -1511,14 +1496,14 @@ def main():
 
         # # Nombre de nouveaux inscrits qui ont acheté (Status COMPLETED)
         # new_signups_completed = len(
-        #     new_signups_orders[
-        #         new_signups_orders["Status"] == "COMPLETED"
+        #     new_signups_ordered[
+        #         new_signups_ordered["Status"] == "COMPLETED"
         #     ].drop_duplicates(subset="customer_id")
         # )
 
         # # Nombre de nouveaux inscrits qui ont commandé (en comptant les order_id)
         # new_signups_ordered = len(
-        #     new_signups_orders.drop_duplicates(subset="customer_id")
+        #     new_signups_ordered.drop_duplicates(subset="customer_id")
         # )
 
         # Sélection de la granularité de la période
@@ -1579,61 +1564,63 @@ def main():
         ).update_xaxes(categoryorder="total ascending")
 
         # Créez une liste de toutes les catégories de business
-        all_categories = ["Toutes les catégories"] + list(new_signups_orders["businessCat"].unique())
+        all_categories = ["Toutes les catégories"] + list(new_signups_ordered["businessCat"].unique())
 
         selected_business_cat = st.selectbox(
             "Sélectionnez la catégorie de business",
             all_categories
         )
 
-        # Dupliquez new_signups_orders pour créer new_signups_orders_copy
-        new_signups_orders_copy = new_signups_orders.copy()
+        # Dupliquez new_signups_ordered pour créer new_signups_ordered_copy
+        new_signups_ordered_copy = new_signups_ordered.copy().drop_duplicates(subset="customer_id")
 
         if selected_business_cat == "Toutes les catégories":
-            filtered_data = new_signups_orders_copy
+            filtered_new_signups_ordered = new_signups_ordered_copy
             filtered_new_signups_checkout = filtered_new_signups_checkout_data
         else:
-            filtered_data = new_signups_orders_copy[new_signups_orders_copy["businessCat"] == selected_business_cat]
+            filtered_new_signups_ordered = new_signups_ordered_copy[new_signups_ordered_copy["businessCat"] == selected_business_cat]
             filtered_new_signups_checkout = filtered_new_signups_checkout_data[filtered_new_signups_checkout_data["businessCat"] == selected_business_cat]
-        
-        # st.dataframe(filtered_data)
+
+        filtered_new_signups_ordered_customer = filtered_new_signups_ordered['customer_id']
+        filtered_new_signups_not_ordered = new_signups[~new_signups['customer_id'].isin(filtered_new_signups_ordered_customer)].drop_duplicates(subset="customer_id")
+        filtered_new_signups_completed = filtered_new_signups_ordered[filtered_new_signups_ordered["New_status"] == "COMPLETED"].drop_duplicates(subset="customer_id")
+        filtered_new_signups_not_completed_customer = filtered_new_signups_completed['customer_id']
+        filtered_new_signups_not_completed = filtered_new_signups_ordered[~filtered_new_signups_ordered['customer_id'].isin(filtered_new_signups_not_completed_customer)].drop_duplicates(subset="customer_id")
+        # st.write(filtered_new_signups_not_ordered)
+        # st.write(len(filtered_new_signups_not_ordered))
+        # st.dataframe(filtered_new_signups_ordered)
+        # st.dataframe(filtered_new_signups_not_completed)
+        # st.dataframe(filtered_new_signups_checkout)
 
         # Calculez les mesures directement sur les données filtrées
         total_filtered_downloads = filtered_data_download['Téléchargement'].sum()
         total_filtered_new_signups = len(new_signups.drop_duplicates(subset="customer_id"))
-        filtered_new_signups_completed = len(
-            filtered_data[filtered_data["New_status"] == "COMPLETED"].drop_duplicates(subset="customer_id")
-        )
-        filtered_new_signups_ordered = len(
-            filtered_data.drop_duplicates(subset="customer_id")
-        )
-        filtered_new_signups_not_completed = filtered_new_signups_ordered - filtered_new_signups_completed
-        filtered_new_signups_not_ordered = total_filtered_new_signups - filtered_new_signups_ordered
-
-        total_filtered_first_open_df_users = len(filtered_first_open_df_users.drop_duplicates(subset="email"))
-        total_filtered_new_signups_checkout = len(filtered_new_signups_checkout.drop_duplicates(subset="email"))
-
-        # st.dataframe(filtered_new_signups_checkout)
+        total_filtered_new_signups_completed = len(filtered_new_signups_completed)
+        total_filtered_new_signups_ordered = len(filtered_new_signups_ordered)
+        total_filtered_new_signups_not_completed = len(filtered_new_signups_not_completed)
+        total_filtered_new_signups_not_ordered = len(filtered_new_signups_not_ordered)
+        total_filtered_new_signups_first_open = len(filtered_new_signups_first_open)
+        total_filtered_new_signups_checkout = len(filtered_new_signups_checkout)
 
         # Créez un DataFrame avec les mesures calculées
         filtered_stats_data = pd.DataFrame({
-            'Mesure': ["Nombre de téléchargement", 
+            'Mesure': ["Nombre de Téléchargement", 
                        "Nombre de Nouveaux Inscrit", 
-                       "Nombre Nouveaux Inscrit qui n'ont jamais effectué une commande", 
+                       "Nombre de Nouveaux Inscrit qui n'ont jamais effectué une commande", 
                        "Nombre de Nouveaux Inscrit qui ont overt la première fois l'app",
-                       "Nombre Nouveaux Inscrit qui ont effectué au moins une commande", 
-                       "Nombre Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté", 
-                       "Nombre Nouveaux Inscrit qui ont effectué au moins une commande avec achat", 
-                       "Nombre Nouveaux Inscrit qui ont effectué au moins une commande sans achat"],
+                       "Nombre de Nouveaux Inscrit qui ont effectué au moins une commande",  
+                       "Nombre de Nouveaux Inscrit qui ont effectué au moins un achat", 
+                       "Nombre de Nouveaux Inscrit qui n'ont n'ont jamais effectué un achat",
+                       "Nombre de Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté"],
             
             'Valeur': [total_filtered_downloads, 
                        total_filtered_new_signups, 
-                       filtered_new_signups_not_ordered , 
-                       total_filtered_first_open_df_users,
-                       filtered_new_signups_ordered, 
-                       total_filtered_new_signups_checkout,
-                       filtered_new_signups_completed, 
-                       filtered_new_signups_not_completed]
+                       total_filtered_new_signups_not_ordered , 
+                       total_filtered_new_signups_first_open,
+                       total_filtered_new_signups_ordered, 
+                       total_filtered_new_signups_completed, 
+                       total_filtered_new_signups_not_completed,
+                       total_filtered_new_signups_checkout]
         })
 
         # Utilisez les données calculées pour créer le graphique
@@ -1668,46 +1655,127 @@ def main():
             # Affichez la heatmap du nombre de clients
             st.plotly_chart(fig_filtered_stat)  # Utilisez le graphique fig_filtered_stat
 
-        # Affichez les orders des nouveaux inscrits dans le tableau de bord
+        # Afficher et téléchargerles nouveaux inscrits dans le tableau de bord
 
-        show_new_signups_orders = st.sidebar.checkbox(
-            "Afficher la liste des orders des nouveaux inscrits"
+         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        def to_excel(df, include_index=False):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+                workbook = writer.book
+                worksheet = writer.sheets["Sheet1"]
+                format = workbook.add_format({"num_format": "0.00"})
+                worksheet.set_column("A:A", None, format)
+            processed_data = output.getvalue()
+            return processed_data
+
+        show_new_signups = st.sidebar.checkbox(
+            "Afficher la liste des nouveaux inscrits"
         )
 
-        if show_new_signups_orders:
-            st.subheader("Orders des Nouveaux Inscrits")
-            st.dataframe(new_signups_orders)
+        if show_new_signups:
+            st.subheader("Nouveaux Inscrits")
+            st.dataframe(new_signups)
 
             # Téléchargement des nouveaux inscrit
-            new_signups_orders_xlsx = to_excel(new_signups_orders, include_index=False)
+            new_signups_xlsx = to_excel(new_signups, include_index=False)
             st.download_button(
-                "Télécharger les données des Orders des Nouveaux Inscrits (.xlsx)",
-                new_signups_orders_xlsx,
+                "Télécharger les données des Nouveaux Inscrits (.xlsx)",
+                new_signups_xlsx,
                 f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
-        show_first_open = st.sidebar.checkbox(
-            "Afficher les données des nouveaux inscrits avec la date du first open app"
+        show_new_signups_not_ordered = st.sidebar.checkbox(
+            "Afficher les données des nouveaux Inscrits qui n'ont jamais effectué une commande", key="checkbox_new_signups_not_ordered"
         )
 
-        new_signups_first_open = filtered_first_open_df_users.drop_duplicates(subset="email")
-
-        if show_first_open:
-            st.subheader("Les données des nouveaux inscrits avec la date du first open app")
-            st.dataframe(new_signups_first_open)
+        if show_new_signups_not_ordered:
+            st.subheader("Les données des nouveaux Inscrits qui n'ont jamais effectué une commande")
+            st.dataframe(filtered_new_signups_not_ordered)
 
             # Téléchargement des nouveaux inscrit
-            new_signups_first_open_xlsx = to_excel(new_signups_first_open, include_index=False)
+            new_signups_not_ordered_xlsx = to_excel(filtered_new_signups_not_ordered, include_index=False)
+            st.download_button(
+                "Télécharger les données des nouveaux Inscrits qui n'ont jamais effectué une commande (.xlsx)",
+                new_signups_not_ordered_xlsx,
+                f"Nouveaux Inscrits qui n'ont jamais effectué une commande - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+        show_new_signups_first_open = st.sidebar.checkbox(
+            "Afficher les données des nouveaux inscrits avec la date du first open app", key="checkbox_new_signups_first_open"
+        )
+
+
+        if show_new_signups_first_open:
+            st.subheader("Les données des nouveaux inscrits avec la date du first open app")
+            st.dataframe(filtered_new_signups_first_open)
+
+            # Téléchargement des nouveaux inscrit
+            new_signups_first_open_xlsx = to_excel(filtered_new_signups_first_open, include_index=False)
             st.download_button(
                 "Télécharger les données des nouveaux inscrits avec la date du first open app (.xlsx)",
                 new_signups_first_open_xlsx,
                 f"Nouveaux Inscrits avec la date du first open app - ORIGINE : {customer_origine}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )   
+
+        show_new_signups_ordered = st.sidebar.checkbox(
+            "Afficher les données des nouveaux Inscrits qui ont effectué au moins une commande", key="checkbox_new_signups_ordered"
+        )
+
+        if show_new_signups_ordered:
+            st.subheader("Les données des nouveaux Inscrits qui ont effectué une commande")
+            st.dataframe(filtered_new_signups_ordered)
+
+            # Téléchargement des nouveaux inscrit
+            new_signups_ordered_xlsx = to_excel(filtered_new_signups_ordered, include_index=False)
+            st.download_button(
+                "Télécharger les données des nouveaux Inscrits qui ont jamais effectué une commande (.xlsx)",
+                new_signups_ordered_xlsx,
+                f"Nouveaux Inscrits qui ont jamais effectué une commande - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
+        st.write(len(filtered_new_signups_ordered))
+
+        show_new_signups_completed = st.sidebar.checkbox(
+            "Afficher les données des nouveaux Inscrits qui ont effectué au moins un achat", key="checkbox_new_signups_completed"
+        )
+
+        if show_new_signups_completed:
+            st.subheader("Les données des nouveaux Inscrits qui ont effectué au moins un achat")
+            st.dataframe(filtered_new_signups_completed)
+
+            # Téléchargement des nouveaux inscrit
+            new_signups_completed_xlsx = to_excel(filtered_new_signups_completed, include_index=False)
+            st.download_button(
+                "Télécharger les données des nouveaux Inscrits qui ont effectué au moins un achat (.xlsx)",
+                new_signups_completed_xlsx,
+                f"Nouveaux Inscrits qui ont effectué au moins un achat - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+        show_new_signups_not_completed = st.sidebar.checkbox(
+            "Afficher les données des nouveaux Inscrits qui n'ont jamais effectué au moins un achat", key="checkbox_new_signups_not_completed"
+        )
+
+        if show_new_signups_not_completed:
+            st.subheader("Les données des nouveaux Inscrits qui n'ont jamais effectué au moins un achat")
+            st.dataframe(filtered_new_signups_not_completed)
+
+            # Téléchargement des nouveaux inscrit
+            new_signups_not_completed_xlsx = to_excel(filtered_new_signups_not_completed, include_index=False)
+            st.download_button(
+                "Télécharger les données des nouveaux Inscrits qui n'ont jamais effectué au moins un achat (.xlsx)",
+                new_signups_not_completed_xlsx,
+                f"Nouveaux Inscrits qui n'ont jamais effectué au moins un achat - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )    
+
         show_new_signups_checkout = st.sidebar.checkbox(
-            "Afficher les données des nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté"
+            "Afficher les données des nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté", key="checkbox_new_signups_checkout"
         )
 
         if show_new_signups_checkout:
