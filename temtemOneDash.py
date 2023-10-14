@@ -69,11 +69,10 @@ def load_key_google_json_with_connection(bucket_name, file_name):
     conn = st.experimental_connection("s3", type=FilesConnection)
     return conn.read(
         f"{bucket_name}/{file_name}",
-        input_format="csv",
+        input_format="json",  # Modifier le format d'entrée en 'json'
         ttl=600,
         low_memory=False,
     )
-
 # Mode de fonctionnement (Codespaces ou production en ligne)
 mode = "production"  # Vous pouvez définir ceci en fonction de votre environnement
 
