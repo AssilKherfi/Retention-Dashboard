@@ -53,7 +53,7 @@ def load_data_from_s3_with_connection(bucket_name, file_name):
     )
 
 # Fonction pour charger key_google.json depuis S3 en tant qu'objet JSON
-def load_key_google_json_with_toml(secrets, bucket_name, file_name):
+def load_key_google_json_with_json_key(secrets, bucket_name, file_name):
     s3_client = boto3.client(
         "s3",
         aws_access_key_id=secrets["s3_credentials"]["AWS_ACCESS_KEY_ID"],
@@ -70,9 +70,9 @@ def load_key_google_json_with_connection(bucket_name, file_name):
     return conn.read(
         f"{bucket_name}/{file_name}",
         input_format="json",  # Modifier le format d'entrée en 'json'
-        ttl=600,
-        low_memory=False,
+        ttl=600
     )
+
 # Mode de fonctionnement (Codespaces ou production en ligne)
 mode = "production"  # Vous pouvez définir ceci en fonction de votre environnement
 
@@ -98,7 +98,7 @@ secrets = load_secrets()
 if mode == "production":
     key_google_json = load_key_google_json_with_connection(bucket_name, "key_google_json/key_google.json")
 else:
-    key_google_json = load_key_google_json_with_toml(secrets, bucket_name, "key_google_json/key_google.json")
+    key_google_json = load_key_google_json_with_json_key(secrets, bucket_name, "key_google_json/key_google.json")
 
 # Charger les données depuis S3 en fonction du mode
 for file_name in file_names:
