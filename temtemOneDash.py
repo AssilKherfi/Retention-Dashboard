@@ -1,13 +1,10 @@
 # %%
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 from operator import attrgetter
 from datetime import datetime, timedelta
 import os
 import boto3
-import openpyxl
 from io import StringIO
 from io import BytesIO
 import bcrypt
