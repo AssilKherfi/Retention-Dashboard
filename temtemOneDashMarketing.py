@@ -1342,8 +1342,8 @@ def main():
 
     /* Styles pour le texte en noir */
     .css-k7vsyb h1,
-    .css-nahz7x,
-    .css-x78sv8,
+    .e1nzilvr1,
+    .e1nzilvr5,
     .css-q8sbsg,
     .css-1n76uvr.e1f1d6gn0 * {
         color: #000000 !important; /* Texte en noir */
