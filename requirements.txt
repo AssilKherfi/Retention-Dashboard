@@ -53,7 +53,7 @@ dash-html-components==2.0.0
 dash-table==5.0.0
 datefinder==0.7.1
 dateparser==1.1.7
-debugpy @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_30hp2nowkm/croot/debugpy_1690905056188/work
+debugpy==1.8.0
 decorator @ file:///opt/conda/conda-bld/decorator_1643638310831/work
 defusedxml==0.7.1
 demjson3==3.0.6
