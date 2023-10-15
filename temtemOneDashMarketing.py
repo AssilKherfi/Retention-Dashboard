@@ -893,6 +893,16 @@ def main():
         total_filtered_new_signups_first_open = len(filtered_new_signups_first_open)
         total_filtered_new_signups_checkout = len(filtered_new_signups_checkout)
 
+        total_filtered_downloads_formatted = "{:,}".format(total_filtered_downloads)
+        total_filtered_new_signups_formatted = "{:,}".format(total_filtered_new_signups)
+        total_filtered_new_signups_completed_formatted = "{:,}".format(total_filtered_new_signups_completed)
+        total_filtered_new_signups_ordered_formatted = "{:,}".format(total_filtered_new_signups_ordered)
+        total_filtered_new_signups_not_completed_formatted = "{:,}".format(total_filtered_new_signups_not_completed)
+        total_filtered_new_signups_not_ordered_formatted = "{:,}".format(total_filtered_new_signups_not_ordered)
+        total_filtered_new_signups_first_open_formatted = "{:,}".format(total_filtered_new_signups_first_open)
+        total_filtered_new_signups_checkout_formatted = "{:,}".format(total_filtered_new_signups_checkout)
+
+
         # Créez un DataFrame avec les mesures calculées
         filtered_stats_data = pd.DataFrame(
             {
@@ -907,14 +917,14 @@ def main():
                     "Nombre de Nouveaux Inscrit qui ont effectué au moins un achat",
                 ],
                 "Valeur": [
-                    total_filtered_downloads,
-                    total_filtered_new_signups,
-                    total_filtered_new_signups_not_ordered,
-                    total_filtered_new_signups_first_open,
-                    total_filtered_new_signups_ordered,
-                    total_filtered_new_signups_not_completed,
-                    total_filtered_new_signups_checkout,
-                    total_filtered_new_signups_completed,
+                    total_filtered_downloads_formatted,
+                    total_filtered_new_signups_formatted,
+                    total_filtered_new_signups_not_ordered_formatted,
+                    total_filtered_new_signups_first_open_formatted,
+                    total_filtered_new_signups_ordered_formatted,
+                    total_filtered_new_signups_not_completed_formatted,
+                    total_filtered_new_signups_checkout_formatted,
+                    total_filtered_new_signups_completed_formatted,
                 ],
             }
         )
@@ -998,9 +1008,9 @@ def main():
                 "Nouveaux Inscrits qui n'ont jamais effectué une commande",
                 "Nouveaux Inscrits avec la date du first open app",
                 "Nouveaux Inscrits qui ont effectué une commande",
-                "Nouveaux Inscrits qui ont effectué au moins un achat",
                 "Nouveaux Inscrits qui n'ont jamais effectué au moins un achat",
                 "Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté",
+                "Nouveaux Inscrits qui ont effectué au moins un achat",
             ),
         )
 
