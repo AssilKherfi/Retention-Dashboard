@@ -732,7 +732,7 @@ def main():
     # Créer un menu de navigation
     selected_page = st.sidebar.selectbox(
         "Sélectionnez un Tableau de Bord",
-        ["Retention", "Lifetime Value (LTV)", "Users", "Concentration des clients par commune, Algérie"],
+        ["Retention", "Lifetime Value (LTV)", "Concentration des clients par commune, Algérie"],
     )
 
     ####################################################################################   RETENTION PAGES   #####################################################################
