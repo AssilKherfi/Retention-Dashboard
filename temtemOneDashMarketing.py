@@ -1334,7 +1334,7 @@ def main():
         """
     <style>
     /* Styles pour la barre de navigation et le contenu principal */
-    .st-emotion-cache-1wrevtn,
+    .ea3mdgi6,
     .st-emotion-cache-1cypcdb {
         background-color: #ffffff !important; /* Fond blanc */
         border: 1px solid #FF6B05; /* Bordure de 1 pixel avec une couleur orange */
