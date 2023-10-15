@@ -83,7 +83,7 @@ bucket_name = "one-data-lake"
 file_names = [
     "csv_database/orders.csv",
     "csv_database/ltv_data.csv",
-    "csv_database/users_2023.csv",
+    # "csv_database/users_2023.csv",
     "csv_database/geoloc_wilaya.csv",
     "key_google_json/key_google.json",
 ]
@@ -112,7 +112,7 @@ for file_name in file_names:
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
 ltv_data = dataframes["ltv_data"]
-users = dataframes["users_2023"]
+# users = dataframes["users_2023"]
 geoloc_wilaya = dataframes["geoloc_wilaya"]
 
 # %%
@@ -342,183 +342,183 @@ ltv_data = ltv_data[
 
 ltv_data = ltv_data[ltv_data['job_status']=='COMPLETED']
 
-users["customer_id"] = users["customer_id"].astype(str)
-users["customer_id"] = [
-    re.sub(r"\.0$", "", customer_id) for customer_id in users["customer_id"]
-]
-users["tags"] = users["tags"].str.replace(r"\[|\]", "", regex=True)
-users["tags"] = users["tags"].str.replace(r"['\"]", "", regex=True)
-users = users[
-    ~users["customer_id"].isin(
-        [
-            "2059318",
-            "1506025442",
-            "1694397201",
-            "2830181885",
-            "5620828389",
-            "4064611739",
-            "3385745613",
-            "2281370",
-            "64438759505",
-            "569994573568",
-            "1628682",
-            "310179181696",
-            "878446",
-            "3643707",
-            "2253354",
-            "1771017743",
-            "727840660224",
-            "2280761953",
-            "2864429",
-            "1505970032",
-            "1517116",
-            "929482210496",
-            "5884716233",
-            "22781605568",
-            "2794629",
-            "47201675489",
-            "6072524763",
-            "2342577",
-            "1440074",
-            "3666483",
-            "449701472960",
-            "869120",
-            "7304625963",
-            "2214784702",
-            "869883",
-            "2851778338",
-            "3000794",
-            "1898245261",
-            "9816298466",
-            "7021529167",
-            "3017838801",
-            "5624710564",
-            "1584024035",
-            "2485567",
-            "2763532338",
-            "841024809600",
-            "1739473",
-            "2183725",
-            "3788062",
-            "23400912794",
-            "150321448192",
-            "461317394880",
-            "2208215",
-            "3669307840",
-            "610335616576",
-            "7478577450",
-            "13153632574",
-            "2815691755",
-            "879984",
-            "3312616",
-            "548088380288",
-            "3526036",
-            "2367635120",
-            "24957125457",
-            "459557812544",
-            "1290757210",
-            "507345740736",
-            "2558315057",
-            "819751",
-            "407181581440",
-            "1412707541",
-            "1419613392",
-            "4068655",
-            "303655560704",
-            "2389210",
-            "2765139",
-            "504153462208",
-            "2100305133",
-            "653243920384",
-            "1253878877",
-            "43255929830",
-        ]
-    )
-]
+# users["customer_id"] = users["customer_id"].astype(str)
+# users["customer_id"] = [
+#     re.sub(r"\.0$", "", customer_id) for customer_id in users["customer_id"]
+# ]
+# users["tags"] = users["tags"].str.replace(r"\[|\]", "", regex=True)
+# users["tags"] = users["tags"].str.replace(r"['\"]", "", regex=True)
+# users = users[
+#     ~users["customer_id"].isin(
+#         [
+#             "2059318",
+#             "1506025442",
+#             "1694397201",
+#             "2830181885",
+#             "5620828389",
+#             "4064611739",
+#             "3385745613",
+#             "2281370",
+#             "64438759505",
+#             "569994573568",
+#             "1628682",
+#             "310179181696",
+#             "878446",
+#             "3643707",
+#             "2253354",
+#             "1771017743",
+#             "727840660224",
+#             "2280761953",
+#             "2864429",
+#             "1505970032",
+#             "1517116",
+#             "929482210496",
+#             "5884716233",
+#             "22781605568",
+#             "2794629",
+#             "47201675489",
+#             "6072524763",
+#             "2342577",
+#             "1440074",
+#             "3666483",
+#             "449701472960",
+#             "869120",
+#             "7304625963",
+#             "2214784702",
+#             "869883",
+#             "2851778338",
+#             "3000794",
+#             "1898245261",
+#             "9816298466",
+#             "7021529167",
+#             "3017838801",
+#             "5624710564",
+#             "1584024035",
+#             "2485567",
+#             "2763532338",
+#             "841024809600",
+#             "1739473",
+#             "2183725",
+#             "3788062",
+#             "23400912794",
+#             "150321448192",
+#             "461317394880",
+#             "2208215",
+#             "3669307840",
+#             "610335616576",
+#             "7478577450",
+#             "13153632574",
+#             "2815691755",
+#             "879984",
+#             "3312616",
+#             "548088380288",
+#             "3526036",
+#             "2367635120",
+#             "24957125457",
+#             "459557812544",
+#             "1290757210",
+#             "507345740736",
+#             "2558315057",
+#             "819751",
+#             "407181581440",
+#             "1412707541",
+#             "1419613392",
+#             "4068655",
+#             "303655560704",
+#             "2389210",
+#             "2765139",
+#             "504153462208",
+#             "2100305133",
+#             "653243920384",
+#             "1253878877",
+#             "43255929830",
+#         ]
+#     )
+# ]
 
-users["createdAt"] = pd.to_datetime(users["createdAt"])
-users["createdAt"] = users["createdAt"].dt.strftime("%Y-%m-%d")
-users["date"] = users["createdAt"]
-users["date"] = pd.to_datetime(users["date"])
-users = users.rename(columns={"Origine": "customer_origine"})
-users_info = users[["date", "email", "phone", "customer_origine", "customer_id"]]
+# users["createdAt"] = pd.to_datetime(users["createdAt"])
+# users["createdAt"] = users["createdAt"].dt.strftime("%Y-%m-%d")
+# users["date"] = users["createdAt"]
+# users["date"] = pd.to_datetime(users["date"])
+# users = users.rename(columns={"Origine": "customer_origine"})
+# users_info = users[["date", "email", "phone", "customer_origine", "customer_id"]]
 
 
-# key_google_json contient le contenu du fichier key_google.json que vous avez chargé depuis S3
-creds = ServiceAccountCredentials.from_json_keyfile_dict(key_google_json)
+# # key_google_json contient le contenu du fichier key_google.json que vous avez chargé depuis S3
+# creds = ServiceAccountCredentials.from_json_keyfile_dict(key_google_json)
 
-# Autoriser l'accès à Google Sheets en utilisant les informations d'authentification
-gc = gspread.authorize(creds)
+# # Autoriser l'accès à Google Sheets en utilisant les informations d'authentification
+# gc = gspread.authorize(creds)
 
-# Ouvrez la feuille Google Sheets par son nom
-spreadsheet_name = "Téléchargement"  # Remplacez par le nom de votre feuille
-worksheet_name = "telechargement"  # Remplacez par le nom de l'onglet que vous souhaitez lire
+# # Ouvrez la feuille Google Sheets par son nom
+# spreadsheet_name = "Téléchargement"  # Remplacez par le nom de votre feuille
+# worksheet_name = "telechargement"  # Remplacez par le nom de l'onglet que vous souhaitez lire
 
-try:
-    spreadsheet = gc.open(spreadsheet_name)
-    worksheet = spreadsheet.worksheet(worksheet_name)
-    # Lire les données de la feuille Google Sheets en tant que DataFrame pandas
-    telechargement = pd.DataFrame(worksheet.get_all_records())
+# try:
+#     spreadsheet = gc.open(spreadsheet_name)
+#     worksheet = spreadsheet.worksheet(worksheet_name)
+#     # Lire les données de la feuille Google Sheets en tant que DataFrame pandas
+#     telechargement = pd.DataFrame(worksheet.get_all_records())
 
     
-    # st.title("Lecture de la feuille Google Sheets")
+#     # st.title("Lecture de la feuille Google Sheets")
     
-    # # Affichez les données de la feuille Google Sheets en tant que tableau
-    # st.table(telechargement)
-except gspread.exceptions.SpreadsheetNotFound:
-    st.error(f"La feuille '{spreadsheet_name}' ou l'onglet '{worksheet_name}' n'a pas été trouvé.")
+#     # # Affichez les données de la feuille Google Sheets en tant que tableau
+#     # st.table(telechargement)
+# except gspread.exceptions.SpreadsheetNotFound:
+#     st.error(f"La feuille '{spreadsheet_name}' ou l'onglet '{worksheet_name}' n'a pas été trouvé.")
 
-# Liste des noms de feuilles
-sheet_names = ['First_open_date_2020-2021', 'First_open_date_2021-2022', 'First_open_date_2022-2023']
+# # Liste des noms de feuilles
+# sheet_names = ['First_open_date_2020-2021', 'First_open_date_2021-2022', 'First_open_date_2022-2023']
 
-# Initialiser une liste pour stocker les DataFrames
-dfs = []
+# # Initialiser une liste pour stocker les DataFrames
+# dfs = []
 
-# Parcourir les feuilles et les stocker dans la liste
-for sheet_name in sheet_names:
-    spreadsheet = gc.open(sheet_name)
+# # Parcourir les feuilles et les stocker dans la liste
+# for sheet_name in sheet_names:
+#     spreadsheet = gc.open(sheet_name)
 
-    # Accès à l'onglet spécifique
-    worksheet = spreadsheet.worksheet('First_open_email')
+#     # Accès à l'onglet spécifique
+#     worksheet = spreadsheet.worksheet('First_open_email')
 
-    # Lire les données de l'onglet
-    data = worksheet.get_all_values()
+#     # Lire les données de l'onglet
+#     data = worksheet.get_all_values()
 
-    # Créer un DataFrame à partir des données
-    df = pd.DataFrame(data)
+#     # Créer un DataFrame à partir des données
+#     df = pd.DataFrame(data)
 
-    # Définir la première ligne comme en-tête
-    df.columns = df.iloc[0]
-    df = df[1:]
+#     # Définir la première ligne comme en-tête
+#     df.columns = df.iloc[0]
+#     df = df[1:]
 
-    # Ajouter le DataFrame à la liste
-    dfs.append(df)
+#     # Ajouter le DataFrame à la liste
+#     dfs.append(df)
 
-# Concaténer tous les DataFrames dans un seul DataFrame
-first_open_data = pd.concat(dfs, ignore_index=True).drop_duplicates(subset='email', keep='first')
-new_signups_first_open_data = pd.merge(users_info, first_open_data, how="inner", on='email')
+# # Concaténer tous les DataFrames dans un seul DataFrame
+# first_open_data = pd.concat(dfs, ignore_index=True).drop_duplicates(subset='email', keep='first')
+# new_signups_first_open_data = pd.merge(users_info, first_open_data, how="inner", on='email')
 
-# st.dataframe(new_signups_first_open_data)
+# # st.dataframe(new_signups_first_open_data)
 
-# Nom de la feuille et de l'onglet
-sheet_name = "Utilisateur qui sont arrivé au Payment_method_screen"
-worksheet_name = "Payment_method_screen"
+# # Nom de la feuille et de l'onglet
+# sheet_name = "Utilisateur qui sont arrivé au Payment_method_screen"
+# worksheet_name = "Payment_method_screen"
 
-# Ouverture de la feuille et de l'onglet spécifique
-spreadsheet = gc.open(sheet_name)
-worksheet = spreadsheet.worksheet(worksheet_name)
+# # Ouverture de la feuille et de l'onglet spécifique
+# spreadsheet = gc.open(sheet_name)
+# worksheet = spreadsheet.worksheet(worksheet_name)
 
-# Lire les données de l'onglet
-data_payment_screen = worksheet.get_all_values()
+# # Lire les données de l'onglet
+# data_payment_screen = worksheet.get_all_values()
 
-# Créer un DataFrame à partir des données
-payment_screen = pd.DataFrame(data_payment_screen[1:], columns=data_payment_screen[0])  # Utiliser la première ligne comme en-tête
-payment_screen["Date de Payment method screen"] = pd.to_datetime(payment_screen["Date de Payment method screen"]).dt.strftime("%Y-%m-%d")
-payment_screen_users = pd.merge(users_info, payment_screen, how="inner", on='email')
-order_payment_screen["date"] = pd.to_datetime(order_payment_screen["date"])
+# # Créer un DataFrame à partir des données
+# payment_screen = pd.DataFrame(data_payment_screen[1:], columns=data_payment_screen[0])  # Utiliser la première ligne comme en-tête
+# payment_screen["Date de Payment method screen"] = pd.to_datetime(payment_screen["Date de Payment method screen"]).dt.strftime("%Y-%m-%d")
+# payment_screen_users = pd.merge(users_info, payment_screen, how="inner", on='email')
+# order_payment_screen["date"] = pd.to_datetime(order_payment_screen["date"])
 
-payment_screen_users_orders = pd.merge(payment_screen_users, order_payment_screen, on=['email', 'date'], how='inner')
-new_signups_checkout = payment_screen_users_orders[(payment_screen_users_orders['Status']!="COMPLETED")].drop_duplicates(subset='email', keep='last')
+# payment_screen_users_orders = pd.merge(payment_screen_users, order_payment_screen, on=['email', 'date'], how='inner')
+# new_signups_checkout = payment_screen_users_orders[(payment_screen_users_orders['Status']!="COMPLETED")].drop_duplicates(subset='email', keep='last')
 
 # st.dataframe(new_signups_checkout)
 
@@ -1326,70 +1326,70 @@ def main():
 
     ####################################################################################   USERS PAGES   #####################################################################
 
-    # Créez une nouvelle page Users
-    elif selected_page == "Users":
-        st.header("Users 2023")
+    # # Créez une nouvelle page Users
+    # elif selected_page == "Users":
+    #     st.header("Users 2023")
 
-        # Sidebar pour les filtres
-        st.sidebar.title("Filtres")
+    #     # Sidebar pour les filtres
+    #     st.sidebar.title("Filtres")
 
-        # Sélection manuelle de la date de début
-        start_date = st.sidebar.date_input(
-            "Date de début", datetime(datetime.now().year, 1, 1).date()
-        )
-        end_date = st.sidebar.date_input(
-            "Date de fin", pd.to_datetime(orders["date"].max()).date()
-        )
+    #     # Sélection manuelle de la date de début
+    #     start_date = st.sidebar.date_input(
+    #         "Date de début", datetime(datetime.now().year, 1, 1).date()
+    #     )
+    #     end_date = st.sidebar.date_input(
+    #         "Date de fin", pd.to_datetime(orders["date"].max()).date()
+    #     )
 
-        # Filtres
-        customer_origine_options = ["Tous"] + list(users["customer_origine"].unique())
-        customer_origine = st.sidebar.selectbox(
-            "Customer Origine (diaspora or Local)", customer_origine_options
-        )
+    #     # Filtres
+    #     customer_origine_options = ["Tous"] + list(users["customer_origine"].unique())
+    #     customer_origine = st.sidebar.selectbox(
+    #         "Customer Origine (diaspora or Local)", customer_origine_options
+    #     )
 
-        customer_country_options = ["Tous"] + list(users["customer_country"].unique())
-        customer_country = st.sidebar.selectbox(
-            "Customer Country", customer_country_options
-        )
+    #     customer_country_options = ["Tous"] + list(users["customer_country"].unique())
+    #     customer_country = st.sidebar.selectbox(
+    #         "Customer Country", customer_country_options
+    #     )
 
-        # Appliquer les filtres
-        filtered_new_signups = apply_filters_users(
-            users,
-            customer_origine,
-            customer_country,
-            # accountTypes,
-            # tags,
-            start_date,
-            end_date,
-        )
+    #     # Appliquer les filtres
+    #     filtered_new_signups = apply_filters_users(
+    #         users,
+    #         customer_origine,
+    #         customer_country,
+    #         # accountTypes,
+    #         # tags,
+    #         start_date,
+    #         end_date,
+    #     )
 
-        filtered_data_download = apply_filters_summary(
-            telechargement,
-            customer_origine,
-            start_date,
-            end_date,
-        )
+    #     filtered_data_download = apply_filters_summary(
+    #         telechargement,
+    #         customer_origine,
+    #         start_date,
+    #         end_date,
+    #     )
 
-        filtered_new_signups_first_open = apply_filters_summary(
-            new_signups_first_open_data,
-            customer_origine,
-            start_date,
-            end_date,
-        )
+    #     filtered_new_signups_first_open = apply_filters_summary(
+    #         new_signups_first_open_data,
+    #         customer_origine,
+    #         start_date,
+    #         end_date,
+    #     )
         
-        filtered_new_signups_first_open = filtered_new_signups_first_open.drop_duplicates(subset="email")
+    #     filtered_new_signups_first_open = filtered_new_signups_first_open.drop_duplicates(subset="email")
 
 
-        # st.dataframe(filtered_new_signups_first_open)
+    #     # st.dataframe(filtered_new_signups_first_open)
 
-        filtered_new_signups_checkout_data = apply_filters_summary(
-            new_signups_checkout,
-            customer_origine,
-            start_date,
-            end_date,
-        )
-        filtered_new_signups_checkout_data = filtered_new_signups_checkout_data.drop_duplicates(subset="email")
-        # st.dataframe(filtered_new_signups_checkout_data)
+    #     filtered_new_signups_checkout_data = apply_filters_summary(
+    #         new_signups_checkout,
+    #         customer_origine,
+    #         start_date,
+    #         end_date,
+    #     )
+    #     filtered_new_signups_checkout_data = filtered_new_signups_checkout_data.drop_duplicates(subset="email")
+    #     # st.dataframe(filtered_new_signups_checkout_data)
 
         # # Afficher les données des Users
         # show_filtered_new_signups = st.sidebar.checkbox("Afficher les données des Users")
@@ -1423,202 +1423,365 @@ def main():
 
                                         ###################
 
-        # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
-        new_signups = filtered_new_signups
-        new_signups = new_signups[
-            [
-                "date",
-                "customer_id",
-                "lastName",
-                "firstName",
-                "phone",
-                "email",
-                "customer_country",
-                "customer_origine",
-            ]
-        ]
+        # # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
+        # new_signups = filtered_new_signups
+        # new_signups = new_signups[
+        #     [
+        #         "date",
+        #         "customer_id",
+        #         "lastName",
+        #         "firstName",
+        #         "phone",
+        #         "email",
+        #         "customer_country",
+        #         "customer_origine",
+        #     ]
+        # ]
 
-        orders_users = orders.copy()
-        orders_users = orders_users[orders_users["date"] >= "2023-01-01"]
-        orders_users = orders_users[
-            [
-                "date",
-                "customer_id",
-                "order_id",
-                "Status",
-                "customer_origine",
-                "businessCat",
-                "total_amount_dzd"
-            ]
+        # orders_users = orders.copy()
+        # orders_users = orders_users[orders_users["date"] >= "2023-01-01"]
+        # orders_users = orders_users[
+        #     [
+        #         "date",
+        #         "customer_id",
+        #         "order_id",
+        #         "Status",
+        #         "customer_origine",
+        #         "businessCat",
+        #         "total_amount_dzd"
+        #     ]
 
-        ].rename(columns={"customer_origine": "customer_origine_orders"})
+        # ].rename(columns={"customer_origine": "customer_origine_orders"})
 
-        new_signups_copy = new_signups.copy()
-        new_signups_copy = new_signups_copy.rename(
-            columns={"date": "registration_date"}
-        )
+        # new_signups_copy = new_signups.copy()
+        # new_signups_copy = new_signups_copy.rename(
+        #     columns={"date": "registration_date"}
+        # )
 
-        new_signups_ordered = pd.merge(
-            orders_users, new_signups_copy, how="inner", on="customer_id"
-        )
+        # new_signups_ordered = pd.merge(
+        #     orders_users, new_signups_copy, how="inner", on="customer_id"
+        # )
 
-        new_signups_ordered['New_status'] = new_signups_ordered['Status']
-        new_signups_ordered = new_signups_ordered.copy()
-        new_signups_ordered[
-            "New_status"
-        ] = new_signups_ordered["New_status"].map(
-            lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
-        )
+        # new_signups_ordered['New_status'] = new_signups_ordered['Status']
+        # new_signups_ordered = new_signups_ordered.copy()
+        # new_signups_ordered[
+        #     "New_status"
+        # ] = new_signups_ordered["New_status"].map(
+        #     lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
+        # )
 
-        # Sélection de la granularité de la période
-        granularity = st.radio(
-            "Sélectionnez la période",
-            ["Mois", "Semaine", "Jour"],
-            key="granularity_users",
-        )
+        # # Sélection de la granularité de la période
+        # granularity = st.radio(
+        #     "Sélectionnez la période",
+        #     ["Mois", "Semaine", "Jour"],
+        #     key="granularity_users",
+        # )
 
-        # Créez une nouvelle colonne "period" pour définir les cohortes en fonction de la granularité sélectionnée
-        if granularity == "Jour":
-            new_signups["period"] = new_signups["date"]
-            period_duration = pd.Timedelta(days=1)  # Une journée
-        elif granularity == "Semaine":
-            new_signups["period"] = new_signups["date"] - pd.to_timedelta(
-                (new_signups["date"].dt.dayofweek + 1) % 7, unit="D"
-            )
-            period_duration = pd.Timedelta(days=7)  # Une semaine
-        else:
-            new_signups["period"] = new_signups["date"].dt.strftime(
-                "%Y-%m"
-            )  # Convertir en format "YYYY-MM"
-            period_duration = pd.Timedelta(days=31)  # Un mois
+        # # Créez une nouvelle colonne "period" pour définir les cohortes en fonction de la granularité sélectionnée
+        # if granularity == "Jour":
+        #     new_signups["period"] = new_signups["date"]
+        #     period_duration = pd.Timedelta(days=1)  # Une journée
+        # elif granularity == "Semaine":
+        #     new_signups["period"] = new_signups["date"] - pd.to_timedelta(
+        #         (new_signups["date"].dt.dayofweek + 1) % 7, unit="D"
+        #     )
+        #     period_duration = pd.Timedelta(days=7)  # Une semaine
+        # else:
+        #     new_signups["period"] = new_signups["date"].dt.strftime(
+        #         "%Y-%m"
+        #     )  # Convertir en format "YYYY-MM"
+        #     period_duration = pd.Timedelta(days=31)  # Un mois
 
-        # Agrégez les données par période (jour, semaine ou mois) et comptez le nombre total d'inscriptions pour le mois
-        if period_duration:
-            new_signups_count = (
-                new_signups.groupby("period").size().reset_index(name="count")
-            )
-        else:
-            new_signups_count = (
-                new_signups.groupby("period")
-                .size()
-                .reset_index(name="count")
-                .groupby("period")
-                .sum()
-                .reset_index()
-            )
+        # # Agrégez les données par période (jour, semaine ou mois) et comptez le nombre total d'inscriptions pour le mois
+        # if period_duration:
+        #     new_signups_count = (
+        #         new_signups.groupby("period").size().reset_index(name="count")
+        #     )
+        # else:
+        #     new_signups_count = (
+        #         new_signups.groupby("period")
+        #         .size()
+        #         .reset_index(name="count")
+        #         .groupby("period")
+        #         .sum()
+        #         .reset_index()
+        #     )
 
-        # Assurez-vous que la dernière période se termine exactement à la fin de la période sélectionnée
-        if len(new_signups_count) > 0 and period_duration:
-            first_period_start = new_signups_count["period"].min()
-            last_period_end = first_period_start + period_duration
-            new_signups_count.loc[0, "period"] = last_period_end
+        # # Assurez-vous que la dernière période se termine exactement à la fin de la période sélectionnée
+        # if len(new_signups_count) > 0 and period_duration:
+        #     first_period_start = new_signups_count["period"].min()
+        #     last_period_end = first_period_start + period_duration
+        #     new_signups_count.loc[0, "period"] = last_period_end
 
-        # Créez un graphique montrant le nombre de nouveaux inscrits par période
-        if period_duration:
-            period_label = f"{granularity}"
-        else:
-            period_label = "Mois"
+        # # Créez un graphique montrant le nombre de nouveaux inscrits par période
+        # if period_duration:
+        #     period_label = f"{granularity}"
+        # else:
+        #     period_label = "Mois"
 
-        fig_nmb_usr = px.bar(
-            new_signups_count,
-            x="period",
-            y="count",
-            title=f"Nombre de Nouveaux Inscrits par {period_label}",
-            labels={"period": period_label, "count": "Nombre de Nouveaux Inscrits"},
-        ).update_xaxes(categoryorder="total ascending")
+        # fig_nmb_usr = px.bar(
+        #     new_signups_count,
+        #     x="period",
+        #     y="count",
+        #     title=f"Nombre de Nouveaux Inscrits par {period_label}",
+        #     labels={"period": period_label, "count": "Nombre de Nouveaux Inscrits"},
+        # ).update_xaxes(categoryorder="total ascending")
 
-        # Créez une liste de toutes les catégories de business
-        all_categories = ["Toutes les catégories"] + list(new_signups_ordered["businessCat"].unique())
+        # # Créez une liste de toutes les catégories de business
+        # all_categories = ["Toutes les catégories"] + list(new_signups_ordered["businessCat"].unique())
 
-        selected_business_cat = st.selectbox(
-            "Sélectionnez la catégorie de business",
-            all_categories
-        )
+        # selected_business_cat = st.selectbox(
+        #     "Sélectionnez la catégorie de business",
+        #     all_categories
+        # )
 
-        # Dupliquez new_signups_ordered pour créer new_signups_ordered_copy
-        new_signups_ordered_copy = new_signups_ordered.copy().drop_duplicates(subset="customer_id")
+        # # Dupliquez new_signups_ordered pour créer new_signups_ordered_copy
+        # new_signups_ordered_copy = new_signups_ordered.copy().drop_duplicates(subset="customer_id")
 
-        if selected_business_cat == "Toutes les catégories":
-            filtered_new_signups_ordered = new_signups_ordered_copy
-            filtered_new_signups_checkout = filtered_new_signups_checkout_data
-        else:
-            filtered_new_signups_ordered = new_signups_ordered_copy[new_signups_ordered_copy["businessCat"] == selected_business_cat]
-            filtered_new_signups_checkout = filtered_new_signups_checkout_data[filtered_new_signups_checkout_data["businessCat"] == selected_business_cat]
+        # if selected_business_cat == "Toutes les catégories":
+        #     filtered_new_signups_ordered = new_signups_ordered_copy
+        #     filtered_new_signups_checkout = filtered_new_signups_checkout_data
+        # else:
+        #     filtered_new_signups_ordered = new_signups_ordered_copy[new_signups_ordered_copy["businessCat"] == selected_business_cat]
+        #     filtered_new_signups_checkout = filtered_new_signups_checkout_data[filtered_new_signups_checkout_data["businessCat"] == selected_business_cat]
 
-        filtered_new_signups_ordered_customer = filtered_new_signups_ordered['customer_id']
-        filtered_new_signups_not_ordered = new_signups[~new_signups['customer_id'].isin(filtered_new_signups_ordered_customer)].drop_duplicates(subset="customer_id")
-        filtered_new_signups_completed = filtered_new_signups_ordered[filtered_new_signups_ordered["New_status"] == "COMPLETED"].drop_duplicates(subset="customer_id")
-        filtered_new_signups_not_completed_customer = filtered_new_signups_completed['customer_id']
-        filtered_new_signups_not_completed = filtered_new_signups_ordered[~filtered_new_signups_ordered['customer_id'].isin(filtered_new_signups_not_completed_customer)].drop_duplicates(subset="customer_id")
+        # filtered_new_signups_ordered_customer = filtered_new_signups_ordered['customer_id']
+        # filtered_new_signups_not_ordered = new_signups[~new_signups['customer_id'].isin(filtered_new_signups_ordered_customer)].drop_duplicates(subset="customer_id")
+        # filtered_new_signups_completed = filtered_new_signups_ordered[filtered_new_signups_ordered["New_status"] == "COMPLETED"].drop_duplicates(subset="customer_id")
+        # filtered_new_signups_not_completed_customer = filtered_new_signups_completed['customer_id']
+        # filtered_new_signups_not_completed = filtered_new_signups_ordered[~filtered_new_signups_ordered['customer_id'].isin(filtered_new_signups_not_completed_customer)].drop_duplicates(subset="customer_id")
 
 
-        # Calculez les mesures directement sur les données filtrées
-        total_filtered_downloads = filtered_data_download['Téléchargement'].sum()
-        total_filtered_new_signups = len(new_signups.drop_duplicates(subset="customer_id"))
-        total_filtered_new_signups_completed = len(filtered_new_signups_completed)
-        total_filtered_new_signups_ordered = len(filtered_new_signups_ordered)
-        total_filtered_new_signups_not_completed = len(filtered_new_signups_not_completed)
-        total_filtered_new_signups_not_ordered = len(filtered_new_signups_not_ordered)
-        total_filtered_new_signups_first_open = len(filtered_new_signups_first_open)
-        total_filtered_new_signups_checkout = len(filtered_new_signups_checkout)
+        # # Calculez les mesures directement sur les données filtrées
+        # total_filtered_downloads = filtered_data_download['Téléchargement'].sum()
+        # total_filtered_new_signups = len(new_signups.drop_duplicates(subset="customer_id"))
+        # total_filtered_new_signups_completed = len(filtered_new_signups_completed)
+        # total_filtered_new_signups_ordered = len(filtered_new_signups_ordered)
+        # total_filtered_new_signups_not_completed = len(filtered_new_signups_not_completed)
+        # total_filtered_new_signups_not_ordered = len(filtered_new_signups_not_ordered)
+        # total_filtered_new_signups_first_open = len(filtered_new_signups_first_open)
+        # total_filtered_new_signups_checkout = len(filtered_new_signups_checkout)
 
-        # Créez un DataFrame avec les mesures calculées
-        filtered_stats_data = pd.DataFrame({
-            'Mesure': ["Nombre de Téléchargement", 
-                       "Nombre de Nouveaux Inscrit", 
-                       "Nombre de Nouveaux Inscrit qui n'ont jamais effectué une commande", 
-                       "Nombre de Nouveaux Inscrit qui ont overt la première fois l'app",
-                       "Nombre de Nouveaux Inscrit qui ont effectué au moins une commande",  
-                       "Nombre de Nouveaux Inscrit qui ont effectué au moins un achat", 
-                       "Nombre de Nouveaux Inscrit qui n'ont n'ont jamais effectué un achat",
-                       "Nombre de Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté"],
+        # # Créez un DataFrame avec les mesures calculées
+        # filtered_stats_data = pd.DataFrame({
+        #     'Mesure': ["Nombre de Téléchargement", 
+        #                "Nombre de Nouveaux Inscrit", 
+        #                "Nombre de Nouveaux Inscrit qui n'ont jamais effectué une commande", 
+        #                "Nombre de Nouveaux Inscrit qui ont overt la première fois l'app",
+        #                "Nombre de Nouveaux Inscrit qui ont effectué au moins une commande",  
+        #                "Nombre de Nouveaux Inscrit qui ont effectué au moins un achat", 
+        #                "Nombre de Nouveaux Inscrit qui n'ont n'ont jamais effectué un achat",
+        #                "Nombre de Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté"],
             
-            'Valeur': [total_filtered_downloads, 
-                       total_filtered_new_signups, 
-                       total_filtered_new_signups_not_ordered , 
-                       total_filtered_new_signups_first_open,
-                       total_filtered_new_signups_ordered, 
-                       total_filtered_new_signups_completed, 
-                       total_filtered_new_signups_not_completed,
-                       total_filtered_new_signups_checkout]
-        })
+        #     'Valeur': [total_filtered_downloads, 
+        #                total_filtered_new_signups, 
+        #                total_filtered_new_signups_not_ordered , 
+        #                total_filtered_new_signups_first_open,
+        #                total_filtered_new_signups_ordered, 
+        #                total_filtered_new_signups_completed, 
+        #                total_filtered_new_signups_not_completed,
+        #                total_filtered_new_signups_checkout]
+        # })
 
-        # Utilisez les données calculées pour créer le graphique
-        fig_filtered_stat = go.Figure(go.Bar(
-            x=filtered_stats_data['Valeur'],
-            y=filtered_stats_data['Mesure'],
-            orientation='h',
-            marker=dict(color=['blue', 'green', 'red', 'purple', 'orange', 'yellow', 'brown', 'pink']),
-            text=filtered_stats_data['Valeur'],
-        ))
+        # # Utilisez les données calculées pour créer le graphique
+        # fig_filtered_stat = go.Figure(go.Bar(
+        #     x=filtered_stats_data['Valeur'],
+        #     y=filtered_stats_data['Mesure'],
+        #     orientation='h',
+        #     marker=dict(color=['blue', 'green', 'red', 'purple', 'orange', 'yellow', 'brown', 'pink']),
+        #     text=filtered_stats_data['Valeur'],
+        # ))
 
-        # Personnalisez le graphique
-        fig_filtered_stat.update_traces(texttemplate='%{text}', textposition='outside')
+        # # Personnalisez le graphique
+        # fig_filtered_stat.update_traces(texttemplate='%{text}', textposition='outside')
 
-        # Personnalisez la mise en page
-        fig_filtered_stat.update_layout(
-            title=f'Statistiques des Nouveaux Inscrits - {selected_business_cat}',
-            xaxis_title='Valeur',
-            yaxis_title='Mesure'
-        )
+        # # Personnalisez la mise en page
+        # fig_filtered_stat.update_layout(
+        #     title=f'Statistiques des Nouveaux Inscrits - {selected_business_cat}',
+        #     xaxis_title='Valeur',
+        #     yaxis_title='Mesure'
+        # )
 
-        # Créez des onglets pour basculer entre les deux visualisations
-        selected_visualization = st.radio(
-            "Sélectionnez la visualisation",
-            ["Nombre de Nouveaux Inscrits", "Statistiques des Nouveaux Inscrits"],
-        )
+        # # Créez des onglets pour basculer entre les deux visualisations
+        # selected_visualization = st.radio(
+        #     "Sélectionnez la visualisation",
+        #     ["Nombre de Nouveaux Inscrits", "Statistiques des Nouveaux Inscrits"],
+        # )
 
-        if selected_visualization == "Nombre de Nouveaux Inscrits":
-            # Affichez la heatmap de l'analyse de rétention
-            st.plotly_chart(fig_nmb_usr)  # Utilisez le graphique fig_nmb_usr
-        else:
-            # Affichez la heatmap du nombre de clients
-            st.plotly_chart(fig_filtered_stat)  # Utilisez le graphique fig_filtered_stat
+        # if selected_visualization == "Nombre de Nouveaux Inscrits":
+        #     # Affichez la heatmap de l'analyse de rétention
+        #     st.plotly_chart(fig_nmb_usr)  # Utilisez le graphique fig_nmb_usr
+        # else:
+        #     # Affichez la heatmap du nombre de clients
+        #     st.plotly_chart(fig_filtered_stat)  # Utilisez le graphique fig_filtered_stat
 
-        # Afficher et téléchargerles nouveaux inscrits dans le tableau de bord
+        # # Afficher et téléchargerles nouveaux inscrits dans le tableau de bord
 
-         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-        def to_excel(df, include_index=False):
+        #  # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        # def to_excel(df, include_index=False):
+        #     output = BytesIO()
+        #     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        #         df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+        #         workbook = writer.book
+        #         worksheet = writer.sheets["Sheet1"]
+        #         format = workbook.add_format({"num_format": "0.00"})
+        #         worksheet.set_column("A:A", None, format)
+        #     processed_data = output.getvalue()
+        #     return processed_data
+
+        # show_new_signups = st.sidebar.checkbox(
+        #     "Afficher la liste des nouveaux inscrits"
+        # )
+
+        # if show_new_signups:
+        #     st.subheader("Nouveaux Inscrits")
+        #     st.dataframe(new_signups)
+
+        #     # Téléchargement des nouveaux inscrit
+        #     new_signups_xlsx = to_excel(new_signups, include_index=False)
+        #     st.download_button(
+        #         "Télécharger les données des Nouveaux Inscrits (.xlsx)",
+        #         new_signups_xlsx,
+        #         f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+        #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        #     )
+
+        # show_new_signups_not_ordered = st.sidebar.checkbox(
+        #     "Afficher les données des nouveaux Inscrits qui n'ont jamais effectué une commande", key="checkbox_new_signups_not_ordered"
+        # )
+
+        # if show_new_signups_not_ordered:
+        #     st.subheader("Les données des nouveaux Inscrits qui n'ont jamais effectué une commande")
+        #     st.dataframe(filtered_new_signups_not_ordered)
+
+        #     # Téléchargement des nouveaux inscrit
+        #     new_signups_not_ordered_xlsx = to_excel(filtered_new_signups_not_ordered, include_index=False)
+        #     st.download_button(
+        #         "Télécharger les données des nouveaux Inscrits qui n'ont jamais effectué une commande (.xlsx)",
+        #         new_signups_not_ordered_xlsx,
+        #         f"Nouveaux Inscrits qui n'ont jamais effectué une commande - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+        #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        #     )
+
+        # show_new_signups_first_open = st.sidebar.checkbox(
+        #     "Afficher les données des nouveaux inscrits avec la date du first open app", key="checkbox_new_signups_first_open"
+        # )
+
+
+        # if show_new_signups_first_open:
+        #     st.subheader("Les données des nouveaux inscrits avec la date du first open app")
+        #     st.dataframe(filtered_new_signups_first_open)
+
+        #     # Téléchargement des nouveaux inscrit
+        #     new_signups_first_open_xlsx = to_excel(filtered_new_signups_first_open, include_index=False)
+        #     st.download_button(
+        #         "Télécharger les données des nouveaux inscrits avec la date du first open app (.xlsx)",
+        #         new_signups_first_open_xlsx,
+        #         f"Nouveaux Inscrits avec la date du first open app - ORIGINE : {customer_origine}, du {start_date} au {end_date}.xlsx",
+        #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        #     )   
+
+        # show_new_signups_ordered = st.sidebar.checkbox(
+        #     "Afficher les données des nouveaux Inscrits qui ont effectué au moins une commande", key="checkbox_new_signups_ordered"
+        # )
+
+        # if show_new_signups_ordered:
+        #     st.subheader("Les données des nouveaux Inscrits qui ont effectué une commande")
+        #     st.dataframe(filtered_new_signups_ordered)
+
+        #     # Téléchargement des nouveaux inscrit
+        #     new_signups_ordered_xlsx = to_excel(filtered_new_signups_ordered, include_index=False)
+        #     st.download_button(
+        #         "Télécharger les données des nouveaux Inscrits qui ont jamais effectué une commande (.xlsx)",
+        #         new_signups_ordered_xlsx,
+        #         f"Nouveaux Inscrits qui ont jamais effectué une commande - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+        #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        #     )
+
+        # # st.write(len(filtered_new_signups_ordered))
+
+        # show_new_signups_completed = st.sidebar.checkbox(
+        #     "Afficher les données des nouveaux Inscrits qui ont effectué au moins un achat", key="checkbox_new_signups_completed"
+        # )
+
+        # if show_new_signups_completed:
+        #     st.subheader("Les données des nouveaux Inscrits qui ont effectué au moins un achat")
+        #     st.dataframe(filtered_new_signups_completed)
+
+        #     # Téléchargement des nouveaux inscrit
+        #     new_signups_completed_xlsx = to_excel(filtered_new_signups_completed, include_index=False)
+        #     st.download_button(
+        #         "Télécharger les données des nouveaux Inscrits qui ont effectué au moins un achat (.xlsx)",
+        #         new_signups_completed_xlsx,
+        #         f"Nouveaux Inscrits qui ont effectué au moins un achat - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+        #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        #     )
+
+        # show_new_signups_not_completed = st.sidebar.checkbox(
+        #     "Afficher les données des nouveaux Inscrits qui n'ont jamais effectué au moins un achat", key="checkbox_new_signups_not_completed"
+        # )
+
+        # if show_new_signups_not_completed:
+        #     st.subheader("Les données des nouveaux Inscrits qui n'ont jamais effectué au moins un achat")
+        #     st.dataframe(filtered_new_signups_not_completed)
+
+        #     # Téléchargement des nouveaux inscrit
+        #     new_signups_not_completed_xlsx = to_excel(filtered_new_signups_not_completed, include_index=False)
+        #     st.download_button(
+        #         "Télécharger les données des nouveaux Inscrits qui n'ont jamais effectué au moins un achat (.xlsx)",
+        #         new_signups_not_completed_xlsx,
+        #         f"Nouveaux Inscrits qui n'ont jamais effectué au moins un achat - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+        #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        #     )    
+
+        # show_new_signups_checkout = st.sidebar.checkbox(
+        #     "Afficher les données des nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté", key="checkbox_new_signups_checkout"
+        # )
+
+        # if show_new_signups_checkout:
+        #     st.subheader("Les données des nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté")
+        #     st.dataframe(filtered_new_signups_checkout.drop_duplicates(subset="email"))
+
+        #     # Téléchargement des nouveaux inscrit
+        #     new_signups_checkout_xlsx = to_excel(filtered_new_signups_checkout, include_index=False)
+        #     st.download_button(
+        #         "Télécharger les données des nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté (.xlsx)",
+        #         new_signups_checkout_xlsx,
+        #         f"Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté - ORIGINE : {customer_origine}, du {start_date} au {end_date}.xlsx",
+        #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        #     )
+
+
+
+        # # Afficher la plage de dates sélectionnée
+        # st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
+
+    ####################################################################################   concentration des clients PAGES   #####################################################################
+
+    # Créez une nouvelle page concentration des clients
+    elif selected_page == "Concentration des clients par commune, Algérie":
+        st.header("Concentration des clients par commune, Algérie")
+        
+        # Créez une liste des régions (wilayas) pour le filtre
+        wilaya_list = geoloc_wilaya['region_delivery_address'].unique()
+        selected_wilaya = st.selectbox("Sélectionnez une wilaya :", wilaya_list)
+
+
+        commune_counts = geoloc_wilaya['commune_delivery_address'].value_counts().reset_index()
+        commune_counts.columns = ['commune_delivery_address', 'nombre_clients']
+
+        commune_coordinates = geoloc_wilaya.groupby('commune_delivery_address').agg({'Latitude': 'first', 'Longitude': 'first'}).reset_index()
+        commune_data = pd.merge(commune_coordinates, commune_counts, on='commune_delivery_address')
+        region_data = geoloc_wilaya[['commune_delivery_address', 'region_delivery_address']]
+
+        merged_data = pd.merge(commune_data, region_data,how='left', on='commune_delivery_address')
+        merged_data = merged_data.drop_duplicates(subset='commune_delivery_address')
+
+        # Afficher les données filtrées
+        show_merged_data = st.sidebar.checkbox("Afficher les données")
+
+        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        def to_excel(df, include_index=True):
             output = BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 df.to_excel(writer, index=include_index, sheet_name="Sheet1")
@@ -1629,234 +1792,71 @@ def main():
             processed_data = output.getvalue()
             return processed_data
 
-        show_new_signups = st.sidebar.checkbox(
-            "Afficher la liste des nouveaux inscrits"
-        )
+        if show_merged_data:
+            st.subheader("Nombre des Clients par Communes")
+            st.dataframe(merged_data)
 
-        if show_new_signups:
-            st.subheader("Nouveaux Inscrits")
-            st.dataframe(new_signups)
-
-            # Téléchargement des nouveaux inscrit
-            new_signups_xlsx = to_excel(new_signups, include_index=False)
+            # Bouton pour télécharger le DataFrame au format Excel
+            merged_data_xlsx = to_excel(merged_data, include_index=False)
             st.download_button(
-                "Télécharger les données des Nouveaux Inscrits (.xlsx)",
-                new_signups_xlsx,
-                f"Nouveaux Inscrits - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+                "Télécharger les Orders en Excel (.xlsx)",
+                merged_data_xlsx,
+                f"Nombre des Clients par Communes .xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
-        show_new_signups_not_ordered = st.sidebar.checkbox(
-            "Afficher les données des nouveaux Inscrits qui n'ont jamais effectué une commande", key="checkbox_new_signups_not_ordered"
-        )
-
-        if show_new_signups_not_ordered:
-            st.subheader("Les données des nouveaux Inscrits qui n'ont jamais effectué une commande")
-            st.dataframe(filtered_new_signups_not_ordered)
-
-            # Téléchargement des nouveaux inscrit
-            new_signups_not_ordered_xlsx = to_excel(filtered_new_signups_not_ordered, include_index=False)
-            st.download_button(
-                "Télécharger les données des nouveaux Inscrits qui n'ont jamais effectué une commande (.xlsx)",
-                new_signups_not_ordered_xlsx,
-                f"Nouveaux Inscrits qui n'ont jamais effectué une commande - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-        show_new_signups_first_open = st.sidebar.checkbox(
-            "Afficher les données des nouveaux inscrits avec la date du first open app", key="checkbox_new_signups_first_open"
-        )
-
-
-        if show_new_signups_first_open:
-            st.subheader("Les données des nouveaux inscrits avec la date du first open app")
-            st.dataframe(filtered_new_signups_first_open)
-
-            # Téléchargement des nouveaux inscrit
-            new_signups_first_open_xlsx = to_excel(filtered_new_signups_first_open, include_index=False)
-            st.download_button(
-                "Télécharger les données des nouveaux inscrits avec la date du first open app (.xlsx)",
-                new_signups_first_open_xlsx,
-                f"Nouveaux Inscrits avec la date du first open app - ORIGINE : {customer_origine}, du {start_date} au {end_date}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )   
-
-        show_new_signups_ordered = st.sidebar.checkbox(
-            "Afficher les données des nouveaux Inscrits qui ont effectué au moins une commande", key="checkbox_new_signups_ordered"
-        )
-
-        if show_new_signups_ordered:
-            st.subheader("Les données des nouveaux Inscrits qui ont effectué une commande")
-            st.dataframe(filtered_new_signups_ordered)
-
-            # Téléchargement des nouveaux inscrit
-            new_signups_ordered_xlsx = to_excel(filtered_new_signups_ordered, include_index=False)
-            st.download_button(
-                "Télécharger les données des nouveaux Inscrits qui ont jamais effectué une commande (.xlsx)",
-                new_signups_ordered_xlsx,
-                f"Nouveaux Inscrits qui ont jamais effectué une commande - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-        # st.write(len(filtered_new_signups_ordered))
-
-        show_new_signups_completed = st.sidebar.checkbox(
-            "Afficher les données des nouveaux Inscrits qui ont effectué au moins un achat", key="checkbox_new_signups_completed"
-        )
-
-        if show_new_signups_completed:
-            st.subheader("Les données des nouveaux Inscrits qui ont effectué au moins un achat")
-            st.dataframe(filtered_new_signups_completed)
-
-            # Téléchargement des nouveaux inscrit
-            new_signups_completed_xlsx = to_excel(filtered_new_signups_completed, include_index=False)
-            st.download_button(
-                "Télécharger les données des nouveaux Inscrits qui ont effectué au moins un achat (.xlsx)",
-                new_signups_completed_xlsx,
-                f"Nouveaux Inscrits qui ont effectué au moins un achat - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-        show_new_signups_not_completed = st.sidebar.checkbox(
-            "Afficher les données des nouveaux Inscrits qui n'ont jamais effectué au moins un achat", key="checkbox_new_signups_not_completed"
-        )
-
-        if show_new_signups_not_completed:
-            st.subheader("Les données des nouveaux Inscrits qui n'ont jamais effectué au moins un achat")
-            st.dataframe(filtered_new_signups_not_completed)
-
-            # Téléchargement des nouveaux inscrit
-            new_signups_not_completed_xlsx = to_excel(filtered_new_signups_not_completed, include_index=False)
-            st.download_button(
-                "Télécharger les données des nouveaux Inscrits qui n'ont jamais effectué au moins un achat (.xlsx)",
-                new_signups_not_completed_xlsx,
-                f"Nouveaux Inscrits qui n'ont jamais effectué au moins un achat - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )    
-
-        show_new_signups_checkout = st.sidebar.checkbox(
-            "Afficher les données des nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté", key="checkbox_new_signups_checkout"
-        )
-
-        if show_new_signups_checkout:
-            st.subheader("Les données des nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté")
-            st.dataframe(filtered_new_signups_checkout.drop_duplicates(subset="email"))
-
-            # Téléchargement des nouveaux inscrit
-            new_signups_checkout_xlsx = to_excel(filtered_new_signups_checkout, include_index=False)
-            st.download_button(
-                "Télécharger les données des nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté (.xlsx)",
-                new_signups_checkout_xlsx,
-                f"Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté - ORIGINE : {customer_origine}, du {start_date} au {end_date}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-
-
-        # Afficher la plage de dates sélectionnée
-        st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
-
-    ####################################################################################   USERS PAGES   #####################################################################
-
-    # # Créez une nouvelle page concentration des clients
-    # elif selected_page == "Concentration des clients par commune, Algérie":
-    #     st.header("Concentration des clients par commune, Algérie")
-        
-    #     # Créez une liste des régions (wilayas) pour le filtre
-    #     wilaya_list = geoloc_wilaya['region_delivery_address'].unique()
-    #     selected_wilaya = st.selectbox("Sélectionnez une wilaya :", wilaya_list)
-
-
-    #     commune_counts = geoloc_wilaya['commune_delivery_address'].value_counts().reset_index()
-    #     commune_counts.columns = ['commune_delivery_address', 'nombre_clients']
-
-    #     commune_coordinates = geoloc_wilaya.groupby('commune_delivery_address').agg({'Latitude': 'first', 'Longitude': 'first'}).reset_index()
-    #     commune_data = pd.merge(commune_coordinates, commune_counts, on='commune_delivery_address')
-    #     region_data = geoloc_wilaya[['commune_delivery_address', 'region_delivery_address']]
-
-    #     merged_data = pd.merge(commune_data, region_data,how='left', on='commune_delivery_address')
-    #     merged_data = merged_data.drop_duplicates(subset='commune_delivery_address')
-
-    #     # Afficher les données filtrées
-    #     show_merged_data = st.sidebar.checkbox("Afficher les données")
-
-    #     # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-    #     def to_excel(df, include_index=True):
-    #         output = BytesIO()
-    #         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-    #             df.to_excel(writer, index=include_index, sheet_name="Sheet1")
-    #             workbook = writer.book
-    #             worksheet = writer.sheets["Sheet1"]
-    #             format = workbook.add_format({"num_format": "0.00"})
-    #             worksheet.set_column("A:A", None, format)
-    #         processed_data = output.getvalue()
-    #         return processed_data
-
-    #     if show_merged_data:
-    #         st.subheader("Nombre des Clients par Communes")
-    #         st.dataframe(merged_data)
-
-    #         # Bouton pour télécharger le DataFrame au format Excel
-    #         merged_data_xlsx = to_excel(merged_data, include_index=False)
-    #         st.download_button(
-    #             "Télécharger les Orders en Excel (.xlsx)",
-    #             merged_data_xlsx,
-    #             f"Nombre des Clients par Communes .xlsx",
-    #             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    #         )
-
-    #     # Filtrer les données en fonction de la région (wilaya) sélectionnée
-    #     filtered_data = merged_data[merged_data['region_delivery_address'] == selected_wilaya]
+        # Filtrer les données en fonction de la région (wilaya) sélectionnée
+        filtered_data = merged_data[merged_data['region_delivery_address'] == selected_wilaya]
         
 
-    #     # Créez la carte en utilisant Plotly Graph Objects avec les données filtrées
-    #     fig = go.Figure()
+        # Créez la carte en utilisant Plotly Graph Objects avec les données filtrées
+        fig = go.Figure()
 
-    #     # Définissez une échelle logarithmique pour ajuster la taille des cercles en fonction du nombre de clients
-    #     min_size = 5  # Taille minimale des cercles
-    #     max_size = 20  # Taille maximale des cercles
-    #     min_clients = filtered_data['nombre_clients'].min()
-    #     max_clients = filtered_data['nombre_clients'].max()
+        # Définissez une échelle logarithmique pour ajuster la taille des cercles en fonction du nombre de clients
+        min_size = 5  # Taille minimale des cercles
+        max_size = 20  # Taille maximale des cercles
+        min_clients = filtered_data['nombre_clients'].min()
+        max_clients = filtered_data['nombre_clients'].max()
 
-    #     fig = go.Figure()
+        fig = go.Figure()
 
-    #     for i, row in filtered_data.iterrows():
-    #         num_clients = row['nombre_clients']
-    #         # Appliquez une échelle logarithmique pour ajuster la taille en fonction du nombre de clients
-    #         size = np.interp(np.log(num_clients), [np.log(min_clients), np.log(max_clients)], [min_size, max_size])
+        for i, row in filtered_data.iterrows():
+            num_clients = row['nombre_clients']
+            # Appliquez une échelle logarithmique pour ajuster la taille en fonction du nombre de clients
+            size = np.interp(np.log(num_clients), [np.log(min_clients), np.log(max_clients)], [min_size, max_size])
             
-    #         fig.add_trace(go.Scattermapbox(
-    #             lat=[row['Latitude']],
-    #             lon=[row['Longitude']],
-    #             mode='markers+text',
-    #             text=[f'Commune: {row["commune_delivery_address"]}<br>Nombre de Clients: {num_clients}'],
-    #             marker=dict(
-    #                 size=size,
-    #                 sizemode='diameter',
-    #                 opacity=0.7
-    #             ),
-    #             name=row["commune_delivery_address"]
-    #         ))
+            fig.add_trace(go.Scattermapbox(
+                lat=[row['Latitude']],
+                lon=[row['Longitude']],
+                mode='markers+text',
+                text=[f'Commune: {row["commune_delivery_address"]}<br>Nombre de Clients: {num_clients}'],
+                marker=dict(
+                    size=size,
+                    sizemode='diameter',
+                    opacity=0.7
+                ),
+                name=row["commune_delivery_address"]
+            ))
 
-    #     fig.update_layout(
-    #         title=f'Concentration des clients par commune, {selected_wilaya}',  # Mettez à jour le titre avec la wilaya sélectionnée
-    #         autosize=True,
-    #         hovermode='closest',
-    #         mapbox=dict(
-    #             style="carto-positron",
-    #             bearing=0,
-    #             center=dict(
-    #                 lat=filtered_data['Latitude'].mean(),  # Centre sur la moyenne des latitudes des communes
-    #                 lon=filtered_data['Longitude'].mean()  # Centre sur la moyenne des longitudes des communes
-    #             ),
-    #             pitch=0,
-    #             zoom=5
-    #         ),
-    #         width=800,  # Largeur souhaitée en pixels
-    #         height=600,  # Hauteur souhaitée en pixels
-    #     )
+        fig.update_layout(
+            title=f'Concentration des clients par commune, {selected_wilaya}',  # Mettez à jour le titre avec la wilaya sélectionnée
+            autosize=True,
+            hovermode='closest',
+            mapbox=dict(
+                style="carto-positron",
+                bearing=0,
+                center=dict(
+                    lat=filtered_data['Latitude'].mean(),  # Centre sur la moyenne des latitudes des communes
+                    lon=filtered_data['Longitude'].mean()  # Centre sur la moyenne des longitudes des communes
+                ),
+                pitch=0,
+                zoom=5
+            ),
+            width=800,  # Largeur souhaitée en pixels
+            height=600,  # Hauteur souhaitée en pixels
+        )
 
-    #     st.plotly_chart(fig)
+        st.plotly_chart(fig)
 
 
 
