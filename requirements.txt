@@ -15,7 +15,7 @@ kaleido==0.2.1
 gspread==5.7.2
 oauth2client==4.1.3
 google-auth==2.6.2
-
+s3fs==2023.9.2
 # absl-py==1.0.0
 # aiohttp==3.8.1
 # aioitertools==0.11.0
