@@ -1,12 +1,11 @@
 # %%
-import pandas as pd
-import numpy as np
-from operator import attrgetter
-from datetime import datetime, timedelta
 import os
-import boto3
-from io import StringIO
+from datetime import datetime
 from io import BytesIO
+from io import StringIO
+import json
+import pandas as pd
+import boto3
 import bcrypt
 import xlsxwriter
 import re
@@ -16,8 +15,8 @@ import plotly.graph_objects as go
 import streamlit as st
 import toml
 import gspread
-import json
 from oauth2client.service_account import ServiceAccountCredentials
+
 
 # %%
 # Fonction pour charger les secrets depuis le fichier secrets.toml
@@ -29,6 +28,7 @@ def load_secrets():
     secrets = toml.load(secrets_file_path)
 
     return secrets
+
 
 # Fonction pour charger les données depuis S3 en utilisant les secrets du fichier toml
 @st.cache_data
@@ -42,6 +42,7 @@ def load_data_from_s3_with_toml(secrets, bucket_name, file_name):
     object_content = response["Body"].read().decode("utf-8")
     return pd.read_csv(StringIO(object_content), delimiter=",", low_memory=False)
 
+
 # Fonction pour charger les données depuis S3 en utilisant experimental_connection
 def load_data_from_s3_with_connection(bucket_name, file_name):
     conn = st.experimental_connection("s3", type=FilesConnection)
@@ -52,6 +53,7 @@ def load_data_from_s3_with_connection(bucket_name, file_name):
         low_memory=False,
     )
 
+
 # Fonction pour charger key_google.json depuis S3 en tant qu'objet JSON
 def load_key_google_json_with_json_key(secrets, bucket_name, file_name):
     s3_client = boto3.client(
@@ -61,17 +63,19 @@ def load_key_google_json_with_json_key(secrets, bucket_name, file_name):
     )
     response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
     object_content = response["Body"].read().decode("utf-8")
-    
+
     # Utilisez la bibliothèque json pour charger le contenu en tant qu'objet JSON
-    return json.loads(object_content)    
+    return json.loads(object_content)
+
 
 def load_key_google_json_with_connection(bucket_name, file_name):
     conn = st.experimental_connection("s3", type=FilesConnection)
     return conn.read(
         f"{bucket_name}/{file_name}",
         input_format="json",  # Modifier le format d'entrée en 'json'
-        ttl=600
+        ttl=600,
     )
+
 
 # Mode de fonctionnement (Codespaces ou production en ligne)
 mode = "production"  # Vous pouvez définir ceci en fonction de votre environnement
@@ -94,18 +98,26 @@ secrets = load_secrets()
 
 # Charger key_google.json en tant qu'objet JSON
 if mode == "production":
-    key_google_json = load_key_google_json_with_connection(bucket_name, "key_google_json/key_google.json")
+    key_google_json = load_key_google_json_with_connection(
+        bucket_name, "key_google_json/key_google.json"
+    )
 else:
-    key_google_json = load_key_google_json_with_json_key(secrets, bucket_name, "key_google_json/key_google.json")
+    key_google_json = load_key_google_json_with_json_key(
+        secrets, bucket_name, "key_google_json/key_google.json"
+    )
 
 # Charger les données depuis S3 en fonction du mode
 for file_name in file_names:
     if "key_google_json" not in file_name:
         df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
         if mode == "production":
-            dataframes[df_name] = load_data_from_s3_with_connection(bucket_name, file_name)
+            dataframes[df_name] = load_data_from_s3_with_connection(
+                bucket_name, file_name
+            )
         else:
-            dataframes[df_name] = load_data_from_s3_with_toml(secrets, bucket_name, file_name)
+            dataframes[df_name] = load_data_from_s3_with_toml(
+                secrets, bucket_name, file_name
+            )
 
 # Créer un DataFrame à partir des données
 orders = dataframes["orders"]
@@ -229,7 +241,9 @@ orders = orders[
 orders = orders.rename(columns={"Order Type": "Order_Type"})
 orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
 
-order_payment_screen = orders[['date', 'businessCat', 'order_id', 'Status','customer_email']].rename(columns={'customer_email':'email'})
+order_payment_screen = orders[
+    ["date", "businessCat", "order_id", "Status", "customer_email"]
+].rename(columns={"customer_email": "email"})
 orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
 
 users["customer_id"] = users["customer_id"].astype(str)
@@ -342,7 +356,9 @@ gc = gspread.authorize(creds)
 
 # Ouvrez la feuille Google Sheets par son nom
 spreadsheet_name = "Téléchargement"  # Remplacez par le nom de votre feuille
-worksheet_name = "telechargement"  # Remplacez par le nom de l'onglet que vous souhaitez lire
+worksheet_name = (
+    "telechargement"  # Remplacez par le nom de l'onglet que vous souhaitez lire
+)
 
 try:
     spreadsheet = gc.open(spreadsheet_name)
@@ -350,16 +366,21 @@ try:
     # Lire les données de la feuille Google Sheets en tant que DataFrame pandas
     telechargement = pd.DataFrame(worksheet.get_all_records())
 
-    
     # st.title("Lecture de la feuille Google Sheets")
-    
+
     # # Affichez les données de la feuille Google Sheets en tant que tableau
     # st.table(telechargement)
 except gspread.exceptions.SpreadsheetNotFound:
-    st.error(f"La feuille '{spreadsheet_name}' ou l'onglet '{worksheet_name}' n'a pas été trouvé.")
+    st.error(
+        f"La feuille '{spreadsheet_name}' ou l'onglet '{worksheet_name}' n'a pas été trouvé."
+    )
 
 # Liste des noms de feuilles
-sheet_names = ['First_open_date_2020-2021', 'First_open_date_2021-2022', 'First_open_date_2022-2023']
+sheet_names = [
+    "First_open_date_2020-2021",
+    "First_open_date_2021-2022",
+    "First_open_date_2022-2023",
+]
 
 # Initialiser une liste pour stocker les DataFrames
 dfs = []
@@ -369,7 +390,7 @@ for sheet_name in sheet_names:
     spreadsheet = gc.open(sheet_name)
 
     # Accès à l'onglet spécifique
-    worksheet = spreadsheet.worksheet('First_open_email')
+    worksheet = spreadsheet.worksheet("First_open_email")
 
     # Lire les données de l'onglet
     data = worksheet.get_all_values()
@@ -385,8 +406,12 @@ for sheet_name in sheet_names:
     dfs.append(df)
 
 # Concaténer tous les DataFrames dans un seul DataFrame
-first_open_data = pd.concat(dfs, ignore_index=True).drop_duplicates(subset='email', keep='first')
-new_signups_first_open_data = pd.merge(users_info, first_open_data, how="inner", on='email')
+first_open_data = pd.concat(dfs, ignore_index=True).drop_duplicates(
+    subset="email", keep="first"
+)
+new_signups_first_open_data = pd.merge(
+    users_info, first_open_data, how="inner", on="email"
+)
 
 # st.dataframe(new_signups_first_open_data)
 
@@ -402,13 +427,21 @@ worksheet = spreadsheet.worksheet(worksheet_name)
 data_payment_screen = worksheet.get_all_values()
 
 # Créer un DataFrame à partir des données
-payment_screen = pd.DataFrame(data_payment_screen[1:], columns=data_payment_screen[0])  # Utiliser la première ligne comme en-tête
-payment_screen["Date de Payment method screen"] = pd.to_datetime(payment_screen["Date de Payment method screen"]).dt.strftime("%Y-%m-%d")
-payment_screen_users = pd.merge(users_info, payment_screen, how="inner", on='email')
+payment_screen = pd.DataFrame(
+    data_payment_screen[1:], columns=data_payment_screen[0]
+)  # Utiliser la première ligne comme en-tête
+payment_screen["Date de Payment method screen"] = pd.to_datetime(
+    payment_screen["Date de Payment method screen"]
+).dt.strftime("%Y-%m-%d")
+payment_screen_users = pd.merge(users_info, payment_screen, how="inner", on="email")
 order_payment_screen["date"] = pd.to_datetime(order_payment_screen["date"])
 
-payment_screen_users_orders = pd.merge(payment_screen_users, order_payment_screen, on=['email', 'date'], how='inner')
-new_signups_checkout = payment_screen_users_orders[(payment_screen_users_orders['Status']!="COMPLETED")].drop_duplicates(subset='email', keep='last')
+payment_screen_users_orders = pd.merge(
+    payment_screen_users, order_payment_screen, on=["email", "date"], how="inner"
+)
+new_signups_checkout = payment_screen_users_orders[
+    (payment_screen_users_orders["Status"] != "COMPLETED")
+].drop_duplicates(subset="email", keep="last")
 
 # st.dataframe(new_signups_checkout)
 
@@ -517,6 +550,7 @@ def apply_filters(df, customer_origine, business_cat, start_date, end_date):
 
     return filtered_data.copy()
 
+
 def apply_filters_summary(df, customer_origine, start_date, end_date):
     filtered_data = df.copy()
 
@@ -570,7 +604,7 @@ def apply_filters_users(df, customer_origine, customer_country, start_date, end_
     ]
 
     return filtered_data.copy()
-    
+
 
 # Créer une application Streamlit
 def main():
@@ -597,7 +631,7 @@ def main():
         "Sélectionnez un Tableau de Bord",
         ["NOUVEAUX INSCRITS", "RETARGETING"],
     )
-    
+
     ####################################################################################   NOUVEAUX INSCRITS PAGES   #####################################################################
 
     # Créez une nouvelle page Users
@@ -650,9 +684,10 @@ def main():
             start_date,
             end_date,
         )
-        
-        filtered_new_signups_first_open = filtered_new_signups_first_open.drop_duplicates(subset="email")
 
+        filtered_new_signups_first_open = (
+            filtered_new_signups_first_open.drop_duplicates(subset="email")
+        )
 
         # st.dataframe(filtered_new_signups_first_open)
 
@@ -662,7 +697,9 @@ def main():
             start_date,
             end_date,
         )
-        filtered_new_signups_checkout_data = filtered_new_signups_checkout_data.drop_duplicates(subset="email")
+        filtered_new_signups_checkout_data = (
+            filtered_new_signups_checkout_data.drop_duplicates(subset="email")
+        )
         # st.dataframe(filtered_new_signups_checkout_data)
 
         # # Afficher les données des Users
@@ -695,7 +732,7 @@ def main():
         #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         #     )
 
-                                        ###################
+        ###################
 
         # Sélectionnez les nouveaux inscrits en fonction des filtres déjà appliqués
         new_signups = filtered_new_signups
@@ -722,9 +759,8 @@ def main():
                 "Status",
                 "customer_origine",
                 "businessCat",
-                "total_amount_dzd"
+                "total_amount_dzd",
             ]
-
         ].rename(columns={"customer_origine": "customer_origine_orders"})
 
         new_signups_copy = new_signups.copy()
@@ -736,11 +772,9 @@ def main():
             orders_users, new_signups_copy, how="inner", on="customer_id"
         )
 
-        new_signups_ordered['New_status'] = new_signups_ordered['Status']
+        new_signups_ordered["New_status"] = new_signups_ordered["Status"]
         new_signups_ordered = new_signups_ordered.copy()
-        new_signups_ordered[
-            "New_status"
-        ] = new_signups_ordered["New_status"].map(
+        new_signups_ordered["New_status"] = new_signups_ordered["New_status"].map(
             lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
         )
 
@@ -802,78 +836,119 @@ def main():
         ).update_xaxes(categoryorder="total ascending")
 
         # Créez une liste de toutes les catégories de business
-        all_categories = ["Toutes les catégories"] + list(new_signups_ordered["businessCat"].unique())
+        all_categories = ["Toutes les catégories"] + list(
+            new_signups_ordered["businessCat"].unique()
+        )
 
         selected_business_cat = st.selectbox(
-            "Sélectionnez la catégorie de business",
-            all_categories
+            "Sélectionnez la catégorie de business", all_categories
         )
 
         # Dupliquez new_signups_ordered pour créer new_signups_ordered_copy
-        new_signups_ordered_copy = new_signups_ordered.copy().drop_duplicates(subset="customer_id")
+        new_signups_ordered_copy = new_signups_ordered.copy().drop_duplicates(
+            subset="customer_id"
+        )
 
         if selected_business_cat == "Toutes les catégories":
             filtered_new_signups_ordered = new_signups_ordered_copy
             filtered_new_signups_checkout = filtered_new_signups_checkout_data
         else:
-            filtered_new_signups_ordered = new_signups_ordered_copy[new_signups_ordered_copy["businessCat"] == selected_business_cat]
-            filtered_new_signups_checkout = filtered_new_signups_checkout_data[filtered_new_signups_checkout_data["businessCat"] == selected_business_cat]
+            filtered_new_signups_ordered = new_signups_ordered_copy[
+                new_signups_ordered_copy["businessCat"] == selected_business_cat
+            ]
+            filtered_new_signups_checkout = filtered_new_signups_checkout_data[
+                filtered_new_signups_checkout_data["businessCat"]
+                == selected_business_cat
+            ]
 
-        filtered_new_signups_ordered_customer = filtered_new_signups_ordered['customer_id']
-        filtered_new_signups_not_ordered = new_signups[~new_signups['customer_id'].isin(filtered_new_signups_ordered_customer)].drop_duplicates(subset="customer_id")
-        filtered_new_signups_completed = filtered_new_signups_ordered[filtered_new_signups_ordered["New_status"] == "COMPLETED"].drop_duplicates(subset="customer_id")
-        filtered_new_signups_not_completed_customer = filtered_new_signups_completed['customer_id']
-        filtered_new_signups_not_completed = filtered_new_signups_ordered[~filtered_new_signups_ordered['customer_id'].isin(filtered_new_signups_not_completed_customer)].drop_duplicates(subset="customer_id")
-
+        filtered_new_signups_ordered_customer = filtered_new_signups_ordered[
+            "customer_id"
+        ]
+        filtered_new_signups_not_ordered = new_signups[
+            ~new_signups["customer_id"].isin(filtered_new_signups_ordered_customer)
+        ].drop_duplicates(subset="customer_id")
+        filtered_new_signups_completed = filtered_new_signups_ordered[
+            filtered_new_signups_ordered["New_status"] == "COMPLETED"
+        ].drop_duplicates(subset="customer_id")
+        filtered_new_signups_not_completed_customer = filtered_new_signups_completed[
+            "customer_id"
+        ]
+        filtered_new_signups_not_completed = filtered_new_signups_ordered[
+            ~filtered_new_signups_ordered["customer_id"].isin(
+                filtered_new_signups_not_completed_customer
+            )
+        ].drop_duplicates(subset="customer_id")
 
         # Calculez les mesures directement sur les données filtrées
-        total_filtered_downloads = filtered_data_download['Téléchargement'].sum()
-        total_filtered_new_signups = len(new_signups.drop_duplicates(subset="customer_id"))
+        total_filtered_downloads = filtered_data_download["Téléchargement"].sum()
+        total_filtered_new_signups = len(
+            new_signups.drop_duplicates(subset="customer_id")
+        )
         total_filtered_new_signups_completed = len(filtered_new_signups_completed)
         total_filtered_new_signups_ordered = len(filtered_new_signups_ordered)
-        total_filtered_new_signups_not_completed = len(filtered_new_signups_not_completed)
+        total_filtered_new_signups_not_completed = len(
+            filtered_new_signups_not_completed
+        )
         total_filtered_new_signups_not_ordered = len(filtered_new_signups_not_ordered)
         total_filtered_new_signups_first_open = len(filtered_new_signups_first_open)
         total_filtered_new_signups_checkout = len(filtered_new_signups_checkout)
 
         # Créez un DataFrame avec les mesures calculées
-        filtered_stats_data = pd.DataFrame({
-            'Mesure': ["Nombre de Téléchargement", 
-                       "Nombre de Nouveaux Inscrit", 
-                       "Nombre de Nouveaux Inscrit qui n'ont jamais effectué une commande", 
-                       "Nombre de Nouveaux Inscrit qui ont overt la première fois l'app",
-                       "Nombre de Nouveaux Inscrit qui ont effectué au moins une commande",  
-                       "Nombre de Nouveaux Inscrit qui ont effectué au moins un achat", 
-                       "Nombre de Nouveaux Inscrit qui n'ont n'ont jamais effectué un achat",
-                       "Nombre de Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté"],
-            
-            'Valeur': [total_filtered_downloads, 
-                       total_filtered_new_signups, 
-                       total_filtered_new_signups_not_ordered , 
-                       total_filtered_new_signups_first_open,
-                       total_filtered_new_signups_ordered, 
-                       total_filtered_new_signups_completed, 
-                       total_filtered_new_signups_not_completed,
-                       total_filtered_new_signups_checkout]
-        })
+        filtered_stats_data = pd.DataFrame(
+            {
+                "Mesure": [
+                    "Nombre de Téléchargement",
+                    "Nombre de Nouveaux Inscrit",
+                    "Nombre de Nouveaux Inscrit qui n'ont jamais effectué une commande",
+                    "Nombre de Nouveaux Inscrit qui ont overt la première fois l'app",
+                    "Nombre de Nouveaux Inscrit qui ont effectué au moins une commande",
+                    "Nombre de Nouveaux Inscrit qui ont effectué au moins un achat",
+                    "Nombre de Nouveaux Inscrit qui n'ont n'ont jamais effectué un achat",
+                    "Nombre de Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté",
+                ],
+                "Valeur": [
+                    total_filtered_downloads,
+                    total_filtered_new_signups,
+                    total_filtered_new_signups_not_ordered,
+                    total_filtered_new_signups_first_open,
+                    total_filtered_new_signups_ordered,
+                    total_filtered_new_signups_completed,
+                    total_filtered_new_signups_not_completed,
+                    total_filtered_new_signups_checkout,
+                ],
+            }
+        )
 
         # Utilisez les données calculées pour créer le graphique
-        fig_filtered_stat = go.Figure(go.Bar(
-            x=filtered_stats_data['Valeur'],
-            y=filtered_stats_data['Mesure'],
-            orientation='h',
-            marker=dict(color=['blue', 'green', 'red', 'purple', 'orange', 'yellow', 'brown', 'pink']),
-            text=filtered_stats_data['Valeur'],
-        ))
+        fig_filtered_stat = go.Figure(
+            go.Bar(
+                x=filtered_stats_data["Valeur"],
+                y=filtered_stats_data["Mesure"],
+                orientation="h",
+                marker=dict(
+                    color=[
+                        "blue",
+                        "green",
+                        "red",
+                        "purple",
+                        "orange",
+                        "yellow",
+                        "brown",
+                        "pink",
+                    ]
+                ),
+                text=filtered_stats_data["Valeur"],
+            )
+        )
 
         # Personnalisez le graphique
-        fig_filtered_stat.update_traces(texttemplate='%{text}', textposition='outside')
+        fig_filtered_stat.update_traces(texttemplate="%{text}", textposition="outside")
 
         # Personnalisez la mise en page
         fig_filtered_stat.update_layout(
-            title=f'Statistiques des Nouveaux Inscrits - {selected_business_cat}',
-            xaxis_title='Valeur',
-            yaxis_title='Mesure'
+            title=f"Statistiques des Nouveaux Inscrits - {selected_business_cat}",
+            xaxis_title="Valeur",
+            yaxis_title="Mesure",
         )
 
         # Créez des onglets pour basculer entre les deux visualisations
@@ -887,7 +962,9 @@ def main():
             st.plotly_chart(fig_nmb_usr)  # Utilisez le graphique fig_nmb_usr
         else:
             # Affichez la heatmap du nombre de clients
-            st.plotly_chart(fig_filtered_stat)  # Utilisez le graphique fig_filtered_stat
+            st.plotly_chart(
+                fig_filtered_stat
+            )  # Utilisez le graphique fig_filtered_stat
 
         # Afficher et téléchargerles nouveaux inscrits dans le tableau de bord
 
@@ -912,7 +989,7 @@ def main():
                 f"{filename} - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
-        
+
         # Afficher les options de sélection dans la barre latérale
         selected_data_option = st.sidebar.selectbox(
             "Sélectionnez les données à télécharger",
@@ -923,15 +1000,21 @@ def main():
                 "Nouveaux Inscrits qui ont effectué une commande",
                 "Nouveaux Inscrits qui ont effectué au moins un achat",
                 "Nouveaux Inscrits qui n'ont jamais effectué au moins un achat",
-                "Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté"
-            )
+                "Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté",
+            ),
         )
 
         # Vérifier l'option sélectionnée et afficher le bouton de téléchargement correspondant
         if selected_data_option == "Nouveaux Inscrits":
             display_download_button(new_signups, "Nouveaux Inscrits")
-        elif selected_data_option == "Nouveaux Inscrits qui n'ont jamais effectué une commande":
-            display_download_button(filtered_new_signups_not_ordered, "Nouveaux Inscrits qui n'ont jamais effectué une commande")
+        elif (
+            selected_data_option
+            == "Nouveaux Inscrits qui n'ont jamais effectué une commande"
+        ):
+            display_download_button(
+                filtered_new_signups_not_ordered,
+                "Nouveaux Inscrits qui n'ont jamais effectué une commande",
+            )
 
         # Afficher la plage de dates sélectionnée
         st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
@@ -947,33 +1030,64 @@ def main():
 
         retargeting = orders.copy()
         # st.dataframe(retargeting)
-        retargeting["New_status"] = retargeting["Status"].map(lambda x: "NOT COMPLETED" if x != "COMPLETED" else x)
+        retargeting["New_status"] = retargeting["Status"].map(
+            lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
+        )
 
-        retargeting_completed = retargeting[retargeting['New_status']=='COMPLETED']
+        retargeting_completed = retargeting[retargeting["New_status"] == "COMPLETED"]
         # retargeting_not_completed = retargeting[retargeting['New_status']=='NOT COMPLETED']
 
         # Filtrer les clients selon les jours sélectionnés
-        def filter_customers_by_last_purchase_days(retargeting_completed, days, customer_origine, businessCat):
-            current_date = pd.to_datetime('today')
-            retargeting_completed['previous_order_date'] = pd.to_datetime(retargeting_completed['previous_order_date'])
+        def filter_customers_by_last_purchase_days(
+            retargeting_completed, days, customer_origine, businessCat
+        ):
+            current_date = pd.to_datetime("today")
+            retargeting_completed["previous_order_date"] = pd.to_datetime(
+                retargeting_completed["previous_order_date"]
+            )
             if days == "Plus de 120":
-                filtered_customers = retargeting_completed[(current_date - retargeting_completed['previous_order_date']).dt.days > 120]
+                filtered_customers = retargeting_completed[
+                    (
+                        current_date - retargeting_completed["previous_order_date"]
+                    ).dt.days
+                    > 120
+                ]
             else:
-                filtered_customers = retargeting_completed[(current_date - retargeting_completed['previous_order_date']).dt.days <= days]
+                filtered_customers = retargeting_completed[
+                    (
+                        current_date - retargeting_completed["previous_order_date"]
+                    ).dt.days
+                    <= days
+                ]
             if "Tous" not in customer_origine:
-                filtered_customers = filtered_customers[filtered_customers['customer_origine'].isin(customer_origine)]
+                filtered_customers = filtered_customers[
+                    filtered_customers["customer_origine"].isin(customer_origine)
+                ]
             if "Tous" not in businessCat:
-                filtered_customers = filtered_customers[filtered_customers['businessCat'].isin(businessCat)]
+                filtered_customers = filtered_customers[
+                    filtered_customers["businessCat"].isin(businessCat)
+                ]
             return filtered_customers
 
         # Barre latérale pour sélectionner les jours du dernier achat, customer_origine et businessCat
-        selected_days = st.sidebar.selectbox("Sélectionnez les jours du dernier achat : ", [7, 14, 21, 30, 60, 90, 120, "Plus de 120"])
-        all_customer_origine = retargeting_completed['customer_origine'].unique().tolist()
-        all_businessCat = retargeting_completed['businessCat'].unique().tolist()
+        selected_days = st.sidebar.selectbox(
+            "Sélectionnez les jours du dernier achat : ",
+            [7, 14, 21, 30, 60, 90, 120, "Plus de 120"],
+        )
+        all_customer_origine = (
+            retargeting_completed["customer_origine"].unique().tolist()
+        )
+        all_businessCat = retargeting_completed["businessCat"].unique().tolist()
         all_customer_origine.insert(0, "Tous")
         all_businessCat.insert(0, "Tous")
-        selected_customer_origine = st.sidebar.multiselect("Customer Origine (diaspora or Local)", all_customer_origine, default=["Tous"])
-        selected_businessCat = st.sidebar.multiselect("Business catégorie", all_businessCat, default=["Tous"])
+        selected_customer_origine = st.sidebar.multiselect(
+            "Customer Origine (diaspora or Local)",
+            all_customer_origine,
+            default=["Tous"],
+        )
+        selected_businessCat = st.sidebar.multiselect(
+            "Business catégorie", all_businessCat, default=["Tous"]
+        )
 
         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
         def to_excel(df, include_index=False):
@@ -989,9 +1103,11 @@ def main():
 
         def display_download_button_by_days(data, filename, selected_days):
             data_xlsx = to_excel(data, include_index=False)
-            days = "Plus de 120" if selected_days == "Plus de 120" else str(selected_days)
+            days = (
+                "Plus de 120" if selected_days == "Plus de 120" else str(selected_days)
+            )
             st.download_button(
-                f"Télécharger les données {filename} {selected_days} jours (.xlsx)",
+                f"Télécharger les données {filename} {selected_days} derniers jours (.xlsx)",
                 data_xlsx,
                 f"{filename} - {days} jours.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -999,12 +1115,136 @@ def main():
 
         # Filtrer les clients selon les jours sélectionnés, customer_origine et businessCat
         if selected_days:
-            filtered_customers = filter_customers_by_last_purchase_days(retargeting_completed, selected_days, selected_customer_origine, selected_businessCat)
-            filtered_df = filtered_customers[["date", "customer_id", "customer_username", "customer_phone", "customer_email", "businessCat", "customer_origine"]]
-            st.write("DataFrame filtré : ", filtered_df)
+            filtered_customers = filter_customers_by_last_purchase_days(
+                retargeting_completed,
+                selected_days,
+                selected_customer_origine,
+                selected_businessCat,
+            )
+            filtered_df = filtered_customers[
+                [
+                    "date",
+                    "customer_id",
+                    "customer_username",
+                    "customer_phone",
+                    "customer_email",
+                    "businessCat",
+                    "customer_origine",
+                ]
+            ]
+            st.write(
+                "Données des clients qui ont effectué leur dernier achat pendant - {days} jours : ",
+                filtered_df,
+            )
 
             # Télécharger les données en fonction de la durée sélectionnée
-            display_download_button_by_days(filtered_df, "des clients qui ont effectué leur dernier achat depuis", selected_days)
+            display_download_button_by_days(
+                filtered_df,
+                "des clients qui ont effectué leur dernier achat pendant les",
+                selected_days,
+            )
+
+            #################################################
+
+            def filter_non_purchasing_customers_by_last_purchase_days(
+                retargeting_completed, days, customer_origine, businessCat
+            ):
+                current_date = pd.to_datetime("today")
+                retargeting_completed["previous_order_date"] = pd.to_datetime(
+                    retargeting_completed["previous_order_date"]
+                )
+                if days == 7:
+                    filtered_customers = retargeting_completed[
+                        (
+                            current_date - retargeting_completed["previous_order_date"]
+                        ).dt.days
+                        <= 6
+                    ]
+                elif days == 14:
+                    filtered_customers = retargeting_completed[
+                        (
+                            current_date - retargeting_completed["previous_order_date"]
+                        ).dt.days.between(7, 13)
+                    ]
+                elif days == 21:
+                    filtered_customers = retargeting_completed[
+                        (
+                            current_date - retargeting_completed["previous_order_date"]
+                        ).dt.days.between(14, 20)
+                    ]
+
+                elif days == 30:
+                    filtered_customers = retargeting_completed[
+                        (
+                            current_date - retargeting_completed["previous_order_date"]
+                        ).dt.days.between(21, 29)
+                    ]
+
+                elif days == 60:
+                    filtered_customers = retargeting_completed[
+                        (
+                            current_date - retargeting_completed["previous_order_date"]
+                        ).dt.days.between(30, 59)
+                    ]
+
+                elif days == 90:
+                    filtered_customers = retargeting_completed[
+                        (
+                            current_date - retargeting_completed["previous_order_date"]
+                        ).dt.days.between(60, 89)
+                    ]
+
+                elif days == 120:
+                    filtered_customers = retargeting_completed[
+                        (
+                            current_date - retargeting_completed["previous_order_date"]
+                        ).dt.days.between(90, 119)
+                    ]
+
+                if "Tous" not in customer_origine:
+                    filtered_customers = filtered_customers[
+                        filtered_customers["customer_origine"].isin(customer_origine)
+                    ]
+                if "Tous" not in businessCat:
+                    filtered_customers = filtered_customers[
+                        filtered_customers["businessCat"].isin(businessCat)
+                    ]
+                return filtered_customers
+
+            # Utilisation de la fonction filter_non_purchasing_customers_by_last_purchase_days dans le code existant
+
+            # Filtrer les clients non acheteurs selon les jours sélectionnés, customer_origine et businessCat
+            if selected_days:
+                filtered_non_purchasing_customers = (
+                    filter_non_purchasing_customers_by_last_purchase_days(
+                        retargeting_completed,
+                        selected_days,
+                        selected_customer_origine,
+                        selected_businessCat,
+                    )
+                )
+                filtered_non_purchasing_df = filtered_non_purchasing_customers[
+                    [
+                        "date",
+                        "customer_id",
+                        "customer_username",
+                        "customer_phone",
+                        "customer_email",
+                        "businessCat",
+                        "customer_origine",
+                    ]
+                ]
+                st.write(
+                    "DataFrame filtré des clients non acheteurs : ",
+                    filtered_non_purchasing_df,
+                )
+
+                # Télécharger les données en fonction de la durée sélectionnée pour les clients non acheteurs
+                display_download_button_by_days(
+                    filtered_non_purchasing_df,
+                    "des clients qui n'ont pas effectué d'achat depuis",
+                    selected_days,
+                )
 
     ####################################################################################   CSS STYLE   #####################################################################
 
