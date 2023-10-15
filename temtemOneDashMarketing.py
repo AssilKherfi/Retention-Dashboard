@@ -228,6 +228,7 @@ orders = orders[
 ]
 orders = orders.rename(columns={"Order Type": "Order_Type"})
 orders.loc[(orders["customer_id"] == "73187559488.0"), "Order_Type"] = "EXTERNE"
+
 order_payment_screen = orders[['date', 'businessCat', 'order_id', 'Status','customer_email']].rename(columns={'customer_email':'email'})
 orders_pmi = orders[orders["Order_Type"] == "EXTERNE"]
 
@@ -516,33 +517,6 @@ def apply_filters(df, customer_origine, business_cat, start_date, end_date):
 
     return filtered_data.copy()
 
-def apply_filters_ltv(df, customer_origine, business_cat, start_date, end_date):
-    filtered_data = df.copy()
-
-    if customer_origine != "Tous":
-        filtered_data = filtered_data[
-            filtered_data["customer_origine"] == customer_origine
-        ]
-
-    if business_cat != "Toutes":
-        filtered_data = filtered_data[filtered_data["businessCat"] == business_cat]    
-
-    date_col = "date"
-
-    # Convertir start_date et end_date en datetime64[ns]
-    start_date = pd.to_datetime(start_date)
-    end_date = pd.to_datetime(end_date)
-
-    # Convertir la colonne de dates en datetime64[ns]
-    filtered_data[date_col] = pd.to_datetime(filtered_data[date_col])
-
-    # Filtrer les données en fonction de la plage de dates sélectionnée
-    filtered_data = filtered_data[
-        (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
-    ]
-
-    return filtered_data.copy()
-
 def apply_filters_summary(df, customer_origine, start_date, end_date):
     filtered_data = df.copy()
 
@@ -621,14 +595,14 @@ def main():
     # Créer un menu de navigation
     selected_page = st.sidebar.selectbox(
         "Sélectionnez un Tableau de Bord",
-        ["Users", "Retargating"],
+        ["NOUVEAUX INSCRITS", "RETARGETING"],
     )
     
-    ####################################################################################   USERS PAGES   #####################################################################
+    ####################################################################################   NOUVEAUX INSCRITS PAGES   #####################################################################
 
     # Créez une nouvelle page Users
-    if selected_page == "Users":
-        st.header("Users 2023")
+    if selected_page == "NOUVEAUX INSCRITS":
+        st.header("NOUVEAUX INSCRITS 2023")
 
         # Sidebar pour les filtres
         st.sidebar.title("Filtres")
@@ -917,7 +891,7 @@ def main():
 
         # Afficher et téléchargerles nouveaux inscrits dans le tableau de bord
 
-         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
         def to_excel(df, include_index=False):
             output = BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
@@ -962,14 +936,75 @@ def main():
         # Afficher la plage de dates sélectionnée
         st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
 
-    ####################################################################################   USERS PAGES   #####################################################################
+    ####################################################################################   RETARGETING   #####################################################################
 
     # Créez une nouvelle page concentration des clients
-    elif selected_page == "Retargating":
-        st.header("Retargating")
-        
+    elif selected_page == "RETARGETING":
+        st.header("RETARGETING")
 
+        # Sidebar pour les filtres
+        st.sidebar.title("Filtres")
 
+        retargeting = orders.copy()
+        # st.dataframe(retargeting)
+        retargeting["New_status"] = retargeting["Status"].map(lambda x: "NOT COMPLETED" if x != "COMPLETED" else x)
+
+        retargeting_completed = retargeting[retargeting['New_status']=='COMPLETED']
+        # retargeting_not_completed = retargeting[retargeting['New_status']=='NOT COMPLETED']
+
+        # Filtrer les clients selon les jours sélectionnés
+        def filter_customers_by_last_purchase_days(retargeting_completed, days, customer_origine, businessCat):
+            current_date = pd.to_datetime('today')
+            retargeting_completed['previous_order_date'] = pd.to_datetime(retargeting_completed['previous_order_date'])
+            if days == "Plus de 120":
+                filtered_customers = retargeting_completed[(current_date - retargeting_completed['previous_order_date']).dt.days > 120]
+            else:
+                filtered_customers = retargeting_completed[(current_date - retargeting_completed['previous_order_date']).dt.days <= days]
+            if "Tous" not in customer_origine:
+                filtered_customers = filtered_customers[filtered_customers['customer_origine'].isin(customer_origine)]
+            if "Tous" not in businessCat:
+                filtered_customers = filtered_customers[filtered_customers['businessCat'].isin(businessCat)]
+            return filtered_customers
+
+        # Barre latérale pour sélectionner les jours du dernier achat, customer_origine et businessCat
+        selected_days = st.sidebar.selectbox("Sélectionnez les jours du dernier achat : ", [7, 14, 21, 30, 60, 90, 120, "Plus de 120"])
+        all_customer_origine = retargeting_completed['customer_origine'].unique().tolist()
+        all_businessCat = retargeting_completed['businessCat'].unique().tolist()
+        all_customer_origine.insert(0, "Tous")
+        all_businessCat.insert(0, "Tous")
+        selected_customer_origine = st.sidebar.multiselect("Customer Origine (diaspora or Local)", all_customer_origine, default=["Tous"])
+        selected_businessCat = st.sidebar.multiselect("Business catégorie", all_businessCat, default=["Tous"])
+
+        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        def to_excel(df, include_index=False):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+                workbook = writer.book
+                worksheet = writer.sheets["Sheet1"]
+                format = workbook.add_format({"num_format": "0.00"})
+                worksheet.set_column("A:A", None, format)
+            processed_data = output.getvalue()
+            return processed_data
+
+        def display_download_button_by_days(data, filename, selected_days):
+            data_xlsx = to_excel(data, include_index=False)
+            days = "Plus de 120" if selected_days == "Plus de 120" else str(selected_days)
+            st.download_button(
+                f"Télécharger les données {filename} {selected_days} jours (.xlsx)",
+                data_xlsx,
+                f"{filename} - {days} jours.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+        # Filtrer les clients selon les jours sélectionnés, customer_origine et businessCat
+        if selected_days:
+            filtered_customers = filter_customers_by_last_purchase_days(retargeting_completed, selected_days, selected_customer_origine, selected_businessCat)
+            filtered_df = filtered_customers[["date", "customer_id", "customer_username", "customer_phone", "customer_email", "businessCat", "customer_origine"]]
+            st.write("DataFrame filtré : ", filtered_df)
+
+            # Télécharger les données en fonction de la durée sélectionnée
+            display_download_button_by_days(filtered_df, "des clients qui ont effectué leur dernier achat depuis", selected_days)
 
     ####################################################################################   CSS STYLE   #####################################################################
 

@@ -1756,7 +1756,7 @@ def main():
         # # Afficher la plage de dates sélectionnée
         # st.sidebar.write(f"Plage de dates sélectionnée : du {start_date} au {end_date}")
 
-    ####################################################################################   concentration des clients PAGES   #####################################################################
+    ####################################################################################   Concentration des clients PAGES   #####################################################################
 
     # Créez une nouvelle page concentration des clients
     elif selected_page == "Concentration des clients par commune, Algérie":
@@ -1778,7 +1778,7 @@ def main():
         merged_data = merged_data.drop_duplicates(subset='commune_delivery_address')
 
         # Afficher les données filtrées
-        show_merged_data = st.sidebar.checkbox("Afficher les données")
+        # show_merged_data = st.sidebar.checkbox("Afficher les données")
 
         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
         def to_excel(df, include_index=True):
