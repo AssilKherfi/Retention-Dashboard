@@ -629,14 +629,14 @@ def main():
     # Créer un menu de navigation
     selected_page = st.sidebar.selectbox(
         "Sélectionnez un Tableau de Bord",
-        ["NOUVEAUX INSCRITS", "RETARGETING"],
+        ["ACQUISITION", "RETARGETING"],
     )
 
     ####################################################################################   NOUVEAUX INSCRITS PAGES   #####################################################################
 
     # Créez une nouvelle page Users
-    if selected_page == "NOUVEAUX INSCRITS":
-        st.header("NOUVEAUX INSCRITS 2023")
+    if selected_page == "ACQUISITION":
+        st.header("ACQUISITION 2023")
 
         # Sidebar pour les filtres
         st.sidebar.title("Filtres")
@@ -914,9 +914,9 @@ def main():
         total_filtered_new_signups_first_open_formatted = "{:,.0f}".format(
             total_filtered_new_signups_first_open
         ).replace(",", ".")
-        total_filtered_new_signups_checkout_formatted = "{:,.0f}".format(
-            total_filtered_new_signups_checkout
-        ).replace(",", ".")
+        # total_filtered_new_signups_checkout_formatted = "{:,.0f}".format(
+        #     total_filtered_new_signups_checkout
+        # ).replace(",", ".")
 
         # Créez un DataFrame avec les mesures calculées
         filtered_stats_data = pd.DataFrame(
@@ -927,7 +927,7 @@ def main():
                     "Nombre de Nouveaux Inscrit qui n'ont jamais effectué une commande",
                     "Nombre de Nouveaux Inscrit qui ont overt la première fois l'app",
                     "Nombre de Nouveaux Inscrit qui ont effectué au moins une commande",
-                    "Nombre de Nouveaux Inscrit qui n'ont jamais effectué un achat",
+                    "Nombre de Nouveaux Inscrit qui ont commandé sans achat final",
                     "Nombre de Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté",
                     "Nombre de Nouveaux Inscrit qui ont effectué au moins un achat",
                 ],
@@ -938,7 +938,7 @@ def main():
                     total_filtered_new_signups_first_open_formatted,
                     total_filtered_new_signups_ordered_formatted,
                     total_filtered_new_signups_not_completed_formatted,
-                    total_filtered_new_signups_checkout_formatted,
+                    total_filtered_new_signups_checkout,
                     total_filtered_new_signups_completed_formatted,
                 ],
             }
