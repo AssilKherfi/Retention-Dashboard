@@ -1341,16 +1341,14 @@ def main():
     }
 
     /* Styles pour le texte en noir */
-    .css-k7vsyb h1,
+    .e1nzilvr2 h1,
     .e1nzilvr1,
-    .e1nzilvr5,
-    .css-q8sbsg,
-    .css-1n76uvr.e1f1d6gn0 * {
+    .e1nzilvr5 {
         color: #000000 !important; /* Texte en noir */
     }
 
     /* Styles pour les boutons */
-    .css-19rxjzo.ef3psqc11 {
+    .st-emotion-cache-x78sv8.e1nzilvr5 {
         background-color: #ffffff !important; /* Couleur de fond orange par défaut */
         color: #FF6B05 !important; /* Couleur du texte en noir par défaut */
         border: 1px solid #FF6B05; /* Bordure noire de 1 pixel */
