@@ -902,9 +902,9 @@ def main():
                     "Nombre de Nouveaux Inscrit qui n'ont jamais effectué une commande",
                     "Nombre de Nouveaux Inscrit qui ont overt la première fois l'app",
                     "Nombre de Nouveaux Inscrit qui ont effectué au moins une commande",
-                    "Nombre de Nouveaux Inscrit qui ont effectué au moins un achat",
-                    "Nombre de Nouveaux Inscrit qui n'ont n'ont jamais effectué un achat",
+                    "Nombre de Nouveaux Inscrit qui n'ont jamais effectué un achat",
                     "Nombre de Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté",
+                    "Nombre de Nouveaux Inscrit qui ont effectué au moins un achat",
                 ],
                 "Valeur": [
                     total_filtered_downloads,
@@ -912,9 +912,9 @@ def main():
                     total_filtered_new_signups_not_ordered,
                     total_filtered_new_signups_first_open,
                     total_filtered_new_signups_ordered,
-                    total_filtered_new_signups_completed,
                     total_filtered_new_signups_not_completed,
                     total_filtered_new_signups_checkout,
+                    total_filtered_new_signups_completed,
                 ],
             }
         )
@@ -1041,7 +1041,7 @@ def main():
             ~retargeting["customer_id"].isin(retargeting_completed_customer)
         ].drop_duplicates(subset="customer_id", keep="last")
 
-        st.dataframe(retargeting_not_completed)
+        # st.dataframe(retargeting_not_completed)
 
         # Filtrer les clients selon les jours sélectionnés
         def filter_customers_by_last_purchase_days(
@@ -1077,7 +1077,7 @@ def main():
 
         # Barre latérale pour sélectionner les jours du dernier achat, customer_origine et businessCat
         selected_days = st.sidebar.selectbox(
-            "Sélectionnez les jours du dernier achat : ",
+            "Sélectionnez les dernier jours : ",
             [7, 14, 21, 30, 60, 90, 120, "Plus de 120"],
         )
         all_customer_origine = (
@@ -1247,6 +1247,11 @@ def main():
                         ).dt.days.between(90, 119)
                     ]
 
+                elif days > 120:
+                    filtered_customers = retargeting_not_completed[
+                        (current_date - retargeting_not_completed["date"]).dt.days > 120
+                    ]
+
                 if "Tous" not in customer_origine:
                     filtered_customers = filtered_customers[
                         filtered_customers["customer_origine"].isin(customer_origine)
@@ -1294,7 +1299,7 @@ def main():
                 # Télécharger les données en fonction de la durée sélectionnée pour les clients non complétés
                 display_download_button_by_days(
                     filtered_non_completed_df,
-                    "des clients qui n'ont pas complété d'achat depuis",
+                    "des clients qui n'ont pas achaté depuis moins",
                     selected_days,
                 )
 
