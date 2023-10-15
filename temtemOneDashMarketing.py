@@ -1238,9 +1238,15 @@ def main():
                         "customer_origine",
                     ]
                 ]
+
+                filtered_df_last_non_purchase = (
+                    filtered_non_purchasing_df.drop_duplicates(
+                        subset="customer_id", keep="last"
+                    )
+                )
                 st.write(
                     "DataFrame filtré des clients non acheteurs : ",
-                    filtered_non_purchasing_df,
+                    filtered_df_last_non_purchase,
                 )
 
                 # Télécharger les données en fonction de la durée sélectionnée pour les clients non acheteurs
