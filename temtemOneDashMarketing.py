@@ -1041,6 +1041,8 @@ def main():
             ~retargeting["customer_id"].isin(retargeting_completed_customer)
         ].drop_duplicates(subset="customer_id")
 
+        st.dataframe(retargeting_not_completed)
+
         # Filtrer les clients selon les jours sélectionnés
         def filter_customers_by_last_purchase_days(
             retargeting_completed, days, customer_origine, businessCat
@@ -1154,118 +1156,118 @@ def main():
 
             #################################################
 
-            def filter_non_purchasing_customers_by_last_purchase_days(
-                retargeting_not_completed, days, customer_origine, businessCat
-            ):
-                current_date = pd.to_datetime("today")
-                retargeting_not_completed["previous_order_date"] = pd.to_datetime(
-                    retargeting_not_completed["previous_order_date"]
-                )
-                if days == 7:
-                    filtered_customers = retargeting_not_completed[
-                        (
-                            current_date
-                            - retargeting_not_completed["previous_order_date"]
-                        ).dt.days
-                        <= 6
-                    ]
-                elif days == 14:
-                    filtered_customers = retargeting_not_completed[
-                        (
-                            current_date
-                            - retargeting_not_completed["previous_order_date"]
-                        ).dt.days.between(7, 13)
-                    ]
-                elif days == 21:
-                    filtered_customers = retargeting_not_completed[
-                        (
-                            current_date
-                            - retargeting_not_completed["previous_order_date"]
-                        ).dt.days.between(14, 20)
-                    ]
+            # def filter_non_purchasing_customers_by_last_purchase_days(
+            #     retargeting_not_completed, days, customer_origine, businessCat
+            # ):
+            #     current_date = pd.to_datetime("today")
+            #     retargeting_not_completed["previous_order_date"] = pd.to_datetime(
+            #         retargeting_not_completed["previous_order_date"]
+            #     )
+            #     if days == 7:
+            #         filtered_customers = retargeting_not_completed[
+            #             (
+            #                 current_date
+            #                 - retargeting_not_completed["previous_order_date"]
+            #             ).dt.days
+            #             <= 6
+            #         ]
+            #     elif days == 14:
+            #         filtered_customers = retargeting_not_completed[
+            #             (
+            #                 current_date
+            #                 - retargeting_not_completed["previous_order_date"]
+            #             ).dt.days.between(7, 13)
+            #         ]
+            #     elif days == 21:
+            #         filtered_customers = retargeting_not_completed[
+            #             (
+            #                 current_date
+            #                 - retargeting_not_completed["previous_order_date"]
+            #             ).dt.days.between(14, 20)
+            #         ]
 
-                elif days == 30:
-                    filtered_customers = retargeting_not_completed[
-                        (
-                            current_date
-                            - retargeting_not_completed["previous_order_date"]
-                        ).dt.days.between(21, 29)
-                    ]
+            #     elif days == 30:
+            #         filtered_customers = retargeting_not_completed[
+            #             (
+            #                 current_date
+            #                 - retargeting_not_completed["previous_order_date"]
+            #             ).dt.days.between(21, 29)
+            #         ]
 
-                elif days == 60:
-                    filtered_customers = retargeting_not_completed[
-                        (
-                            current_date
-                            - retargeting_not_completed["previous_order_date"]
-                        ).dt.days.between(30, 59)
-                    ]
+            #     elif days == 60:
+            #         filtered_customers = retargeting_not_completed[
+            #             (
+            #                 current_date
+            #                 - retargeting_not_completed["previous_order_date"]
+            #             ).dt.days.between(30, 59)
+            #         ]
 
-                elif days == 90:
-                    filtered_customers = retargeting_not_completed[
-                        (
-                            current_date
-                            - retargeting_not_completed["previous_order_date"]
-                        ).dt.days.between(60, 89)
-                    ]
+            #     elif days == 90:
+            #         filtered_customers = retargeting_not_completed[
+            #             (
+            #                 current_date
+            #                 - retargeting_not_completed["previous_order_date"]
+            #             ).dt.days.between(60, 89)
+            #         ]
 
-                elif days == 120:
-                    filtered_customers = retargeting_not_completed[
-                        (
-                            current_date
-                            - retargeting_not_completed["previous_order_date"]
-                        ).dt.days.between(90, 119)
-                    ]
+            #     elif days == 120:
+            #         filtered_customers = retargeting_not_completed[
+            #             (
+            #                 current_date
+            #                 - retargeting_not_completed["previous_order_date"]
+            #             ).dt.days.between(90, 119)
+            #         ]
 
-                if "Tous" not in customer_origine:
-                    filtered_customers = filtered_customers[
-                        filtered_customers["customer_origine"].isin(customer_origine)
-                    ]
-                if "Tous" not in businessCat:
-                    filtered_customers = filtered_customers[
-                        filtered_customers["businessCat"].isin(businessCat)
-                    ]
-                return filtered_customers
+            #     if "Tous" not in customer_origine:
+            #         filtered_customers = filtered_customers[
+            #             filtered_customers["customer_origine"].isin(customer_origine)
+            #         ]
+            #     if "Tous" not in businessCat:
+            #         filtered_customers = filtered_customers[
+            #             filtered_customers["businessCat"].isin(businessCat)
+            #         ]
+            #     return filtered_customers
 
-            # Utilisation de la fonction filter_non_purchasing_customers_by_last_purchase_days dans le code existant
+            # # Utilisation de la fonction filter_non_purchasing_customers_by_last_purchase_days dans le code existant
 
-            # Filtrer les clients non acheteurs selon les jours sélectionnés, customer_origine et businessCat
-            if selected_days:
-                filtered_non_purchasing_customers = (
-                    filter_non_purchasing_customers_by_last_purchase_days(
-                        retargeting_not_completed,
-                        selected_days,
-                        selected_customer_origine,
-                        selected_businessCat,
-                    )
-                )
-                filtered_non_purchasing_df = filtered_non_purchasing_customers[
-                    [
-                        "date",
-                        "customer_id",
-                        "customer_username",
-                        "customer_phone",
-                        "customer_email",
-                        "businessCat",
-                        "customer_origine",
-                    ]
-                ]
+            # # Filtrer les clients non acheteurs selon les jours sélectionnés, customer_origine et businessCat
+            # if selected_days:
+            #     filtered_non_purchasing_customers = (
+            #         filter_non_purchasing_customers_by_last_purchase_days(
+            #             retargeting_not_completed,
+            #             selected_days,
+            #             selected_customer_origine,
+            #             selected_businessCat,
+            #         )
+            #     )
+            #     filtered_non_purchasing_df = filtered_non_purchasing_customers[
+            #         [
+            #             "date",
+            #             "customer_id",
+            #             "customer_username",
+            #             "customer_phone",
+            #             "customer_email",
+            #             "businessCat",
+            #             "customer_origine",
+            #         ]
+            #     ]
 
-                filtered_df_last_non_purchase = (
-                    filtered_non_purchasing_df.drop_duplicates(
-                        subset="customer_id", keep="last"
-                    )
-                )
-                st.write(
-                    "DataFrame filtré des clients non acheteurs : ",
-                    filtered_df_last_non_purchase,
-                )
+            #     filtered_df_last_non_purchase = (
+            #         filtered_non_purchasing_df.drop_duplicates(
+            #             subset="customer_id", keep="last"
+            #         )
+            #     )
+            #     st.write(
+            #         "DataFrame filtré des clients non acheteurs : ",
+            #         filtered_df_last_non_purchase,
+            #     )
 
-                # Télécharger les données en fonction de la durée sélectionnée pour les clients non acheteurs
-                display_download_button_by_days(
-                    filtered_non_purchasing_df,
-                    "des clients qui n'ont pas effectué d'achat depuis",
-                    selected_days,
-                )
+            #     # Télécharger les données en fonction de la durée sélectionnée pour les clients non acheteurs
+            #     display_download_button_by_days(
+            #         filtered_non_purchasing_df,
+            #         "des clients qui n'ont pas effectué d'achat depuis",
+            #         selected_days,
+            #     )
 
     ####################################################################################   CSS STYLE   #####################################################################
 
