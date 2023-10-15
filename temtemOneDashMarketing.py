@@ -893,28 +893,30 @@ def main():
         total_filtered_new_signups_first_open = len(filtered_new_signups_first_open)
         total_filtered_new_signups_checkout = len(filtered_new_signups_checkout)
 
-        total_filtered_downloads_formatted = "{:,.0f}".format(total_filtered_downloads)
+        total_filtered_downloads_formatted = "{:,.0f}".format(
+            total_filtered_downloads
+        ).replace(",", ".")
         total_filtered_new_signups_formatted = "{:,.0f}".format(
             total_filtered_new_signups
-        )
+        ).replace(",", ".")
         total_filtered_new_signups_completed_formatted = "{:,.0f}".format(
             total_filtered_new_signups_completed
-        )
+        ).replace(",", ".")
         total_filtered_new_signups_ordered_formatted = "{:,.0f}".format(
             total_filtered_new_signups_ordered
-        )
+        ).replace(",", ".")
         total_filtered_new_signups_not_completed_formatted = "{:,.0f}".format(
             total_filtered_new_signups_not_completed
-        )
+        ).replace(",", ".")
         total_filtered_new_signups_not_ordered_formatted = "{:,.0f}".format(
             total_filtered_new_signups_not_ordered
-        )
+        ).replace(",", ".")
         total_filtered_new_signups_first_open_formatted = "{:,.0f}".format(
             total_filtered_new_signups_first_open
-        )
+        ).replace(",", ".")
         total_filtered_new_signups_checkout_formatted = "{:,.0f}".format(
             total_filtered_new_signups_checkout
-        )
+        ).replace(",", ".")
 
         # Créez un DataFrame avec les mesures calculées
         filtered_stats_data = pd.DataFrame(
