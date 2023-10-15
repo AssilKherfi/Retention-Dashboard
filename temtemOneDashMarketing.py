@@ -1035,7 +1035,11 @@ def main():
         )
 
         retargeting_completed = retargeting[retargeting["New_status"] == "COMPLETED"]
-        # retargeting_not_completed = retargeting[retargeting['New_status']=='NOT COMPLETED']
+        retargeting_completed_customer = retargeting_completed["customer_id"]
+
+        retargeting_not_completed = retargeting[
+            ~retargeting["customer_id"].isin(retargeting_completed_customer)
+        ].drop_duplicates(subset="customer_id")
 
         # Filtrer les clients selon les jours sélectionnés
         def filter_customers_by_last_purchase_days(
@@ -1151,57 +1155,64 @@ def main():
             #################################################
 
             def filter_non_purchasing_customers_by_last_purchase_days(
-                retargeting_completed, days, customer_origine, businessCat
+                retargeting_not_completed, days, customer_origine, businessCat
             ):
                 current_date = pd.to_datetime("today")
-                retargeting_completed["previous_order_date"] = pd.to_datetime(
-                    retargeting_completed["previous_order_date"]
+                retargeting_not_completed["previous_order_date"] = pd.to_datetime(
+                    retargeting_not_completed["previous_order_date"]
                 )
                 if days == 7:
-                    filtered_customers = retargeting_completed[
+                    filtered_customers = retargeting_not_completed[
                         (
-                            current_date - retargeting_completed["previous_order_date"]
+                            current_date
+                            - retargeting_not_completed["previous_order_date"]
                         ).dt.days
                         <= 6
                     ]
                 elif days == 14:
-                    filtered_customers = retargeting_completed[
+                    filtered_customers = retargeting_not_completed[
                         (
-                            current_date - retargeting_completed["previous_order_date"]
+                            current_date
+                            - retargeting_not_completed["previous_order_date"]
                         ).dt.days.between(7, 13)
                     ]
                 elif days == 21:
-                    filtered_customers = retargeting_completed[
+                    filtered_customers = retargeting_not_completed[
                         (
-                            current_date - retargeting_completed["previous_order_date"]
+                            current_date
+                            - retargeting_not_completed["previous_order_date"]
                         ).dt.days.between(14, 20)
                     ]
 
                 elif days == 30:
-                    filtered_customers = retargeting_completed[
+                    filtered_customers = retargeting_not_completed[
                         (
-                            current_date - retargeting_completed["previous_order_date"]
+                            current_date
+                            - retargeting_not_completed["previous_order_date"]
                         ).dt.days.between(21, 29)
                     ]
 
                 elif days == 60:
-                    filtered_customers = retargeting_completed[
+                    filtered_customers = retargeting_not_completed[
                         (
-                            current_date - retargeting_completed["previous_order_date"]
+                            current_date
+                            - retargeting_not_completed["previous_order_date"]
                         ).dt.days.between(30, 59)
                     ]
 
                 elif days == 90:
-                    filtered_customers = retargeting_completed[
+                    filtered_customers = retargeting_not_completed[
                         (
-                            current_date - retargeting_completed["previous_order_date"]
+                            current_date
+                            - retargeting_not_completed["previous_order_date"]
                         ).dt.days.between(60, 89)
                     ]
 
                 elif days == 120:
-                    filtered_customers = retargeting_completed[
+                    filtered_customers = retargeting_not_completed[
                         (
-                            current_date - retargeting_completed["previous_order_date"]
+                            current_date
+                            - retargeting_not_completed["previous_order_date"]
                         ).dt.days.between(90, 119)
                     ]
 
@@ -1221,7 +1232,7 @@ def main():
             if selected_days:
                 filtered_non_purchasing_customers = (
                     filter_non_purchasing_customers_by_last_purchase_days(
-                        retargeting_completed,
+                        retargeting_not_completed,
                         selected_days,
                         selected_customer_origine,
                         selected_businessCat,
