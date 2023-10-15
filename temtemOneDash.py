@@ -692,12 +692,6 @@ def apply_filters_users(df, customer_origine, customer_country, start_date, end_
             filtered_data["customer_country"] == customer_country
         ]
 
-    # if tags != "Tous":
-    #     filtered_data = filtered_data[filtered_data["tags"] == tags]
-
-    # if accountTypes != "Tous":
-    #     filtered_data = filtered_data[filtered_data["accountTypes"] == accountTypes]
-
     date_col = "date"
 
     # Convertir start_date et end_date en datetime64[ns]
@@ -1263,8 +1257,6 @@ def main():
 
 
 
-        # pd.options.display.float_format = "{:.2f}".format
-
         # Calculer le pourcentage entre "LTV (Marge en dzd)" et "LTV (GMV en dzd)" pour chaque catégorie d'entreprise
         ltv_avg_by_cat["Pourcentage Marge vs GMV"] = (
             (ltv_avg_by_cat["LTV (Marge en dzd)"] / ltv_avg_by_cat["LTV (GMV en dzd)"]) * 100
@@ -1280,13 +1272,6 @@ def main():
         # Afficher le tableau de la LTV
         st.subheader("Moyenne de LTV par Business Catégorie (GMV et Marge de la GMV) :")
         st.dataframe(ltv_avg_by_cat)
-
-        # # Afficher le pourcentage sous forme de texte
-        # for index, row in ltv_avg_by_cat.iterrows():
-        #     business_cat = row["Business Catégorie"]
-        #     percentage = row["Pourcentage Marge vs GMV"]
-        #     st.text(f"Marge {business_cat} % = {percentage:.2f}%")
-
 
         # Téléchargement de la LTV
         ltv_avg_by_cat_xlsx = to_excel(ltv_avg_by_cat, include_index=False)
@@ -1367,12 +1352,6 @@ def main():
             "Customer Country", customer_country_options
         )
 
-        # accountTypes_options = ["Tous"] + list(users["accountTypes"].unique())
-        # accountTypes = st.sidebar.selectbox("Account Types", accountTypes_options)
-
-        # tags_options = ["Toutes"] + list(users["tags"].unique())
-        # tags = st.sidebar.selectbox("Tags", tags_options)
-
         # Appliquer les filtres
         filtered_new_signups = apply_filters_users(
             users,
@@ -1412,35 +1391,35 @@ def main():
         filtered_new_signups_checkout_data = filtered_new_signups_checkout_data.drop_duplicates(subset="email")
         # st.dataframe(filtered_new_signups_checkout_data)
 
-        # Afficher les données des Users
-        show_filtered_new_signups = st.sidebar.checkbox("Afficher les données des Users")
+        # # Afficher les données des Users
+        # show_filtered_new_signups = st.sidebar.checkbox("Afficher les données des Users")
 
-        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-        def to_excel(df, include_index=False):
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
-                workbook = writer.book
-                worksheet = writer.sheets["Sheet1"]
-                format = workbook.add_format({"num_format": "0.00"})
-                worksheet.set_column("A:A", None, format)
-            processed_data = output.getvalue()
-            return processed_data
+        # # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+        # def to_excel(df, include_index=False):
+        #     output = BytesIO()
+        #     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        #         df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+        #         workbook = writer.book
+        #         worksheet = writer.sheets["Sheet1"]
+        #         format = workbook.add_format({"num_format": "0.00"})
+        #         worksheet.set_column("A:A", None, format)
+        #     processed_data = output.getvalue()
+        #     return processed_data
 
-        if show_filtered_new_signups:
-            st.subheader("Data Users")
-            st.dataframe(filtered_new_signups)
+        # if show_filtered_new_signups:
+        #     st.subheader("Data Users")
+        #     st.dataframe(filtered_new_signups)
 
-            # Bouton pour télécharger le DataFrame au format Excel
-            filtered_new_signups_xlsx = to_excel(
-                filtered_new_signups, include_index=False
-            )
-            st.download_button(
-                "Télécharger les Users en Excel (.xlsx)",
-                filtered_new_signups_xlsx,
-                f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
+        #     # Bouton pour télécharger le DataFrame au format Excel
+        #     filtered_new_signups_xlsx = to_excel(
+        #         filtered_new_signups, include_index=False
+        #     )
+        #     st.download_button(
+        #         "Télécharger les Users en Excel (.xlsx)",
+        #         filtered_new_signups_xlsx,
+        #         f"USERS - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
+        #         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        #     )
 
                                         ###################
 
@@ -1490,21 +1469,6 @@ def main():
         ] = new_signups_ordered["New_status"].map(
             lambda x: "NOT COMPLETED" if x != "COMPLETED" else x
         )
-
-        # # Nombre total de nouveaux inscrits
-        # total_new_signups = len(new_signups)
-
-        # # Nombre de nouveaux inscrits qui ont acheté (Status COMPLETED)
-        # new_signups_completed = len(
-        #     new_signups_ordered[
-        #         new_signups_ordered["Status"] == "COMPLETED"
-        #     ].drop_duplicates(subset="customer_id")
-        # )
-
-        # # Nombre de nouveaux inscrits qui ont commandé (en comptant les order_id)
-        # new_signups_ordered = len(
-        #     new_signups_ordered.drop_duplicates(subset="customer_id")
-        # )
 
         # Sélection de la granularité de la période
         granularity = st.radio(
@@ -1586,11 +1550,7 @@ def main():
         filtered_new_signups_completed = filtered_new_signups_ordered[filtered_new_signups_ordered["New_status"] == "COMPLETED"].drop_duplicates(subset="customer_id")
         filtered_new_signups_not_completed_customer = filtered_new_signups_completed['customer_id']
         filtered_new_signups_not_completed = filtered_new_signups_ordered[~filtered_new_signups_ordered['customer_id'].isin(filtered_new_signups_not_completed_customer)].drop_duplicates(subset="customer_id")
-        # st.write(filtered_new_signups_not_ordered)
-        # st.write(len(filtered_new_signups_not_ordered))
-        # st.dataframe(filtered_new_signups_ordered)
-        # st.dataframe(filtered_new_signups_not_completed)
-        # st.dataframe(filtered_new_signups_checkout)
+
 
         # Calculez les mesures directement sur les données filtrées
         total_filtered_downloads = filtered_data_download['Téléchargement'].sum()
@@ -1738,7 +1698,7 @@ def main():
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
-        st.write(len(filtered_new_signups_ordered))
+        # st.write(len(filtered_new_signups_ordered))
 
         show_new_signups_completed = st.sidebar.checkbox(
             "Afficher les données des nouveaux Inscrits qui ont effectué au moins un achat", key="checkbox_new_signups_completed"
@@ -1798,105 +1758,105 @@ def main():
 
     ####################################################################################   USERS PAGES   #####################################################################
 
-    # Créez une nouvelle page concentration des clients
-    elif selected_page == "Concentration des clients par commune, Algérie":
-        st.header("Concentration des clients par commune, Algérie")
+    # # Créez une nouvelle page concentration des clients
+    # elif selected_page == "Concentration des clients par commune, Algérie":
+    #     st.header("Concentration des clients par commune, Algérie")
         
-        # Créez une liste des régions (wilayas) pour le filtre
-        wilaya_list = geoloc_wilaya['region_delivery_address'].unique()
-        selected_wilaya = st.selectbox("Sélectionnez une wilaya :", wilaya_list)
+    #     # Créez une liste des régions (wilayas) pour le filtre
+    #     wilaya_list = geoloc_wilaya['region_delivery_address'].unique()
+    #     selected_wilaya = st.selectbox("Sélectionnez une wilaya :", wilaya_list)
 
 
-        commune_counts = geoloc_wilaya['commune_delivery_address'].value_counts().reset_index()
-        commune_counts.columns = ['commune_delivery_address', 'nombre_clients']
+    #     commune_counts = geoloc_wilaya['commune_delivery_address'].value_counts().reset_index()
+    #     commune_counts.columns = ['commune_delivery_address', 'nombre_clients']
 
-        commune_coordinates = geoloc_wilaya.groupby('commune_delivery_address').agg({'Latitude': 'first', 'Longitude': 'first'}).reset_index()
-        commune_data = pd.merge(commune_coordinates, commune_counts, on='commune_delivery_address')
-        region_data = geoloc_wilaya[['commune_delivery_address', 'region_delivery_address']]
+    #     commune_coordinates = geoloc_wilaya.groupby('commune_delivery_address').agg({'Latitude': 'first', 'Longitude': 'first'}).reset_index()
+    #     commune_data = pd.merge(commune_coordinates, commune_counts, on='commune_delivery_address')
+    #     region_data = geoloc_wilaya[['commune_delivery_address', 'region_delivery_address']]
 
-        merged_data = pd.merge(commune_data, region_data,how='left', on='commune_delivery_address')
-        merged_data = merged_data.drop_duplicates(subset='commune_delivery_address')
+    #     merged_data = pd.merge(commune_data, region_data,how='left', on='commune_delivery_address')
+    #     merged_data = merged_data.drop_duplicates(subset='commune_delivery_address')
 
-        # Afficher les données filtrées
-        show_merged_data = st.sidebar.checkbox("Afficher les données")
+    #     # Afficher les données filtrées
+    #     show_merged_data = st.sidebar.checkbox("Afficher les données")
 
-        # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
-        def to_excel(df, include_index=True):
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                df.to_excel(writer, index=include_index, sheet_name="Sheet1")
-                workbook = writer.book
-                worksheet = writer.sheets["Sheet1"]
-                format = workbook.add_format({"num_format": "0.00"})
-                worksheet.set_column("A:A", None, format)
-            processed_data = output.getvalue()
-            return processed_data
+    #     # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
+    #     def to_excel(df, include_index=True):
+    #         output = BytesIO()
+    #         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    #             df.to_excel(writer, index=include_index, sheet_name="Sheet1")
+    #             workbook = writer.book
+    #             worksheet = writer.sheets["Sheet1"]
+    #             format = workbook.add_format({"num_format": "0.00"})
+    #             worksheet.set_column("A:A", None, format)
+    #         processed_data = output.getvalue()
+    #         return processed_data
 
-        if show_merged_data:
-            st.subheader("Nombre des Clients par Communes")
-            st.dataframe(merged_data)
+    #     if show_merged_data:
+    #         st.subheader("Nombre des Clients par Communes")
+    #         st.dataframe(merged_data)
 
-            # Bouton pour télécharger le DataFrame au format Excel
-            merged_data_xlsx = to_excel(merged_data, include_index=False)
-            st.download_button(
-                "Télécharger les Orders en Excel (.xlsx)",
-                merged_data_xlsx,
-                f"Nombre des Clients par Communes .xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
+    #         # Bouton pour télécharger le DataFrame au format Excel
+    #         merged_data_xlsx = to_excel(merged_data, include_index=False)
+    #         st.download_button(
+    #             "Télécharger les Orders en Excel (.xlsx)",
+    #             merged_data_xlsx,
+    #             f"Nombre des Clients par Communes .xlsx",
+    #             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    #         )
 
-        # Filtrer les données en fonction de la région (wilaya) sélectionnée
-        filtered_data = merged_data[merged_data['region_delivery_address'] == selected_wilaya]
+    #     # Filtrer les données en fonction de la région (wilaya) sélectionnée
+    #     filtered_data = merged_data[merged_data['region_delivery_address'] == selected_wilaya]
         
 
-        # Créez la carte en utilisant Plotly Graph Objects avec les données filtrées
-        fig = go.Figure()
+    #     # Créez la carte en utilisant Plotly Graph Objects avec les données filtrées
+    #     fig = go.Figure()
 
-        # Définissez une échelle logarithmique pour ajuster la taille des cercles en fonction du nombre de clients
-        min_size = 5  # Taille minimale des cercles
-        max_size = 20  # Taille maximale des cercles
-        min_clients = filtered_data['nombre_clients'].min()
-        max_clients = filtered_data['nombre_clients'].max()
+    #     # Définissez une échelle logarithmique pour ajuster la taille des cercles en fonction du nombre de clients
+    #     min_size = 5  # Taille minimale des cercles
+    #     max_size = 20  # Taille maximale des cercles
+    #     min_clients = filtered_data['nombre_clients'].min()
+    #     max_clients = filtered_data['nombre_clients'].max()
 
-        fig = go.Figure()
+    #     fig = go.Figure()
 
-        for i, row in filtered_data.iterrows():
-            num_clients = row['nombre_clients']
-            # Appliquez une échelle logarithmique pour ajuster la taille en fonction du nombre de clients
-            size = np.interp(np.log(num_clients), [np.log(min_clients), np.log(max_clients)], [min_size, max_size])
+    #     for i, row in filtered_data.iterrows():
+    #         num_clients = row['nombre_clients']
+    #         # Appliquez une échelle logarithmique pour ajuster la taille en fonction du nombre de clients
+    #         size = np.interp(np.log(num_clients), [np.log(min_clients), np.log(max_clients)], [min_size, max_size])
             
-            fig.add_trace(go.Scattermapbox(
-                lat=[row['Latitude']],
-                lon=[row['Longitude']],
-                mode='markers+text',
-                text=[f'Commune: {row["commune_delivery_address"]}<br>Nombre de Clients: {num_clients}'],
-                marker=dict(
-                    size=size,
-                    sizemode='diameter',
-                    opacity=0.7
-                ),
-                name=row["commune_delivery_address"]
-            ))
+    #         fig.add_trace(go.Scattermapbox(
+    #             lat=[row['Latitude']],
+    #             lon=[row['Longitude']],
+    #             mode='markers+text',
+    #             text=[f'Commune: {row["commune_delivery_address"]}<br>Nombre de Clients: {num_clients}'],
+    #             marker=dict(
+    #                 size=size,
+    #                 sizemode='diameter',
+    #                 opacity=0.7
+    #             ),
+    #             name=row["commune_delivery_address"]
+    #         ))
 
-        fig.update_layout(
-            title=f'Concentration des clients par commune, {selected_wilaya}',  # Mettez à jour le titre avec la wilaya sélectionnée
-            autosize=True,
-            hovermode='closest',
-            mapbox=dict(
-                style="carto-positron",
-                bearing=0,
-                center=dict(
-                    lat=filtered_data['Latitude'].mean(),  # Centre sur la moyenne des latitudes des communes
-                    lon=filtered_data['Longitude'].mean()  # Centre sur la moyenne des longitudes des communes
-                ),
-                pitch=0,
-                zoom=5
-            ),
-            width=800,  # Largeur souhaitée en pixels
-            height=600,  # Hauteur souhaitée en pixels
-        )
+    #     fig.update_layout(
+    #         title=f'Concentration des clients par commune, {selected_wilaya}',  # Mettez à jour le titre avec la wilaya sélectionnée
+    #         autosize=True,
+    #         hovermode='closest',
+    #         mapbox=dict(
+    #             style="carto-positron",
+    #             bearing=0,
+    #             center=dict(
+    #                 lat=filtered_data['Latitude'].mean(),  # Centre sur la moyenne des latitudes des communes
+    #                 lon=filtered_data['Longitude'].mean()  # Centre sur la moyenne des longitudes des communes
+    #             ),
+    #             pitch=0,
+    #             zoom=5
+    #         ),
+    #         width=800,  # Largeur souhaitée en pixels
+    #         height=600,  # Hauteur souhaitée en pixels
+    #     )
 
-        st.plotly_chart(fig)
+    #     st.plotly_chart(fig)
 
 
 
