@@ -1132,6 +1132,7 @@ def main():
             filtered_df_completed = filtered_customers_completed[
                 [
                     "date",
+                    "previous_order_date",
                     "customer_id",
                     "customer_username",
                     "customer_phone",
@@ -1156,41 +1157,41 @@ def main():
                 selected_days,
             )
 
-            # Pour les clients qui n'ont pas complété d'achat
-            filtered_customers_not_completed = filter_customers_by_last_purchase_days(
-                retargeting_not_completed,
-                selected_days,
-                selected_customer_origine,
-                selected_businessCat,
-            )
-            filtered_df_not_completed = filtered_customers_not_completed[
-                [
-                    "date",
-                    "customer_id",
-                    "customer_username",
-                    "customer_phone",
-                    "customer_email",
-                    "businessCat",
-                    "customer_origine",
-                ]
-            ]
+            # # Pour les clients qui n'ont pas complété d'achat
+            # filtered_customers_not_completed = filter_customers_by_last_purchase_days(
+            #     retargeting_not_completed,
+            #     selected_days,
+            #     selected_customer_origine,
+            #     selected_businessCat,
+            # )
+            # filtered_df_not_completed = filtered_customers_not_completed[
+            #     [
+            #         "date",
+            #         "customer_id",
+            #         "customer_username",
+            #         "customer_phone",
+            #         "customer_email",
+            #         "businessCat",
+            #         "customer_origine",
+            #     ]
+            # ]
 
-            filtered_df_last_purchase_not_completed = (
-                filtered_df_not_completed.drop_duplicates(
-                    subset="customer_id", keep="last"
-                )
-            )
-            st.write(
-                f"Données des clients qui n'ont pas complété d'achat pendant {selected_days} derniers jours : ",
-                filtered_df_last_purchase_not_completed,
-            )
+            # filtered_df_last_purchase_not_completed = (
+            #     filtered_df_not_completed.drop_duplicates(
+            #         subset="customer_id", keep="last"
+            #     )
+            # )
+            # st.write(
+            #     f"Données des clients qui n'ont pas complété d'achat pendant {selected_days} derniers jours : ",
+            #     filtered_df_last_purchase_not_completed,
+            # )
 
-            # Télécharger les données en fonction de la durée sélectionnée pour les clients qui n'ont pas complété d'achat
-            display_download_button_by_days(
-                filtered_df_not_completed,
-                "des clients qui n'ont pas complété d'achat pendant les",
-                selected_days,
-            )
+            # # Télécharger les données en fonction de la durée sélectionnée pour les clients qui n'ont pas complété d'achat
+            # display_download_button_by_days(
+            #     filtered_df_not_completed,
+            #     "des clients qui n'ont pas complété d'achat pendant les",
+            #     selected_days,
+            # )
 
             ################################################
 
@@ -1281,6 +1282,7 @@ def main():
                 filtered_non_completed_df = filtered_non_completed_customers[
                     [
                         "date",
+                        "previous_order_date",
                         "customer_id",
                         "customer_username",
                         "customer_phone",
@@ -1289,6 +1291,11 @@ def main():
                         "customer_origine",
                     ]
                 ]
+
+                filtered_non_completed_df = filtered_non_completed_df.drop_duplicates(
+                    subset="customer_id", keep="last"
+                )
+
                 st.write(
                     "DataFrame filtré des clients non complétés : ",
                     filtered_non_completed_df,
