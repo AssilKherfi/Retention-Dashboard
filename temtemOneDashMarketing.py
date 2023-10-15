@@ -893,15 +893,28 @@ def main():
         total_filtered_new_signups_first_open = len(filtered_new_signups_first_open)
         total_filtered_new_signups_checkout = len(filtered_new_signups_checkout)
 
-        total_filtered_downloads_formatted = "{:,}".format(total_filtered_downloads)
-        total_filtered_new_signups_formatted = "{:,}".format(total_filtered_new_signups)
-        total_filtered_new_signups_completed_formatted = "{:,}".format(total_filtered_new_signups_completed)
-        total_filtered_new_signups_ordered_formatted = "{:,}".format(total_filtered_new_signups_ordered)
-        total_filtered_new_signups_not_completed_formatted = "{:,}".format(total_filtered_new_signups_not_completed)
-        total_filtered_new_signups_not_ordered_formatted = "{:,}".format(total_filtered_new_signups_not_ordered)
-        total_filtered_new_signups_first_open_formatted = "{:,}".format(total_filtered_new_signups_first_open)
-        total_filtered_new_signups_checkout_formatted = "{:,}".format(total_filtered_new_signups_checkout)
-
+        total_filtered_downloads_formatted = "{:,.0f}".format(total_filtered_downloads)
+        total_filtered_new_signups_formatted = "{:,.0f}".format(
+            total_filtered_new_signups
+        )
+        total_filtered_new_signups_completed_formatted = "{:,.0f}".format(
+            total_filtered_new_signups_completed
+        )
+        total_filtered_new_signups_ordered_formatted = "{:,.0f}".format(
+            total_filtered_new_signups_ordered
+        )
+        total_filtered_new_signups_not_completed_formatted = "{:,.0f}".format(
+            total_filtered_new_signups_not_completed
+        )
+        total_filtered_new_signups_not_ordered_formatted = "{:,.0f}".format(
+            total_filtered_new_signups_not_ordered
+        )
+        total_filtered_new_signups_first_open_formatted = "{:,.0f}".format(
+            total_filtered_new_signups_first_open
+        )
+        total_filtered_new_signups_checkout_formatted = "{:,.0f}".format(
+            total_filtered_new_signups_checkout
+        )
 
         # Créez un DataFrame avec les mesures calculées
         filtered_stats_data = pd.DataFrame(
