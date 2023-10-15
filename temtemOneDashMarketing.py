@@ -1137,8 +1137,8 @@ def main():
                 subset="customer_id", keep="last"
             )
             st.write(
-                "Données des clients qui ont effectué leur dernier achat pendant - {days} jours : ",
-                filtered_df,
+                f"Données des clients qui ont effectué leur dernier achat pendant {selected_days} derniers jours : ",
+                filtered_df_last_purchase,
             )
 
             # Télécharger les données en fonction de la durée sélectionnée
