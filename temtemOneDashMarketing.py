@@ -609,6 +609,10 @@ def apply_filters_users(df, customer_origine, customer_country, start_date, end_
 # Créer une application Streamlit
 def main():
     st.title("Tableau de Bord TemtemOne")
+    # Ajout d'un lien vers une autre application
+    st.markdown(
+        "[Aller vers l'application Retention & LTV](https://temtemone-dashboard-factorydigitale.streamlit.app)"
+    )
 
     # # Zone de connexion
     # if "logged_in" not in st.session_state:
@@ -895,28 +899,28 @@ def main():
 
         total_filtered_downloads_formatted = "{:,.0f}".format(
             total_filtered_downloads
-        ).replace(",", ".")
+        ).replace(",", " ")
         total_filtered_new_signups_formatted = "{:,.0f}".format(
             total_filtered_new_signups
-        ).replace(",", ".")
+        ).replace(",", " ")
         total_filtered_new_signups_completed_formatted = "{:,.0f}".format(
             total_filtered_new_signups_completed
-        ).replace(",", ".")
+        ).replace(",", " ")
         total_filtered_new_signups_ordered_formatted = "{:,.0f}".format(
             total_filtered_new_signups_ordered
-        ).replace(",", ".")
+        ).replace(",", " ")
         total_filtered_new_signups_not_completed_formatted = "{:,.0f}".format(
             total_filtered_new_signups_not_completed
-        ).replace(",", ".")
+        ).replace(",", " ")
         total_filtered_new_signups_not_ordered_formatted = "{:,.0f}".format(
             total_filtered_new_signups_not_ordered
-        ).replace(",", ".")
+        ).replace(",", " ")
         total_filtered_new_signups_first_open_formatted = "{:,.0f}".format(
             total_filtered_new_signups_first_open
-        ).replace(",", ".")
-        # total_filtered_new_signups_checkout_formatted = "{:,.0f}".format(
-        #     total_filtered_new_signups_checkout
-        # ).replace(",", ".")
+        ).replace(",", " ")
+        total_filtered_new_signups_checkout_formatted = "{:,.0f}".format(
+            total_filtered_new_signups_checkout
+        ).replace(",", " ")
 
         # Créez un DataFrame avec les mesures calculées
         filtered_stats_data = pd.DataFrame(
@@ -938,7 +942,7 @@ def main():
                     total_filtered_new_signups_first_open_formatted,
                     total_filtered_new_signups_ordered_formatted,
                     total_filtered_new_signups_not_completed_formatted,
-                    total_filtered_new_signups_checkout,
+                    total_filtered_new_signups_checkout_formatted,
                     total_filtered_new_signups_completed_formatted,
                 ],
             }

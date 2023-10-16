@@ -732,6 +732,10 @@ def apply_filters_users(df, customer_origine, customer_country, start_date, end_
 # Créer une application Streamlit
 def main():
     st.title("Tableau de Bord TemtemOne")
+    # Ajout d'un lien vers une autre application
+    st.markdown(
+        "[Aller vers l'application Acquisition & Retargeting](https://temtemone-dashboard-factorydigitale-marketing.streamlit.app)"
+    )
 
     # # Zone de connexion
     # if "logged_in" not in st.session_state:
