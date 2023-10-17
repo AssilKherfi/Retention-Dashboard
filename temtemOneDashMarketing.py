@@ -1350,26 +1350,27 @@ def main():
     .e1nzilvr5 {
         color: #000000 !important; /* Texte en noir */
     }
+    # st-emotion-cache-x78sv8.e1nzilvr5
 
     /* Styles pour les boutons */
-    .st-emotion-cache-x78sv8.e1nzilvr5 {
+    .st-emotion-cache-19rxjzo.ef3psqc1 {
         background-color: #ffffff !important; /* Couleur de fond orange par défaut */
         color: #FF6B05 !important; /* Couleur du texte en noir par défaut */
         border: 1px solid #FF6B05; /* Bordure noire de 1 pixel */
     }
 
-    .css-19rxjzo.ef3psqc11:hover {
+    .st-emotion-cache-19rxjzo.ef3psqc1:hover {
         background-color: #FF6B05 !important; /* Couleur de fond verte lorsque survolé */
         color: #ffffff !important; /* Couleur du texte en blanc lorsque survolé */
     }
 
     /* Styles pour le texte à l'intérieur des boutons */
-    .css-19rxjzo.ef3psqc11 p {
+    .st-emotion-cache-19rxjzo.ef3psqc11 p {
         font-weight: bold;
         color: #FF6B05 !important;
     }
 
-    .css-19rxjzo.ef3psqc11 p:hover {
+    .st-emotion-cache-19rxjzo.ef3psqc11 p:hover {
         color: #ffffff !important; /* Couleur du texte en blanc lorsque survolé */
         font-weight: bold;
     }
