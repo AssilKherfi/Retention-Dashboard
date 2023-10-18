@@ -1853,7 +1853,7 @@ def main():
         merged_data = merged_data.drop_duplicates(subset="commune_delivery_address")
 
         # Afficher les données filtrées
-        # show_merged_data = st.sidebar.checkbox("Afficher les données")
+        show_merged_data = st.sidebar.checkbox("Afficher les données")
 
         # Fonction pour convertir un DataFrame en un fichier Excel en mémoire
         def to_excel(df, include_index=True):
