@@ -90,7 +90,7 @@ file_names = [
     "csv_database/orders.csv",
     "csv_database/ltv_data.csv",
     # "csv_database/users_2023.csv",
-    "csv_database/geoloc_wilaya.csv",
+    "csv_database/customer_geolocalisation.csv",
     "key_google_json/key_google.json",
 ]
 
@@ -127,7 +127,7 @@ for file_name in file_names:
 orders = dataframes["orders"]
 ltv_data = dataframes["ltv_data"]
 # users = dataframes["users_2023"]
-geoloc_wilaya = dataframes["geoloc_wilaya"]
+geoloc_wilaya = dataframes["customer_geolocalisation"]
 
 # %%
 pd.set_option("display.max_columns", None)
@@ -1827,30 +1827,30 @@ def main():
         st.header("Concentration des clients par commune, Algérie")
 
         # Créez une liste des régions (wilayas) pour le filtre
-        wilaya_list = geoloc_wilaya["region_delivery_address"].unique()
+        wilaya_list = geoloc_wilaya["wilaya"].unique()
         selected_wilaya = st.selectbox("Sélectionnez une wilaya :", wilaya_list)
 
         commune_counts = (
-            geoloc_wilaya["commune_delivery_address"].value_counts().reset_index()
+            geoloc_wilaya["commune"].value_counts().reset_index()
         )
-        commune_counts.columns = ["commune_delivery_address", "nombre_clients"]
+        commune_counts.columns = ["commune", "nombre_clients"]
 
         commune_coordinates = (
-            geoloc_wilaya.groupby("commune_delivery_address")
+            geoloc_wilaya.groupby("commune")
             .agg({"Latitude": "first", "Longitude": "first"})
             .reset_index()
         )
         commune_data = pd.merge(
-            commune_coordinates, commune_counts, on="commune_delivery_address"
+            commune_coordinates, commune_counts, on="commune"
         )
         region_data = geoloc_wilaya[
-            ["commune_delivery_address", "region_delivery_address"]
+            ["commune", "wilaya"]
         ]
 
         merged_data = pd.merge(
-            commune_data, region_data, how="left", on="commune_delivery_address"
+            commune_data, region_data, how="left", on="commune"
         )
-        merged_data = merged_data.drop_duplicates(subset="commune_delivery_address")
+        merged_data = merged_data.drop_duplicates(subset="commune")
 
         # Afficher les données filtrées
         show_merged_data = st.sidebar.checkbox("Afficher les données")
@@ -1882,7 +1882,7 @@ def main():
 
         # Filtrer les données en fonction de la région (wilaya) sélectionnée
         filtered_data = merged_data[
-            merged_data["region_delivery_address"] == selected_wilaya
+            merged_data["wilaya"] == selected_wilaya
         ]
 
         # Créez la carte en utilisant Plotly Graph Objects avec les données filtrées
@@ -1911,10 +1911,10 @@ def main():
                     lon=[row["Longitude"]],
                     mode="markers+text",
                     text=[
-                        f'Commune: {row["commune_delivery_address"]}<br>Nombre de Clients: {num_clients}'
+                        f'Commune: {row["commune"]}<br>Nombre de Clients: {num_clients}'
                     ],
                     marker=dict(size=size, sizemode="diameter", opacity=0.7),
-                    name=row["commune_delivery_address"],
+                    name=row["commune"],
                 )
             )
 
