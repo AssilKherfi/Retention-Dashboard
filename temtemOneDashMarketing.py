@@ -1023,13 +1023,13 @@ def main():
         selected_data_option = st.sidebar.selectbox(
             "Sélectionnez les données à télécharger",
             (
-                "Nouveaux Inscrits",
-                "Nouveaux Inscrits qui n'ont jamais effectué une commande",
-                "Nouveaux Inscrits avec la date du first open app",
-                "Nouveaux Inscrits qui ont effectué une commande",
-                "Nouveaux Inscrits qui n'ont jamais effectué au moins un achat",
+                "Nouveaux Inscrit",
+                "Nouveaux Inscrit qui n'ont jamais effectué une commande",
+                "Nouveaux Inscrit qui ont overt la première fois l'app",
+                "Nouveaux Inscrit qui ont effectué au moins une commande",
+                "Nouveaux Inscrit qui ont commandé sans achat final",
                 "Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté",
-                "Nouveaux Inscrits qui ont effectué au moins un achat",
+                "Nouveaux Inscrit qui ont effectué au moins un achat",
             ),
         )
 
@@ -1038,11 +1038,55 @@ def main():
             display_download_button(new_signups, "Nouveaux Inscrits")
         elif (
             selected_data_option
-            == "Nouveaux Inscrits qui n'ont jamais effectué une commande"
+            == "Nouveaux Inscrit qui n'ont jamais effectué une commande"
         ):
             display_download_button(
                 filtered_new_signups_not_ordered,
-                "Nouveaux Inscrits qui n'ont jamais effectué une commande",
+                "Nouveaux Inscrit qui n'ont jamais effectué une commande",
+            )
+
+        elif (
+            selected_data_option
+            == "Nouveaux Inscrit qui ont overt la première fois l'app"
+        ):
+            display_download_button(
+                filtered_new_signups_first_open,
+                "Nouveaux Inscrit qui ont overt la première fois l'app",
+            )
+
+        elif (
+            selected_data_option
+            == "Nouveaux Inscrit qui ont effectué au moins une commande"
+        ):
+            display_download_button(
+                filtered_new_signups_ordered,
+                "Nouveaux Inscrit qui ont effectué au moins une commande",
+            )
+
+        elif (
+            selected_data_option == "Nouveaux Inscrit qui ont commandé sans achat final"
+        ):
+            display_download_button(
+                filtered_new_signups_not_completed,
+                "Nouveaux Inscrit qui ont commandé sans achat final",
+            )
+
+        elif (
+            selected_data_option
+            == "Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté"
+        ):
+            display_download_button(
+                filtered_new_signups_checkout,
+                "Nouveaux Inscrit qui sont arrivés au checkout et qui n'ont pas acheté",
+            )
+
+        elif (
+            selected_data_option
+            == "Nouveaux Inscrit qui ont effectué au moins un achat"
+        ):
+            display_download_button(
+                total_filtered_new_signups_completed,
+                "Nouveaux Inscrit qui ont effectué au moins un achat",
             )
 
         # Afficher la plage de dates sélectionnée
