@@ -347,6 +347,9 @@ users["date"] = pd.to_datetime(users["date"])
 users = users.rename(columns={"Origine": "customer_origine"})
 users_info = users[["date", "email", "phone", "customer_origine", "customer_id"]]
 
+# users_info_payment_screen = users[
+#     ["date", "email", "phone", "customer_origine", "customer_id"]
+# ].rename(columns={"date": "date_registration"})
 
 # key_google_json contient le contenu du fichier key_google.json que vous avez chargé depuis S3
 creds = ServiceAccountCredentials.from_json_keyfile_dict(key_google_json)
@@ -415,33 +418,37 @@ new_signups_first_open_data = pd.merge(
 
 # st.dataframe(new_signups_first_open_data)
 
-# Nom de la feuille et de l'onglet
-sheet_name = "Utilisateur qui sont arrivé au Payment_method_screen"
-worksheet_name = "Payment_method_screen"
+# # Nom de la feuille et de l'onglet
+# sheet_name = "Utilisateur qui sont arrivé au Payment_method_screen"
+# worksheet_name = "Payment_method_screen"
 
-# Ouverture de la feuille et de l'onglet spécifique
-spreadsheet = gc.open(sheet_name)
-worksheet = spreadsheet.worksheet(worksheet_name)
+# # Ouverture de la feuille et de l'onglet spécifique
+# spreadsheet = gc.open(sheet_name)
+# worksheet = spreadsheet.worksheet(worksheet_name)
 
-# Lire les données de l'onglet
-data_payment_screen = worksheet.get_all_values()
+# # Lire les données de l'onglet
+# data_payment_screen = worksheet.get_all_values()
 
-# Créer un DataFrame à partir des données
-payment_screen = pd.DataFrame(
-    data_payment_screen[1:], columns=data_payment_screen[0]
-)  # Utiliser la première ligne comme en-tête
-payment_screen["Date de Payment method screen"] = pd.to_datetime(
-    payment_screen["Date de Payment method screen"]
-).dt.strftime("%Y-%m-%d")
-payment_screen_users = pd.merge(users_info, payment_screen, how="inner", on="email")
-order_payment_screen["date"] = pd.to_datetime(order_payment_screen["date"])
+# # Créer un DataFrame à partir des données
+# payment_screen = pd.DataFrame(
+#     data_payment_screen[1:], columns=data_payment_screen[0]
+# ).rename(
+#     columns={"Date de Payment method screen": "date"}
+# )  # Utiliser la première ligne comme en-tête
+# payment_screen["date"] = pd.to_datetime(payment_screen["date"]).dt.strftime("%Y-%m-%d")
+# payment_screen_users = pd.merge(
+#     users_info_payment_screen, payment_screen, how="inner", on="email"
+# )
+# order_payment_screen["date"] = pd.to_datetime(order_payment_screen["date"])
 
-payment_screen_users_orders = pd.merge(
-    payment_screen_users, order_payment_screen, on=["email", "date"], how="inner"
-)
-new_signups_checkout = payment_screen_users_orders[
-    (payment_screen_users_orders["Status"] != "COMPLETED")
-].drop_duplicates(subset="email", keep="last")
+# payment_screen_users["date"] = pd.to_datetime(payment_screen_users["date"])
+
+# payment_screen_users_orders = pd.merge(
+#     payment_screen_users, order_payment_screen, on=["email", "date"], how="inner"
+# )
+# new_signups_checkout = payment_screen_users_orders[
+#     (payment_screen_users_orders["Status"] != "COMPLETED")
+# ].drop_duplicates(subset="email", keep="last")
 
 # st.dataframe(new_signups_checkout)
 
@@ -576,6 +583,31 @@ def apply_filters_summary(df, customer_origine, start_date, end_date):
     return filtered_data.copy()
 
 
+# def apply_filters_checkout(df, customer_origine, start_date, end_date):
+#     filtered_data = df.copy()
+
+#     if customer_origine != "Tous":
+#         filtered_data = filtered_data[
+#             filtered_data["customer_origine"] == customer_origine
+#         ]
+
+#     date_col = "date_registration"
+
+#     # Convertir start_date et end_date en datetime64[ns]
+#     start_date = pd.to_datetime(start_date)
+#     end_date = pd.to_datetime(end_date)
+
+#     # Convertir la colonne de dates en datetime64[ns]
+#     filtered_data[date_col] = pd.to_datetime(filtered_data[date_col])
+
+#     # Filtrer les données en fonction de la plage de dates sélectionnée
+#     filtered_data = filtered_data[
+#         (filtered_data[date_col] >= start_date) & (filtered_data[date_col] <= end_date)
+#     ]
+
+#     return filtered_data.copy()
+
+
 def apply_filters_users(df, customer_origine, customer_country, start_date, end_date):
     filtered_data = df.copy()
 
@@ -695,15 +727,6 @@ def main():
 
         # st.dataframe(filtered_new_signups_first_open)
 
-        filtered_new_signups_checkout_data = apply_filters_summary(
-            new_signups_checkout,
-            customer_origine,
-            start_date,
-            end_date,
-        )
-        filtered_new_signups_checkout_data = (
-            filtered_new_signups_checkout_data.drop_duplicates(subset="email")
-        )
         # st.dataframe(filtered_new_signups_checkout_data)
 
         # # Afficher les données des Users
@@ -849,31 +872,59 @@ def main():
         )
 
         # Dupliquez new_signups_ordered pour créer new_signups_ordered_copy
-        new_signups_ordered_copy = new_signups_ordered.copy().drop_duplicates(
-            subset="customer_id"
-        )
+        new_signups_ordered_copy = new_signups_ordered.copy()
+
+        new_signups_ordered_checkout_copy = new_signups_ordered.copy()
 
         if selected_business_cat == "Toutes les catégories":
-            filtered_new_signups_ordered = new_signups_ordered_copy
-            filtered_new_signups_checkout = filtered_new_signups_checkout_data
+            filtered_new_signups_ordered = new_signups_ordered_copy.drop_duplicates(
+                subset="customer_id"
+            )
+            filtered_new_signups_ordered_checkout = new_signups_ordered_checkout_copy
+            # filtered_new_signups_checkout = filtered_new_signups_checkout_data
         else:
             filtered_new_signups_ordered = new_signups_ordered_copy[
                 new_signups_ordered_copy["businessCat"] == selected_business_cat
-            ]
-            filtered_new_signups_checkout = filtered_new_signups_checkout_data[
-                filtered_new_signups_checkout_data["businessCat"]
+            ].drop_duplicates(subset="customer_id")
+            filtered_new_signups_ordered_checkout = new_signups_ordered_checkout_copy[
+                new_signups_ordered_checkout_copy["businessCat"]
                 == selected_business_cat
             ]
+            # filtered_new_signups_checkout = filtered_new_signups_checkout_data[
+            #     filtered_new_signups_checkout_data["businessCat"]
+            #     == selected_business_cat
+            # ]
 
         filtered_new_signups_ordered_customer = filtered_new_signups_ordered[
             "customer_id"
-        ]
+        ].drop_duplicates()
+
         filtered_new_signups_not_ordered = new_signups[
             ~new_signups["customer_id"].isin(filtered_new_signups_ordered_customer)
         ].drop_duplicates(subset="customer_id")
+
         filtered_new_signups_completed = filtered_new_signups_ordered[
             filtered_new_signups_ordered["New_status"] == "COMPLETED"
         ].drop_duplicates(subset="customer_id")
+
+        filtered_new_signups_completed_checkout = filtered_new_signups_ordered_checkout[
+            filtered_new_signups_ordered_checkout["New_status"] == "COMPLETED"
+        ].drop_duplicates(subset="customer_id", keep="last")
+
+        filtered_new_signups_completed_customer = (
+            filtered_new_signups_completed_checkout["customer_id"]
+        )
+
+        filtered_new_signups_inProgress = filtered_new_signups_ordered[
+            filtered_new_signups_ordered["Status"] == "In_Progress"
+        ].drop_duplicates(subset="customer_id")
+
+        filtered_new_signups_checkout = filtered_new_signups_inProgress[
+            ~filtered_new_signups_inProgress["customer_id"].isin(
+                filtered_new_signups_completed_customer
+            )
+        ].drop_duplicates(subset="customer_id")
+
         filtered_new_signups_not_completed_customer = filtered_new_signups_completed[
             "customer_id"
         ]
@@ -1018,6 +1069,8 @@ def main():
                 f"{filename} - ORIGINE : {customer_origine} - Customer Country : {customer_country}, du {start_date} au {end_date}.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
+
+        # st.dataframe(filtered_new_signups_checkout)
 
         # Afficher les options de sélection dans la barre latérale
         selected_data_option = st.sidebar.selectbox(
