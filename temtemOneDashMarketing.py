@@ -1,14 +1,14 @@
 # %%
+from datetime import datetime, timedelta
 import os
-from datetime import datetime
-from io import BytesIO
 from io import StringIO
+from io import BytesIO
+import re
 import json
 import pandas as pd
 import boto3
 import bcrypt
 import xlsxwriter
-import re
 from st_files_connection import FilesConnection
 import plotly.express as px
 import plotly.graph_objects as go
@@ -21,6 +21,12 @@ from oauth2client.service_account import ServiceAccountCredentials
 # %%
 # Fonction pour charger les secrets depuis le fichier secrets.toml
 def load_secrets():
+    """
+    Charge les secrets depuis le fichier 'secrets.toml'.
+
+    Returns:
+        dict: Un dictionnaire contenant les secrets chargés.
+    """
     # Obtenez le chemin complet vers le fichier secrets.toml
     secrets_file_path = os.path.join(".streamlit", "secrets.toml")
 
@@ -33,6 +39,17 @@ def load_secrets():
 # Fonction pour charger les données depuis S3 en utilisant les secrets du fichier toml
 @st.cache_data
 def load_data_from_s3_with_toml(secrets, bucket_name, file_name):
+    """
+    Charge les données depuis un fichier stocké sur Amazon S3 en utilisant les informations de connexion fournies.
+
+    Args:
+        secrets (dict): Un dictionnaire contenant les informations d'identification AWS.
+        bucket_name (str): Le nom du bucket S3.
+        file_name (str): Le nom du fichier à charger depuis S3.
+
+    Returns:
+        pd.DataFrame: Un DataFrame Pandas contenant les données du fichier chargé depuis S3.
+    """
     s3_client = boto3.client(
         "s3",
         aws_access_key_id=secrets["s3_credentials"]["AWS_ACCESS_KEY_ID"],
@@ -45,6 +62,16 @@ def load_data_from_s3_with_toml(secrets, bucket_name, file_name):
 
 # Fonction pour charger les données depuis S3 en utilisant experimental_connection
 def load_data_from_s3_with_connection(bucket_name, file_name):
+    """
+    Charge les données depuis un fichier stocké sur Amazon S3 en utilisant la connexion expérimentale Streamlit.
+
+    Args:
+        bucket_name (str): Le nom du bucket S3.
+        file_name (str): Le nom du fichier à charger depuis S3.
+
+    Returns:
+        pd.DataFrame: Un DataFrame Pandas contenant les données du fichier chargé depuis S3.
+    """
     conn = st.experimental_connection("s3", type=FilesConnection)
     return conn.read(
         f"{bucket_name}/{file_name}",
@@ -56,6 +83,17 @@ def load_data_from_s3_with_connection(bucket_name, file_name):
 
 # Fonction pour charger key_google.json depuis S3 en tant qu'objet JSON
 def load_key_google_json_with_json_key(secrets, bucket_name, file_name):
+    """
+    Charge une clé JSON Google depuis un fichier stocké sur Amazon S3 en utilisant les informations de connexion S3.
+
+    Args:
+        secrets (dict): Un dictionnaire contenant les informations de connexion S3.
+        bucket_name (str): Le nom du bucket S3.
+        file_name (str): Le nom du fichier à charger depuis S3.
+
+    Returns:
+        dict: Un objet JSON représentant la clé Google chargée depuis le fichier.
+    """
     s3_client = boto3.client(
         "s3",
         aws_access_key_id=secrets["s3_credentials"]["AWS_ACCESS_KEY_ID"],
@@ -69,6 +107,16 @@ def load_key_google_json_with_json_key(secrets, bucket_name, file_name):
 
 
 def load_key_google_json_with_connection(bucket_name, file_name):
+    """
+    Charge une clé JSON Google depuis un fichier stocké sur Amazon S3 en utilisant la connexion expérimentale Streamlit.
+
+    Args:
+        bucket_name (str): Le nom du bucket S3.
+        file_name (str): Le nom du fichier à charger depuis S3.
+
+    Returns:
+        dict: Un objet JSON représentant la clé Google chargée depuis le fichier.
+    """
     conn = st.experimental_connection("s3", type=FilesConnection)
     return conn.read(
         f"{bucket_name}/{file_name}",
@@ -488,14 +536,6 @@ user2_username = st.secrets["st_utilisateurs_2"]["st_username"]
 user2_password = st.secrets["st_utilisateurs_2"]["st_password"]
 
 # Créez un dictionnaire user_db avec les informations d'utilisateur hachées
-user_db = {
-    user1_username: {
-        "mot_de_passe": bcrypt.hashpw(user1_password.encode(), bcrypt.gensalt())
-    },
-    user2_username: {
-        "mot_de_passe": bcrypt.hashpw(user2_password.encode(), bcrypt.gensalt())
-    },
-}
 
 
 # Fonction de connexion
@@ -518,7 +558,29 @@ def login(user_db):
     return False
 
 
+user_db = {
+    user1_username: {
+        "mot_de_passe": bcrypt.hashpw(user1_password.encode(), bcrypt.gensalt())
+    },
+    user2_username: {
+        "mot_de_passe": bcrypt.hashpw(user2_password.encode(), bcrypt.gensalt())
+    },
+}
+
+
 def verify_credentials(username, password):
+    """
+    Vérifie les informations d'identification de l'utilisateur.
+
+    Args:
+        username (str): Le nom d'utilisateur à vérifier.
+        password (str): Le mot de passe à vérifier.
+
+    Returns:
+        bool: True si les informations d'identification sont valides, False sinon.
+    Raises:
+            KeyError: Si le nom d'utilisateur n'est pas trouvé dans la base de données.
+    """
     if username in user_db:
         hashed_password = user_db[username]["mot_de_passe"]
         return bcrypt.checkpw(password.encode(), hashed_password)
@@ -528,6 +590,22 @@ def verify_credentials(username, password):
 # Fonction pour appliquer les filtres
 @st.cache_data
 def apply_filters(df, customer_origine, business_cat, start_date, end_date):
+    """
+    Applique des filtres au DataFrame en fonction des critères spécifiés.
+
+    Args:
+        df (pd.DataFrame): Le DataFrame d'origine.
+        customer_origine (str): La valeur de la colonne "customer_origine" à filtrer.
+        business_cat (str): La valeur de la colonne "businessCat" à filtrer.
+        start_date (str): La date de début pour la plage de dates à filtrer.
+        end_date (str): La date de fin pour la plage de dates à filtrer.
+
+    Returns:
+        pd.DataFrame: Un nouveau DataFrame contenant les données filtrées.
+
+    Raises:
+        ValueError: Si les colonnes spécifiées pour le filtrage n'existent pas dans le DataFrame.
+    """
     filtered_data = df.copy()
 
     # if status != "Tous":
@@ -559,6 +637,21 @@ def apply_filters(df, customer_origine, business_cat, start_date, end_date):
 
 
 def apply_filters_summary(df, customer_origine, start_date, end_date):
+    """
+    Applique des filtres au DataFrame pour résumer les données.
+
+    Args:
+        df (pd.DataFrame): Le DataFrame d'origine.
+        customer_origine (str): La valeur de la colonne "customer_origine" à filtrer.
+        start_date (str): La date de début pour la plage de dates à filtrer.
+        end_date (str): La date de fin pour la plage de dates à filtrer.
+
+    Returns:
+        pd.DataFrame: Un nouveau DataFrame contenant les données filtrées.
+
+    Notes:
+        - Cette fonction est généralement utilisée pour filtrer les données avant de créer un résumé.
+    """
     filtered_data = df.copy()
 
     if customer_origine != "Tous":
@@ -609,6 +702,22 @@ def apply_filters_summary(df, customer_origine, start_date, end_date):
 
 
 def apply_filters_users(df, customer_origine, customer_country, start_date, end_date):
+    """
+    Applique des filtres au DataFrame pour résumer les données des utilisateurs.
+
+    Args:
+        df (pd.DataFrame): Le DataFrame d'origine.
+        customer_origine (str): La valeur de la colonne "customer_origine" à filtrer.
+        customer_country (str): La valeur de la colonne "customer_country" à filtrer.
+        start_date (str): La date de début pour la plage de dates à filtrer.
+        end_date (str): La date de fin pour la plage de dates à filtrer.
+
+    Returns:
+        pd.DataFrame: Un nouveau DataFrame contenant les données filtrées.
+
+    Notes:
+        - Cette fonction est généralement utilisée pour filtrer les données avant de créer un résumé des utilisateurs.
+    """
     filtered_data = df.copy()
 
     if customer_origine != "Tous":
@@ -640,6 +749,15 @@ def apply_filters_users(df, customer_origine, customer_country, start_date, end_
 
 # Créer une application Streamlit
 def main():
+    """
+    Fonction principale pour exécuter l'application.
+
+    Cette fonction contient le code principal de l'application, y compris la création des pages,
+    le traitement des données, et la génération des graphiques et des visualisations.
+
+    Returns:
+    None
+    """
     st.title("Tableau de Bord TemtemOne")
     # Ajout d'un lien vers une autre application
     st.markdown(
@@ -679,7 +797,8 @@ def main():
 
         # Sélection manuelle de la date de début
         start_date = st.sidebar.date_input(
-            "Date de début", datetime(datetime.now().year, 1, 1).date()
+            "Date de début",
+            (datetime.now() - timedelta(days=365)).replace(month=1, day=1).date(),
         )
         end_date = st.sidebar.date_input(
             "Date de fin", pd.to_datetime(orders["date"].max()).date()
