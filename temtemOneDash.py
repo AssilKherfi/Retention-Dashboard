@@ -1,23 +1,24 @@
 # %%
-import pandas as pd
-import numpy as np
 from operator import attrgetter
 from datetime import datetime, timedelta
 import os
-import boto3
 from io import StringIO
 from io import BytesIO
+import re
+import json
+import pandas as pd
+import numpy as np
+import boto3
 import bcrypt
 import xlsxwriter
-import re
 from st_files_connection import FilesConnection
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import toml
-import gspread
-import json
-from oauth2client.service_account import ServiceAccountCredentials
+
+# import gspread
+# from oauth2client.service_account import ServiceAccountCredentials
 
 
 # %%
@@ -113,7 +114,9 @@ else:
 # Charger les données depuis S3 en fonction du mode
 for file_name in file_names:
     if "key_google_json" not in file_name:
-        df_name = file_name.split("/")[-1].split(".")[0]  # Obtenir le nom du DataFrame
+        df_name = file_name.rsplit("/", 1)[-1].split(".")[
+            0
+        ]  # Obtenir le nom du DataFrame
         if mode == "production":
             dataframes[df_name] = load_data_from_s3_with_connection(
                 bucket_name, file_name
@@ -907,19 +910,18 @@ def main():
         )
 
         # Ajoutez les annotations dans les cases de la heatmap
-        for i in range(len(y_labels)):
-            for j in range(len(x_labels)):
+        for i, y_label in enumerate(y_labels):
+            for j, x_label in enumerate(x_labels):
                 value = heatmap_data.iloc[i, j]
                 if not pd.isna(value):
-                    font_color = (
-                        "black" if j == 0 else "white"
-                    )  # Noir pour la première colonne, blanc pour les autres
+                    font_color = "black" if j == 0 else "white"
+
                     fig_retention.add_annotation(
-                        text=value,  # Format du texte à afficher
-                        x=x_labels[j],
-                        y=y_labels[i],
+                        text=value,
+                        x=x_label,
+                        y=y_label,
                         showarrow=False,
-                        font=dict(color=font_color),  # Couleur du texte
+                        font=dict(color=font_color),
                     )
 
         # Créez la heatmap de la matrice du nombre de clients
@@ -936,19 +938,22 @@ def main():
         fig_clients = px.imshow(cohort_pivot, x=x_labels, y=y_labels)
 
         # Ajoutez les annotations dans les cases de la heatmap
-        for i in range(len(y_labels)):
-            for j in range(len(x_labels)):
+        for i, y_label in enumerate(y_labels):
+            for j, x_label in enumerate(x_labels):
                 value = cohort_pivot.iloc[i, j]
                 if not pd.isna(value):
-                    font_color = (
-                        "black" if j == 0 else "white"
-                    )  # Noir pour la première colonne, blanc pour les autres
+                    font_color = "black" if j == 0 else "white"
+
+                    # Vérifier que la valeur est une chaîne de caractères
+                    if not isinstance(value, str):
+                        value = str(value)
+
                     fig_clients.add_annotation(
-                        text=value,  # Format du texte à afficher
-                        x=x_labels[j],
-                        y=y_labels[i],
+                        text=value,
+                        x=x_label,
+                        y=y_label,
                         showarrow=False,
-                        font=dict(color=font_color),  # Couleur du texte
+                        font=dict(color=font_color),
                     )
 
         # Créez des onglets pour basculer entre les deux visualisations
@@ -1830,9 +1835,7 @@ def main():
         wilaya_list = geoloc_wilaya["wilaya"].unique()
         selected_wilaya = st.selectbox("Sélectionnez une wilaya :", wilaya_list)
 
-        commune_counts = (
-            geoloc_wilaya["commune"].value_counts().reset_index()
-        )
+        commune_counts = geoloc_wilaya["commune"].value_counts().reset_index()
         commune_counts.columns = ["commune", "nombre_clients"]
 
         commune_coordinates = (
@@ -1840,16 +1843,10 @@ def main():
             .agg({"Latitude": "first", "Longitude": "first"})
             .reset_index()
         )
-        commune_data = pd.merge(
-            commune_coordinates, commune_counts, on="commune"
-        )
-        region_data = geoloc_wilaya[
-            ["commune", "wilaya"]
-        ]
+        commune_data = pd.merge(commune_coordinates, commune_counts, on="commune")
+        region_data = geoloc_wilaya[["commune", "wilaya"]]
 
-        merged_data = pd.merge(
-            commune_data, region_data, how="left", on="commune"
-        )
+        merged_data = pd.merge(commune_data, region_data, how="left", on="commune")
         merged_data = merged_data.drop_duplicates(subset="commune")
 
         # Afficher les données filtrées
@@ -1876,14 +1873,12 @@ def main():
             st.download_button(
                 "Télécharger les Orders en Excel (.xlsx)",
                 merged_data_xlsx,
-                f"Nombre des Clients par Communes .xlsx",
+                "Nombre des Clients par Communes .xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
 
         # Filtrer les données en fonction de la région (wilaya) sélectionnée
-        filtered_data = merged_data[
-            merged_data["wilaya"] == selected_wilaya
-        ]
+        filtered_data = merged_data[merged_data["wilaya"] == selected_wilaya]
 
         # Créez la carte en utilisant Plotly Graph Objects avec les données filtrées
         fig = go.Figure()
