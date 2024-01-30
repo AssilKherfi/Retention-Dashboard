@@ -177,7 +177,7 @@ pd.set_option("display.precision", 0)
 
 orders["order_id"] = orders["order_id"].astype(str)
 orders["customer_id"] = orders["customer_id"].astype(str)
-orders["createdAt"] = pd.to_datetime(orders["createdAt"])
+orders["date"] = pd.to_datetime(orders["date"])
 orders = orders.rename(columns={"job_status": "Status"})
 orders = orders[~orders["Status"].isin(["ABANDONED"])]
 orders["customer_id"] = [
@@ -388,9 +388,8 @@ users = users[
     )
 ]
 
-users["createdAt"] = pd.to_datetime(users["createdAt"])
-users["createdAt"] = users["createdAt"].dt.strftime("%Y-%m-%d")
-users["date"] = users["createdAt"]
+users["date"] = pd.to_datetime(users["date"])
+users["date"] = users["date"].dt.strftime("%Y-%m-%d")
 users["date"] = pd.to_datetime(users["date"])
 users = users.rename(columns={"Origine": "customer_origine"})
 users_info = users[["date", "email", "phone", "customer_origine", "customer_id"]]

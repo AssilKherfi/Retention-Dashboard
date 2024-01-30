@@ -186,7 +186,7 @@ pd.set_option("display.precision", 0)
 
 orders["order_id"] = orders["order_id"].astype(str)
 orders["customer_id"] = orders["customer_id"].astype(str)
-orders["createdAt"] = pd.to_datetime(orders["createdAt"])
+orders["date"] = pd.to_datetime(orders["date"])
 orders = orders.rename(columns={"job_status": "Status"})
 orders = orders[~orders["Status"].isin(["ABANDONED"])]
 orders["customer_id"] = [
